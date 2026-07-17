@@ -26,6 +26,7 @@ public class Drivetrain
 	float _shiftTimer;
 	float _shiftLockout;
 	float _freeRpm; // engine-side rpm when the clutch slips
+	float _limiterHold; // seconds spent pinned near redline under power (limiter-camp escape)
 
 	public Drivetrain( CarDefinition def )
 	{
@@ -93,13 +94,34 @@ public class Drivetrain
 		_shiftLockout -= dt;
 		float groundRpm = MathF.Abs( groundWheelSpeed * ratio ) * 60f / MathF.Tau;
 
+		// Limiter-camp escape: the upshift decision reads GROUND-speed rpm (anti-hunt — see the
+		// header comment) but the engine + rev limiter run on WHEEL-implied rpm, and wheelspin
+		// separates the two. With traction control off, a hard launch inflates
+		// engine rpm onto the limiter while groundRpm is still below ShiftUpRpm — the box then
+		// bounces on the limiter until ground speed catches up (worst on the hatch: redline 6300
+		// is only ~9% over its 5800 shift point, less than its launch slip). Track sustained
+		// near-redline running under power; after a short hold, allow the upshift early. The
+		// post-shift groundRpm guard preserves the original anti-hunt property: never escape into
+		// a gear the ground speed would immediately downshift back out of.
+		bool nearLimiter = Rpm >= _def.RedlineRpm * 0.98f && throttle > 0.5f;
+		_limiterHold = nearLimiter ? _limiterHold + dt : 0f;
+
 		if ( !ManualMode && Gear > 0 && !IsShifting && _shiftLockout <= 0f )
 		{
-			if ( groundRpm > _def.ShiftUpRpm && Gear < _def.GearRatios.Length )
+			bool wantUp = groundRpm > _def.ShiftUpRpm;
+			if ( !wantUp && _limiterHold > 0.2f && Gear < _def.GearRatios.Length )
+			{
+				float nextRatio = _def.GearRatios[Gear] * _def.FinalDrive; // Gear is 1-based → [Gear] = next gear up
+				float postShiftGroundRpm = MathF.Abs( groundWheelSpeed * nextRatio ) * 60f / MathF.Tau;
+				wantUp = postShiftGroundRpm >= _def.ShiftDownRpm * 1.15f;
+			}
+
+			if ( wantUp && Gear < _def.GearRatios.Length )
 			{
 				Gear++;
 				_shiftTimer = 0.15f;
 				_shiftLockout = 0.8f;
+				_limiterHold = 0f;
 			}
 			else if ( groundRpm < _def.ShiftDownRpm && Gear > 1 )
 			{
