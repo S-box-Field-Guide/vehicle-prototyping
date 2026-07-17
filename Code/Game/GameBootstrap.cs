@@ -87,7 +87,7 @@ public sealed class GameBootstrap : Component
 		perfGo.Name = "PerfProbe";
 		perfGo.Components.Create<PerfProbe>();
 
-		Log.Info( $"[vp] boot started. build {VpBuild.PublishStamp} ({VpBuild.PublishStampNote}). WASD drive, Space handbrake, R respawn, T tuning, I help, H hide HUD. Pilot ready." );
+		Log.Info( $"[vp] boot started. v{VpBuild.Version} build {VpBuild.PublishStamp} ({VpBuild.PublishStampNote}). WASD drive, Space handbrake, R respawn, T tuning, I help, H hide HUD. Pilot ready." );
 	}
 
 	/// <summary>Build the selected world and spawn <paramref name="def"/> at its spawn point, wiring

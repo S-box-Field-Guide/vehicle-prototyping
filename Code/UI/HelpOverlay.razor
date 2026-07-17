@@ -46,7 +46,7 @@
 				<div class="footwrap">
 					<span class="foot">Gamepad: left stick · RT/LT pedals · Start menu</span>
 					<span class="foot">A handbrake · R1/L1 shift · X reset · d-pad switch car</span>
-					<span class="foot">@($"build {VpBuild.PublishStamp} · {VpBuild.PublishStampNote}")</span>
+					<span class="foot">@BuildLine</span>
 				</div>
 				<div class="btn" onclick=@Dismiss>Got it — let's drive</div>
 			</div>
@@ -58,6 +58,11 @@
 	// FileSystem.Data flag file — the sanctioned, whitelisted persistence path for
 	// small local UI state that should survive between sessions.
 	const string SeenFlagFile = "vp_seen_help.flag";
+
+	// Version + build line, resolved to ONE string: interpolating multiple @values inline with
+	// literal text in a single fragment renders with the text runs interleaved — a whole-line
+	// string property rendered as the element's sole child is the safe pattern.
+	static string BuildLine => $"v{VpBuild.Version} · build {VpBuild.PublishStamp} · {VpBuild.PublishStampNote}";
 
 	protected override void OnStart()
 	{

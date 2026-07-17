@@ -20,4 +20,12 @@ public static class VpBuild
 	/// --note gist SHORT — this renders verbatim in the Help overlay footer (design-locked panel);
 	/// the full story of each build lives in CHANGELOG.md.</summary>
 	public const string PublishStampNote = "2026-07-17 - town polish, analog triggers, UI improvements (build 9)";
+
+	/// <summary>PUBLIC DISPLAY VERSION — the player-facing "vX.Y.Z" shown beside the build stamp.
+	/// Policy: 0.1.0 = the first public release (2026-07-17). Bump MINOR (0.2.0, …) with each content
+	/// publish, alongside its CHANGELOG.md entry; bump PATCH (0.1.1, …) for hotfix republishes;
+	/// 1.0.0 is reserved for feature-complete. DISPLAY ONLY — it never gates compatibility
+	/// (<see cref="PublishStamp"/> keeps that job). Bumps are deliberate manual edits to this line,
+	/// never automated: tools/bump_publish_stamp.py touches only the stamp and note lines above.</summary>
+	public const string Version = "0.1.0";
 }
