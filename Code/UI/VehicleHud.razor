@@ -63,14 +63,23 @@
 		@if ( !UiState.TelemetryOpen )
 		{
 			<div class="hints">
-				<div class="hint"><span class="mono key">L</span><span class="cap">Telemetry</span></div>
-				<div class="hint"><span class="mono key">T</span><span class="cap">Tuning</span></div>
-				<div class="hint"><span class="mono key">I</span><span class="cap">Help</span></div>
-				<div class="hint"><span class="mono key">TAB</span><span class="cap">Session</span></div>
-				<div class="hint hide" onclick=@ToggleHud>
-					<span class="mono key">H</span>
-					<span class="cap">Hide UI</span>
-				</div>
+				@if ( UsingPad )
+				{
+					<div class="hint"><span class="mono key pad">START</span><span class="cap">Session</span></div>
+					<div class="hint"><span class="mono key pad">D-PAD L/R</span><span class="cap">Switch car</span></div>
+					<div class="hint"><span class="mono key pad">D-PAD UP</span><span class="cap">Shift mode</span></div>
+				}
+				else
+				{
+					<div class="hint"><span class="mono key">L</span><span class="cap">Telemetry</span></div>
+					<div class="hint"><span class="mono key">T</span><span class="cap">Tuning</span></div>
+					<div class="hint"><span class="mono key">I</span><span class="cap">Help</span></div>
+					<div class="hint"><span class="mono key">TAB</span><span class="cap">Session</span></div>
+					<div class="hint hide" onclick=@ToggleHud>
+						<span class="mono key">H</span>
+						<span class="cap">Hide UI</span>
+					</div>
+				}
 			</div>
 		}
 	}
@@ -89,6 +98,16 @@
 	string CarName => Target?.Definition?.Name ?? "—";
 	string CarClass => (Target?.Definition?.Layout ?? DriveLayout.FWD).ToString().ToLower();
 	string AssistText => (Target?.Assists ?? AssistLevel.Casual).ToString().ToUpper();
+
+	// Active input device. Input.UsingController is an engine-maintained bool that latches to the
+	// last-used device: it only flips when real input actually arrives from the other device, so it
+	// never flickers frame-to-frame — that latching IS the debounce (no manual hysteresis needed).
+	// A plain property read, allocation-free, safe to sample every frame. Folded into BuildHash so the
+	// legend rebuilds the instant the player switches between keyboard/mouse and a gamepad. When true
+	// the bottom-right legend shows the actions that have a real gamepad binding in Input.config
+	// (Session=SwitchRightMenu, CyclePrev/Next=d-pad left/right, ShiftMode=d-pad up); keyboard-only
+	// toggles drop off the pad view rather than showing an invented bind.
+	static bool UsingPad => Input.UsingController;
 
 	float RpmFraction => Target?.Drivetrain is null || Target.Definition is null
 		? 0f
@@ -152,5 +171,5 @@
 			CarName, AssistText, UiState.TelemetryOpen ),
 		// UserSettings.SpeedUnit: re-render the unit label the instant the player flips km/h↔mph,
 		// even while stationary (both units read "0", so SpeedDisplay alone wouldn't change the hash).
-		System.HashCode.Combine( UiState.HudHidden, UserSettings.SpeedUnit ) );
+		System.HashCode.Combine( UiState.HudHidden, UserSettings.SpeedUnit, UsingPad ) );
 }

@@ -23,7 +23,7 @@
 					</div>
 					<div class="hint">
 						<span class="hintlabel">Resume</span>
-						<span class="mono keycap">Tab</span>
+						<span class="mono keycap">@ResumeCap</span>
 					</div>
 				</div>
 
@@ -33,7 +33,7 @@
 						<div class="btn primary" onclick=@Resume>Resume</div>
 						<div class="btn ghost" onclick=@Respawn>
 							<span>Respawn car</span>
-							<span class="mono keycap">R</span>
+							<span class="mono keycap">@RespawnCap</span>
 						</div>
 
 						<div class="rule"></div>
@@ -91,7 +91,7 @@
 						<div class="rosterhead">
 							<span class="lbl">Vehicle</span>
 							<span class="cyclehint">
-								<span class="mono keycap">[ ]</span>
+								<span class="mono keycap">@CycleCap</span>
 								<span class="cyclelbl">cycle</span>
 							</span>
 						</div>
@@ -122,6 +122,16 @@
 
 @code {
 	public VehicleController Target { get; set; }
+
+	// Active input device — Input.UsingController latches to the last-used device (engine-maintained,
+	// flicker-free), so the menu's keycap chips read the button the player is actually holding. Each cap
+	// resolves to a single string (never interleave multiple @values with literal text in one fragment).
+	// Bindings are the real Input.config values: Session = tab / SwitchRightMenu, Reload = r / X,
+	// CyclePrev/Next = [ ] / d-pad west+east. Folded into BuildHash so the chips swap live on device change.
+	static bool UsingPad => Input.UsingController;
+	static string ResumeCap => UsingPad ? "START" : "Tab";
+	static string RespawnCap => UsingPad ? "X" : "R";
+	static string CycleCap => UsingPad ? "D-PAD L/R" : "[ ]";
 
 	static readonly AssistLevel[] Levels = { AssistLevel.Casual, AssistLevel.Sport, AssistLevel.Sim };
 	AssistLevel CurrentAssist => Target?.Assists ?? AssistLevel.Casual;
@@ -303,7 +313,8 @@
 		UiState.SessionOpen, Target?.Definition?.Name, CurrentAssist, UserSettings.SpeedUnit,
 		// Integer master-volume percent: rebuilds the fill width + % readout once per percent-step
 		// while dragging (NOT the raw sub-pixel drag value, which would rebuild every frame).
-		UserSettings.MasterVolume );
+		// UsingPad: swap the Resume/Respawn/cycle keycaps live when the player changes input device.
+		UserSettings.MasterVolume, UsingPad );
 
 	/// <summary>Console parity for opening/closing the Tab session menu — same idiom as
 	/// <see cref="GameBootstrap.VpSetWorld"/>: the Tab keypress can't be injected in headless UI
