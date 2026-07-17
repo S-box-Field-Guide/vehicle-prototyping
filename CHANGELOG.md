@@ -1,8 +1,27 @@
 # Changelog
 
 Publish cadence: bump the publish stamp (`tools/bump_publish_stamp.py`) and append a
-`## build N` section here on EVERY republish of `fieldguide.vehicle_prototyping`. No semver —
-the stamp is a monotonic tester-attribution counter (see `Code/Game/VpBuild.cs`).
+`## build N` section here on EVERY republish of `fieldguide.vehicle_prototyping`. The stamp is a
+monotonic tester-attribution counter; the display version (`VpBuild.Version`, shown as `vX.Y.Z`
+in-game) is bumped by hand alongside it — minor per content publish, patch per hotfix — and is
+display-only (see `Code/Game/VpBuild.cs` for the full policy).
+
+## build 10 — 2026-07-17 (v0.2.0)
+- NEW master volume slider in the Session (Tab) menu: a Sound row under Units — click or drag the
+  bar, the level applies live as you drag and persists across sessions. Default is 25% for a fresh
+  install (was full volume).
+- NEW controller support for the menus: the Start/menu button opens and closes the Session (Tab)
+  menu, and d-pad left/right cycles through the cars (same as `[` / `]`). The Help overlay's
+  gamepad footer lists both.
+- FIX sport-mode automatic shifting under wheelspin: launching hard in Sport (no traction control)
+  used to pin the engine on the rev limiter for seconds before the box would upshift out of first —
+  and an early fix attempt then bounced 2nd→1st→2nd. The automatic now recognizes sustained
+  limiter-pinned wheelspin and upshifts out of it promptly, and a gear entered that way holds
+  through its spin-up — no limiter camping, no gear hunting. Downshifts while slowing are unchanged.
+- CHANGE the bottom-right hotkey legend is now a vertical list (one keybind per line) instead of a
+  single horizontal strip — easier to scan while driving.
+- NEW public display version: the game now shows `vX.Y.Z · build N` in the Help overlay footer and
+  the boot log. This build is v0.2.0.
 
 ## build 9 — 2026-07-17
 - CHANGE World switching is disabled this build — you drive the **Town**, a street network with an

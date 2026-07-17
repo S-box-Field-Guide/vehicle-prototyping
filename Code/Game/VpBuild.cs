@@ -14,12 +14,12 @@ public static class VpBuild
 {
 	/// <summary>Monotonically increasing publish counter. Bumped by tools/bump_publish_stamp.py before each
 	/// publish. Starts at 1 (the first published build, which predated the stamp).</summary>
-	public const int PublishStamp = 9;
+	public const int PublishStamp = 10;
 
 	/// <summary>Human note for the current stamp (date + gist). Updated alongside the bump. Keep the
 	/// --note gist SHORT — this renders verbatim in the Help overlay footer (design-locked panel);
 	/// the full story of each build lives in CHANGELOG.md.</summary>
-	public const string PublishStampNote = "2026-07-17 - town polish, analog triggers, UI improvements (build 9)";
+	public const string PublishStampNote = "2026-07-17 - sound slider, controller binds, sport shift fix (build 10)";
 
 	/// <summary>PUBLIC DISPLAY VERSION — the player-facing "vX.Y.Z" shown beside the build stamp.
 	/// Policy: 0.1.0 = the first public release (2026-07-17). Bump MINOR (0.2.0, …) with each content
@@ -27,5 +27,5 @@ public static class VpBuild
 	/// 1.0.0 is reserved for feature-complete. DISPLAY ONLY — it never gates compatibility
 	/// (<see cref="PublishStamp"/> keeps that job). Bumps are deliberate manual edits to this line,
 	/// never automated: tools/bump_publish_stamp.py touches only the stamp and note lines above.</summary>
-	public const string Version = "0.1.0";
+	public const string Version = "0.2.0";
 }
