@@ -28,6 +28,15 @@ public class Drivetrain
 	float _freeRpm; // engine-side rpm when the clutch slips
 	float _limiterHold; // seconds spent pinned near redline under power (limiter-camp escape)
 
+	// Downshift arming (anti-hunt hysteresis): a gear entered by UPSHIFT starts unproven and may
+	// not auto-downshift under power until groundRpm has first risen past ShiftDownRpm — an escape
+	// shift can land below that threshold on purpose (recovery in progress), and a fixed-length
+	// lockout can expire before the low-rpm clutch-slip zone climbs out (measured: 2nd entered at
+	// ~1150 ground rpm climbs ~575 rpm/s, so 1.5 s ends at ~1980 < the 2200 downshift point —
+	// the box bounced straight back into the wheelspin it had escaped). Lifting the throttle
+	// re-arms the downshift immediately, so coasting to a stop still steps down normally.
+	bool _gearProven = true;
+
 	public Drivetrain( CarDefinition def )
 	{
 		_def = def;
@@ -106,6 +115,11 @@ public class Drivetrain
 		bool nearLimiter = Rpm >= _def.RedlineRpm * 0.94f && throttle > 0.5f;
 		_limiterHold = nearLimiter ? _limiterHold + dt : MathF.Max( 0f, _limiterHold - dt * 0.5f );
 
+		// Downshift arming: the current gear proves itself the moment ground rpm clears the
+		// downshift threshold; from then on the normal downshift rule applies unchanged.
+		if ( !_gearProven && groundRpm >= _def.ShiftDownRpm )
+			_gearProven = true;
+
 		if ( !ManualMode && Gear > 0 && !IsShifting && _shiftLockout <= 0f )
 		{
 			bool wantUp = groundRpm > _def.ShiftUpRpm;
@@ -114,8 +128,8 @@ public class Drivetrain
 			{
 				// Escape guard: the next gear only needs to be VIABLE, not already above the
 				// downshift point — a spinning launch hooks up instantly on the taller gear and
-				// climbs fast (measured ~940 rpm/s in 2nd at full throttle), so a half-ShiftDown
-				// floor plus the extended lockout below bridges the recovery without hunting.
+				// recovers under the downshift-arming hysteresis (which holds the box in the new
+				// gear through the sub-ShiftDownRpm climb no matter how long it takes).
 				float nextRatio = _def.GearRatios[Gear] * _def.FinalDrive; // Gear is 1-based → [Gear] = next gear up
 				float postShiftGroundRpm = MathF.Abs( groundWheelSpeed * nextRatio ) * 60f / MathF.Tau;
 				wantUp = escape = postShiftGroundRpm >= _def.ShiftDownRpm * 0.5f;
@@ -125,17 +139,18 @@ public class Drivetrain
 			{
 				Gear++;
 				_shiftTimer = 0.15f;
-				// Escape shifts get a longer post-shift hold: ground rpm in the new gear may start
-				// below ShiftDownRpm and needs time to climb past it, or the box would downshift
-				// straight back into the wheelspin that caused the escape (the 1-2-1-2 hunt).
+				// Escape shifts keep a longer settle hold; the arming hysteresis above is the real
+				// anti-hunt guard (a fixed timer alone measurably expired mid-recovery).
 				_shiftLockout = escape ? 1.5f : 0.8f;
 				_limiterHold = 0f;
+				_gearProven = false; // entered by upshift → must prove itself before downshifting under power
 			}
-			else if ( groundRpm < _def.ShiftDownRpm && Gear > 1 )
+			else if ( groundRpm < _def.ShiftDownRpm && Gear > 1 && (_gearProven || throttle < 0.5f) )
 			{
 				Gear--;
 				_shiftTimer = 0.12f;
 				_shiftLockout = 0.8f;
+				_gearProven = true; // entered downward — ground rpm is higher here by ratio; nothing to prove
 			}
 		}
 
@@ -143,8 +158,8 @@ public class Drivetrain
 		return drivenWheelCount > 0 ? torqueOut / drivenWheelCount : 0f;
 	}
 
-	public void EngageReverse() { Gear = -1; _shiftTimer = 0f; }
-	public void EngageForward() { if ( Gear <= 0 ) { Gear = 1; _shiftTimer = 0f; } }
+	public void EngageReverse() { Gear = -1; _shiftTimer = 0f; _gearProven = true; }
+	public void EngageForward() { if ( Gear <= 0 ) { Gear = 1; _shiftTimer = 0f; _gearProven = true; } }
 
 	// ── sequential MANUAL shift (feature 2026-07-15) ──
 	// Gated on IsShifting only (the 0.15 s torque-cut window), NOT on _shiftLockout — the 0.8 s
@@ -161,6 +176,7 @@ public class Drivetrain
 		Gear++;
 		_shiftTimer = 0.15f;
 		_shiftLockout = 0.8f;
+		_gearProven = true; // player-commanded — the auto arming rule never second-guesses manual shifts
 		return true;
 	}
 
@@ -176,6 +192,7 @@ public class Drivetrain
 		Gear--;
 		_shiftTimer = 0.12f;
 		_shiftLockout = 0.8f;
+		_gearProven = true; // player-commanded — the auto arming rule never second-guesses manual shifts
 		return true;
 	}
 
