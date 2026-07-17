@@ -96,31 +96,39 @@ public class Drivetrain
 
 		// Limiter-camp escape: the upshift decision reads GROUND-speed rpm (anti-hunt — see the
 		// header comment) but the engine + rev limiter run on WHEEL-implied rpm, and wheelspin
-		// separates the two. With traction control off, a hard launch inflates
-		// engine rpm onto the limiter while groundRpm is still below ShiftUpRpm — the box then
-		// bounces on the limiter until ground speed catches up (worst on the hatch: redline 6300
-		// is only ~9% over its 5800 shift point, less than its launch slip). Track sustained
-		// near-redline running under power; after a short hold, allow the upshift early. The
-		// post-shift groundRpm guard preserves the original anti-hunt property: never escape into
-		// a gear the ground speed would immediately downshift back out of.
-		bool nearLimiter = Rpm >= _def.RedlineRpm * 0.98f && throttle > 0.5f;
-		_limiterHold = nearLimiter ? _limiterHold + dt : 0f;
+		// separates the two. With traction control off, a hard launch inflates engine rpm onto the
+		// limiter while groundRpm is still below ShiftUpRpm — the box then bounces on the limiter
+		// until ground speed catches up (measured on the hatch: ~3.4 s pinned 5945–6300 in 1st
+		// while groundRpm crawled 560→5730). The limiter cut decelerates a spinning wheel within
+		// substeps, so the bounce dips a few percent below redline many times a second — the
+		// near-limiter window is therefore WIDE (0.94) and the hold DECAYS on dips instead of
+		// resetting, or the oscillation zeroes the timer forever and the escape never fires.
+		bool nearLimiter = Rpm >= _def.RedlineRpm * 0.94f && throttle > 0.5f;
+		_limiterHold = nearLimiter ? _limiterHold + dt : MathF.Max( 0f, _limiterHold - dt * 0.5f );
 
 		if ( !ManualMode && Gear > 0 && !IsShifting && _shiftLockout <= 0f )
 		{
 			bool wantUp = groundRpm > _def.ShiftUpRpm;
-			if ( !wantUp && _limiterHold > 0.2f && Gear < _def.GearRatios.Length )
+			bool escape = false;
+			if ( !wantUp && _limiterHold > 0.25f && Gear < _def.GearRatios.Length )
 			{
+				// Escape guard: the next gear only needs to be VIABLE, not already above the
+				// downshift point — a spinning launch hooks up instantly on the taller gear and
+				// climbs fast (measured ~940 rpm/s in 2nd at full throttle), so a half-ShiftDown
+				// floor plus the extended lockout below bridges the recovery without hunting.
 				float nextRatio = _def.GearRatios[Gear] * _def.FinalDrive; // Gear is 1-based → [Gear] = next gear up
 				float postShiftGroundRpm = MathF.Abs( groundWheelSpeed * nextRatio ) * 60f / MathF.Tau;
-				wantUp = postShiftGroundRpm >= _def.ShiftDownRpm * 1.15f;
+				wantUp = escape = postShiftGroundRpm >= _def.ShiftDownRpm * 0.5f;
 			}
 
 			if ( wantUp && Gear < _def.GearRatios.Length )
 			{
 				Gear++;
 				_shiftTimer = 0.15f;
-				_shiftLockout = 0.8f;
+				// Escape shifts get a longer post-shift hold: ground rpm in the new gear may start
+				// below ShiftDownRpm and needs time to climb past it, or the box would downshift
+				// straight back into the wheelspin that caused the escape (the 1-2-1-2 hunt).
+				_shiftLockout = escape ? 1.5f : 0.8f;
 				_limiterHold = 0f;
 			}
 			else if ( groundRpm < _def.ShiftDownRpm && Gear > 1 )
