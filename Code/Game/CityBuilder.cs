@@ -204,10 +204,14 @@ public static class CityBuilder
 			Block( new Vector3( 0f, offset, 0.01f ) * M, new Vector3( Total, RoadWidth, 0.02f ), Asphalt, collide: false, name: "Road EW" );
 		}
 
-		// dashed center line on the two main avenues through the origin
+		// dashed center line on the two main avenues through the origin. Dashes that would fall
+		// under a crosswalk band are skipped, so a lane line terminates before each crossing instead
+		// of overprinting the zebra stripes.
 		for ( int i = 0; i < 46; i++ )
 		{
 			float t = Origin + 4f + i * (Total / 46f);
+			if ( NearCrosswalkBand( t ) )
+				continue;
 			Block( new Vector3( t, 0f, 0.02f ) * M, new Vector3( 2.2f, 0.25f, 0.02f ), new Color( 0.9f, 0.85f, 0.55f ), collide: false, name: "Lane" );
 			Block( new Vector3( 0f, t, 0.02f ) * M, new Vector3( 0.25f, 2.2f, 0.02f ), new Color( 0.9f, 0.85f, 0.55f ), collide: false, name: "Lane" );
 		}
@@ -225,7 +229,10 @@ public static class CityBuilder
 		float edge = -Origin + RoadWidth * 0.5f + 2f; // just outside the outermost road
 		var wall = new Color( 0.52f, 0.52f, 0.55f );
 		var cap = new Color( 0.40f, 0.40f, 0.44f );    // contrasting coping so the wall reads
-		float len = Total + WallThick * 2f;
+		// Each wall runs the FULL outer span (2·edge) so the four walls OVERLAP at the corners,
+		// leaving no open corner notch for a car to slip through. (Was Total + 2·thick, which fell
+		// short because the walls sit at ±edge, ~7 m outside ±Total/2 — the corners were left open.)
+		float len = 2f * edge + WallThick;
 
 		foreach ( var (pos, size, capPos, capSize, nm) in new[]
 		{
@@ -396,11 +403,17 @@ public static class CityBuilder
 			Tree( new Vector2( tx, ty ) );
 		}
 
-		// drivable diagonal shortcut path
+		// drivable diagonal path. Length is derived so the 45°-rotated strip — INCLUDING its width —
+		// stays a curb margin inside the block, so its pointed corners terminate cleanly on the grass
+		// instead of poking over the road edge. (Was a fixed BlockSize·1.3, whose corners overran the
+		// curb.) A 45° rectangle reaches (halfLen + halfWidth)/√2 from centre along each axis; keep
+		// that within BlockSize/2 − curbMargin.
 		if ( (bx + by) % 2 == 1 )
 		{
+			const float pathWidth = 4.5f, curbMargin = 1f;
+			float pathLen = ((BlockSize * 0.5f - curbMargin) * MathF.Sqrt( 2f ) - pathWidth * 0.5f) * 2f;
 			var go = Block( new Vector3( min.x + BlockSize * 0.5f, min.y + BlockSize * 0.5f, 0.015f ) * M,
-				new Vector3( BlockSize * 1.3f, 4.5f, 0.02f ), ParkPath, collide: false, name: "Path" );
+				new Vector3( pathLen, pathWidth, 0.02f ), ParkPath, collide: false, name: "Path" );
 			go.WorldRotation = Rotation.FromYaw( 45f );
 		}
 	}
@@ -437,16 +450,47 @@ public static class CityBuilder
 
 	static readonly Color CrosswalkPaint = new( 0.88f, 0.88f, 0.84f );
 
-	// Zebra crossings on the two main avenues (through the origin), at every cross-street.
-	// The player is on these avenues most, so the paint reads constantly.
+	const float CrosswalkDepth = 3f;    // along-travel depth of a crossing band (m)
+	const float LaneDashHalfLen = 1.1f; // half the length of a centre-line dash (m)
+	// A crossing sits at the MOUTH of a junction — its stop line, pulled clear of the junction box —
+	// not dead-centre in it. Offset from the cross-road centreline by half the road width plus half
+	// the band depth, so the band's inner edge lands right at the junction edge.
+	const float CrosswalkApproachOffset = RoadWidth * 0.5f + CrosswalkDepth * 0.5f; // 6.5 m
+
+	// Zebra crossings on the two main avenues (through the origin). At each cross-street the crossing
+	// is painted on BOTH approaches (the two stop lines framing the junction) instead of a single band
+	// dumped in the junction centre — so the stripes sit at the intersection edges, clear of the
+	// cross-traffic box and of the other avenue's crossing. The player is on these avenues most, so
+	// the paint reads constantly.
 	static void BuildCrosswalks()
 	{
+		float limit = Total * 0.5f - CrosswalkDepth * 0.5f; // keep bands on the paved avenue
 		for ( int i = 0; i <= GridBlocks; i++ )
 		{
 			float cross = Origin + i * Cell + RoadWidth * 0.5f; // a cross-road centreline
-			Zebra( new Vector2( 0f, cross ), acrossX: true );   // across the NS avenue (x=0)
-			Zebra( new Vector2( cross, 0f ), acrossX: false );  // across the EW avenue (y=0)
+			foreach ( float c in new[] { cross - CrosswalkApproachOffset, cross + CrosswalkApproachOffset } )
+			{
+				if ( MathF.Abs( c ) > limit )
+					continue;
+				Zebra( new Vector2( 0f, c ), acrossX: true );   // across the NS avenue (x=0)
+				Zebra( new Vector2( c, 0f ), acrossX: false );  // across the EW avenue (y=0)
+			}
 		}
+	}
+
+	// True if avenue coordinate t lies under (or right up against) a crosswalk band — used to gap the
+	// centre-line dashes so a lane line stops at a crossing rather than overprinting it. Symmetric in
+	// the two avenues, so one test serves both.
+	static bool NearCrosswalkBand( float t )
+	{
+		const float clear = CrosswalkDepth * 0.5f + LaneDashHalfLen;
+		for ( int i = 0; i <= GridBlocks; i++ )
+		{
+			float cross = Origin + i * Cell + RoadWidth * 0.5f;
+			if ( MathF.Abs( t - (cross - CrosswalkApproachOffset) ) < clear ) return true;
+			if ( MathF.Abs( t - (cross + CrosswalkApproachOffset) ) < clear ) return true;
+		}
+		return false;
 	}
 
 	// Five stripes over a ~3 m-deep crossing spanning most of the 10 m road width. acrossX =
@@ -454,7 +498,7 @@ public static class CityBuilder
 	static void Zebra( Vector2 at, bool acrossX )
 	{
 		const int n = 5;
-		const float span = 8f, depth = 3f, sw = depth / n * 0.55f; // stripe width
+		const float span = 8f, depth = CrosswalkDepth, sw = depth / n * 0.55f; // stripe width
 		for ( int s = 0; s < n; s++ )
 		{
 			float t = -depth * 0.5f + (s + 0.5f) / n * depth;
@@ -469,14 +513,19 @@ public static class CityBuilder
 	// out over the road well above car height and are visual-only.
 	static void BuildStreetlights()
 	{
-		float edge = RoadWidth * 0.5f + 1f; // 1 m onto the sidewalk from the road edge
+		// Poles sit 3 m back from the road edge (was 1 m). At 1 m the poles stood right at the edge of
+		// the 10 m roadway, so a wide vehicle using the full lane clipped them at speed like invisible
+		// walls; 3 m clears the widest car with margin even when it hugs the curb. The arm reaches back
+		// over the roadway so the lamp head still overhangs the lane.
+		float edge = RoadWidth * 0.5f + 3f;
+		float arm = (edge - RoadWidth * 0.5f) + 1.4f; // lamp head hangs ~1.4 m inside the road edge, over the lane
 		for ( int k = 0; k < GridBlocks; k++ )
 		{
 			float c = Origin + RoadWidth + k * Cell + BlockSize * 0.5f; // ~each block centre
-			Streetlight( new Vector2( edge, c ), new Vector2( -2.4f, 0f ) );  // NS avenue, east side
-			Streetlight( new Vector2( -edge, c ), new Vector2( 2.4f, 0f ) );  // NS avenue, west side
-			Streetlight( new Vector2( c, edge ), new Vector2( 0f, -2.4f ) );  // EW avenue, north side
-			Streetlight( new Vector2( c, -edge ), new Vector2( 0f, 2.4f ) );  // EW avenue, south side
+			Streetlight( new Vector2( edge, c ), new Vector2( -arm, 0f ) );  // NS avenue, east side
+			Streetlight( new Vector2( -edge, c ), new Vector2( arm, 0f ) );  // NS avenue, west side
+			Streetlight( new Vector2( c, edge ), new Vector2( 0f, -arm ) );  // EW avenue, north side
+			Streetlight( new Vector2( c, -edge ), new Vector2( 0f, arm ) );  // EW avenue, south side
 		}
 	}
 
