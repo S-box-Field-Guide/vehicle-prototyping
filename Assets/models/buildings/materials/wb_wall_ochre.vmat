@@ -1,0 +1,12 @@
+// Imported building asset (self-contained in vehicle_prototyping)
+
+Layer0
+{
+	shader "shaders/complex.shader"
+
+	TextureColor "models/buildings/materials/white.png"
+	g_vColorTint "[0.7200 0.5200 0.2700 0.0000]"
+	g_flModelTintAmount "1.000"
+	TextureRoughness "[1.0000 1.0000 1.0000 1.0000]"
+	g_flMetalness "0.000"
+}

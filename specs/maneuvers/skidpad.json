@@ -1,0 +1,53 @@
+{
+  "bands": "handling-targets v1",
+  "suite": [
+    {
+      "maneuver": "skidpad",
+      "car": "hatch",
+      "station": "skidpad",
+      "params": { "radiusM": 20.0, "laps": 2, "maxRunS": 40.0 },
+      "asserts": [
+        { "metric": "lateralGAvg", "op": "between", "value": [0.80, 0.90], "note": "handling-targets v1 Hatch Skidpad lateral g @ 20 m" },
+        { "metric": "yawRateAvgDeg", "op": "between", "value": [5.0, 60.0], "note": "steady-state yaw stability sanity (no specific handling-targets band)" },
+        { "metric": "spunOut", "op": "==", "value": false, "note": "pass shape: no spin-out" },
+        { "metric": "flips", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" }
+      ]
+    },
+    {
+      "maneuver": "skidpad",
+      "car": "coupe",
+      "station": "skidpad",
+      "params": { "radiusM": 20.0, "laps": 2, "maxRunS": 40.0 },
+      "asserts": [
+        { "metric": "lateralGAvg", "op": "between", "value": [0.95, 1.05], "note": "handling-targets v1 Coupe Skidpad lateral g @ 20 m (performance tires)" },
+        { "metric": "yawRateAvgDeg", "op": "between", "value": [5.0, 60.0], "note": "steady-state yaw stability sanity (no specific handling-targets band)" },
+        { "metric": "spunOut", "op": "==", "value": false, "note": "pass shape: no spin-out" },
+        { "metric": "flips", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" }
+      ]
+    },
+    {
+      "maneuver": "skidpad",
+      "car": "kart",
+      "station": "skidpad",
+      "params": { "radiusM": 20.0, "laps": 2, "maxRunS": 40.0 },
+      "asserts": [
+        { "metric": "lateralGAvg", "op": "between", "value": [1.00, 1.20], "note": "handling-targets v1 Kart Skidpad lateral g @ 20 m (low CoM/light, tamed for catchability)" },
+        { "metric": "yawRateAvgDeg", "op": "between", "value": [5.0, 90.0], "note": "steady-state yaw stability sanity (kart's tiny wheelbase yaws faster; no specific handling-targets band)" },
+        { "metric": "spunOut", "op": "==", "value": false, "note": "pass shape: no spin-out" },
+        { "metric": "flips", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" }
+      ]
+    },
+    {
+      "maneuver": "skidpad",
+      "car": "pickup",
+      "station": "skidpad",
+      "params": { "radiusM": 20.0, "laps": 2, "maxRunS": 40.0 },
+      "asserts": [
+        { "metric": "lateralGAvg", "op": "between", "value": [0.70, 0.80], "note": "handling-targets v1 Pickup Skidpad lateral g @ 20 m (AT tires, higher CoM, load sensitivity)" },
+        { "metric": "yawRateAvgDeg", "op": "between", "value": [5.0, 60.0], "note": "steady-state yaw stability sanity (no specific handling-targets band)" },
+        { "metric": "spunOut", "op": "==", "value": false, "note": "pass shape: no spin-out" },
+        { "metric": "flips", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" }
+      ]
+    }
+  ]
+}

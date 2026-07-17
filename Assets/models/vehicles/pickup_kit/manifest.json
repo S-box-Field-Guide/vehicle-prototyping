@@ -1,0 +1,777 @@
+{
+  "schema": "vp.partkit/3",
+  "generator": "tools/gen_vehicle.py",
+  "kit": "pickup_kit",
+  "spec_m": {
+    "length": 5.4,
+    "width": 2.0,
+    "height": 1.9,
+    "wheelbase": 3.4,
+    "track": 1.7,
+    "wheel_radius": 0.35,
+    "wheel_width": 0.28,
+    "body_color": "body_red"
+  },
+  "units": "metres (multiply by 39.37 for s&box units at the engine boundary)",
+  "frames": {
+    "authoring": "+X forward, +Y left, +Z up (Blender)",
+    "chassis_local": "+X right, +Y FRONT, +Z up (nose points local +Y; -90 deg yaw faces root +X) \u2014 EMPIRICALLY PROVEN 2026-07-11",
+    "author_to_local": "(mx,my,mz) = (-bY, +bX, bZ)",
+    "obj_import": "model = (objZ, objX, objY) \u2014 plain Y-up->Z-up cyclic permutation, no sign flips"
+  },
+  "material_route": "per-part usemtl -> shared flat vmats (white.png + g_vColorTint)",
+  "collision": "render-only vmdls; the assembler attaches code-side BoxColliders per part",
+  "mass_fraction_note": "suggestion only; the assembler assigns absolute masses from CarDefinition total",
+  "total_tris": 5900,
+  "parts": [
+    {
+      "part": "cab",
+      "obj": "cab.obj",
+      "vmdl": "models/vehicles/pickup_kit/cab.vmdl",
+      "kind": "chassis",
+      "pivot_semantics": "footprint-centre@ground",
+      "rotation_axis_local": null,
+      "dims_m": [
+        1.975,
+        5.15,
+        1.7244
+      ],
+      "local_bounds_min_m": [
+        -0.9875,
+        -2.5,
+        0.1756
+      ],
+      "local_bounds_max_m": [
+        0.9875,
+        2.65,
+        1.9
+      ],
+      "attach_local_m": [
+        -0.0,
+        0.0,
+        0.0
+      ],
+      "attach_author_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "mass_fraction": 0.52,
+      "tris": 1284,
+      "submesh_index_counts": [
+        3336,
+        324,
+        72,
+        36,
+        84
+      ],
+      "dent_impulse": 2600.0,
+      "loosen_impulse": 6500.0,
+      "detach_impulse": 1000000000.0,
+      "stiffness": 3e-05,
+      "max_crush_m": 0.3,
+      "zone": "cabin"
+    },
+    {
+      "part": "wheel_fl",
+      "obj": "wheel.obj",
+      "vmdl": "models/vehicles/pickup_kit/wheel.vmdl",
+      "kind": "wheel",
+      "pivot_semantics": "hub-centre",
+      "rotation_axis_local": "X",
+      "dims_m": [
+        0.32,
+        0.7,
+        0.7
+      ],
+      "local_bounds_min_m": [
+        -0.16,
+        -0.35,
+        -0.35
+      ],
+      "local_bounds_max_m": [
+        0.16,
+        0.35,
+        0.35
+      ],
+      "attach_local_m": [
+        -0.85,
+        1.7,
+        0.35
+      ],
+      "attach_author_m": [
+        1.7,
+        0.85,
+        0.35
+      ],
+      "mass_fraction": 0.04,
+      "tris": 672,
+      "submesh_index_counts": [
+        1212,
+        804
+      ],
+      "steer": true,
+      "mirror": false,
+      "dent_impulse": 1000000000.0,
+      "loosen_impulse": 1000000000.0,
+      "detach_impulse": 1000000000.0,
+      "stiffness": 0.0,
+      "max_crush_m": 0.0,
+      "zone": "wheel"
+    },
+    {
+      "part": "wheel_fr",
+      "obj": "wheel.obj",
+      "vmdl": "models/vehicles/pickup_kit/wheel.vmdl",
+      "kind": "wheel",
+      "pivot_semantics": "hub-centre",
+      "rotation_axis_local": "X",
+      "dims_m": [
+        0.32,
+        0.7,
+        0.7
+      ],
+      "local_bounds_min_m": [
+        -0.16,
+        -0.35,
+        -0.35
+      ],
+      "local_bounds_max_m": [
+        0.16,
+        0.35,
+        0.35
+      ],
+      "attach_local_m": [
+        0.85,
+        1.7,
+        0.35
+      ],
+      "attach_author_m": [
+        1.7,
+        -0.85,
+        0.35
+      ],
+      "mass_fraction": 0.04,
+      "tris": 672,
+      "submesh_index_counts": [
+        1212,
+        804
+      ],
+      "steer": true,
+      "mirror": true,
+      "dent_impulse": 1000000000.0,
+      "loosen_impulse": 1000000000.0,
+      "detach_impulse": 1000000000.0,
+      "stiffness": 0.0,
+      "max_crush_m": 0.0,
+      "zone": "wheel"
+    },
+    {
+      "part": "wheel_rl",
+      "obj": "wheel.obj",
+      "vmdl": "models/vehicles/pickup_kit/wheel.vmdl",
+      "kind": "wheel",
+      "pivot_semantics": "hub-centre",
+      "rotation_axis_local": "X",
+      "dims_m": [
+        0.32,
+        0.7,
+        0.7
+      ],
+      "local_bounds_min_m": [
+        -0.16,
+        -0.35,
+        -0.35
+      ],
+      "local_bounds_max_m": [
+        0.16,
+        0.35,
+        0.35
+      ],
+      "attach_local_m": [
+        -0.85,
+        -1.7,
+        0.35
+      ],
+      "attach_author_m": [
+        -1.7,
+        0.85,
+        0.35
+      ],
+      "mass_fraction": 0.04,
+      "tris": 672,
+      "submesh_index_counts": [
+        1212,
+        804
+      ],
+      "steer": false,
+      "mirror": false,
+      "dent_impulse": 1000000000.0,
+      "loosen_impulse": 1000000000.0,
+      "detach_impulse": 1000000000.0,
+      "stiffness": 0.0,
+      "max_crush_m": 0.0,
+      "zone": "wheel"
+    },
+    {
+      "part": "wheel_rr",
+      "obj": "wheel.obj",
+      "vmdl": "models/vehicles/pickup_kit/wheel.vmdl",
+      "kind": "wheel",
+      "pivot_semantics": "hub-centre",
+      "rotation_axis_local": "X",
+      "dims_m": [
+        0.32,
+        0.7,
+        0.7
+      ],
+      "local_bounds_min_m": [
+        -0.16,
+        -0.35,
+        -0.35
+      ],
+      "local_bounds_max_m": [
+        0.16,
+        0.35,
+        0.35
+      ],
+      "attach_local_m": [
+        0.85,
+        -1.7,
+        0.35
+      ],
+      "attach_author_m": [
+        -1.7,
+        -0.85,
+        0.35
+      ],
+      "mass_fraction": 0.04,
+      "tris": 672,
+      "submesh_index_counts": [
+        1212,
+        804
+      ],
+      "steer": false,
+      "mirror": true,
+      "dent_impulse": 1000000000.0,
+      "loosen_impulse": 1000000000.0,
+      "detach_impulse": 1000000000.0,
+      "stiffness": 0.0,
+      "max_crush_m": 0.0,
+      "zone": "wheel"
+    },
+    {
+      "part": "door_l",
+      "obj": "door_l.obj",
+      "vmdl": "models/vehicles/pickup_kit/door_l.vmdl",
+      "kind": "door",
+      "pivot_semantics": "front-hinge-line",
+      "rotation_axis_local": "Z",
+      "dims_m": [
+        0.1975,
+        1.22,
+        1.29
+      ],
+      "local_bounds_min_m": [
+        -0.045,
+        -1.23,
+        -0.37
+      ],
+      "local_bounds_max_m": [
+        0.1525,
+        -0.01,
+        0.92
+      ],
+      "attach_local_m": [
+        -0.92,
+        0.8,
+        0.8
+      ],
+      "attach_author_m": [
+        0.8,
+        0.92,
+        0.8
+      ],
+      "mass_fraction": 0.025,
+      "tris": 144,
+      "submesh_index_counts": [
+        324,
+        36,
+        36,
+        36
+      ],
+      "open_sign": 1,
+      "dent_impulse": 1500.0,
+      "loosen_impulse": 3000.0,
+      "detach_impulse": 6750.0,
+      "stiffness": 5e-05,
+      "max_crush_m": 0.0592,
+      "zone": "door"
+    },
+    {
+      "part": "door_r",
+      "obj": "door_r.obj",
+      "vmdl": "models/vehicles/pickup_kit/door_r.vmdl",
+      "kind": "door",
+      "pivot_semantics": "front-hinge-line",
+      "rotation_axis_local": "Z",
+      "dims_m": [
+        0.1975,
+        1.22,
+        1.29
+      ],
+      "local_bounds_min_m": [
+        -0.1525,
+        -1.23,
+        -0.37
+      ],
+      "local_bounds_max_m": [
+        0.045,
+        -0.01,
+        0.92
+      ],
+      "attach_local_m": [
+        0.92,
+        0.8,
+        0.8
+      ],
+      "attach_author_m": [
+        0.8,
+        -0.92,
+        0.8
+      ],
+      "mass_fraction": 0.025,
+      "tris": 144,
+      "submesh_index_counts": [
+        324,
+        36,
+        36,
+        36
+      ],
+      "open_sign": -1,
+      "dent_impulse": 1500.0,
+      "loosen_impulse": 3000.0,
+      "detach_impulse": 6750.0,
+      "stiffness": 5e-05,
+      "max_crush_m": 0.0592,
+      "zone": "door"
+    },
+    {
+      "part": "hood",
+      "obj": "hood.obj",
+      "vmdl": "models/vehicles/pickup_kit/hood.vmdl",
+      "kind": "hood",
+      "pivot_semantics": "rear-hinge-line",
+      "rotation_axis_local": "X",
+      "dims_m": [
+        1.4,
+        1.44,
+        0.11
+      ],
+      "local_bounds_min_m": [
+        -0.7,
+        0.0,
+        -0.05
+      ],
+      "local_bounds_max_m": [
+        0.7,
+        1.44,
+        0.06
+      ],
+      "attach_local_m": [
+        -0.0,
+        1.05,
+        1.08
+      ],
+      "attach_author_m": [
+        1.05,
+        0.0,
+        1.08
+      ],
+      "mass_fraction": 0.03,
+      "tris": 216,
+      "submesh_index_counts": [
+        648
+      ],
+      "open_sign": -1,
+      "dent_impulse": 1100.0,
+      "loosen_impulse": 2640.0,
+      "detach_impulse": 4400.0,
+      "stiffness": 7e-05,
+      "max_crush_m": 0.05,
+      "zone": "hood"
+    },
+    {
+      "part": "bed",
+      "obj": "bed.obj",
+      "vmdl": "models/vehicles/pickup_kit/bed.vmdl",
+      "kind": "bed",
+      "pivot_semantics": "bed-front-frame-mount",
+      "rotation_axis_local": null,
+      "dims_m": [
+        1.975,
+        1.89,
+        0.9244
+      ],
+      "local_bounds_min_m": [
+        -0.9875,
+        -1.87,
+        -0.2844
+      ],
+      "local_bounds_max_m": [
+        0.9875,
+        0.02,
+        0.64
+      ],
+      "attach_local_m": [
+        -0.0,
+        -0.7,
+        0.46
+      ],
+      "attach_author_m": [
+        -0.7,
+        0.0,
+        0.46
+      ],
+      "mass_fraction": 0.16,
+      "tris": 716,
+      "submesh_index_counts": [
+        1860,
+        216,
+        72
+      ],
+      "mount_normal": "+Z",
+      "dent_impulse": 2200.0,
+      "loosen_impulse": 4840.0,
+      "detach_impulse": 13200.0,
+      "stiffness": 3.5e-05,
+      "max_crush_m": 0.1479,
+      "zone": "rear"
+    },
+    {
+      "part": "tailgate",
+      "obj": "tailgate.obj",
+      "vmdl": "models/vehicles/pickup_kit/tailgate.vmdl",
+      "kind": "tailgate",
+      "pivot_semantics": "bottom-hinge-line",
+      "rotation_axis_local": "X",
+      "dims_m": [
+        1.58,
+        0.1275,
+        0.54
+      ],
+      "local_bounds_min_m": [
+        -0.79,
+        -0.0825,
+        0.01
+      ],
+      "local_bounds_max_m": [
+        0.79,
+        0.045,
+        0.55
+      ],
+      "attach_local_m": [
+        -0.0,
+        -2.55,
+        0.53
+      ],
+      "attach_author_m": [
+        -2.55,
+        0.0,
+        0.53
+      ],
+      "mass_fraction": 0.02,
+      "tris": 132,
+      "submesh_index_counts": [
+        324,
+        36,
+        36
+      ],
+      "open_sign": -1,
+      "dent_impulse": 1200.0,
+      "loosen_impulse": 2400.0,
+      "detach_impulse": 4200.0,
+      "stiffness": 6.5e-05,
+      "max_crush_m": 0.05,
+      "zone": "rear"
+    },
+    {
+      "part": "bumper_f",
+      "obj": "bumper_f.obj",
+      "vmdl": "models/vehicles/pickup_kit/bumper_f.vmdl",
+      "kind": "bolton",
+      "pivot_semantics": "mount-plane",
+      "rotation_axis_local": null,
+      "dims_m": [
+        1.9,
+        0.2,
+        0.38
+      ],
+      "local_bounds_min_m": [
+        -0.95,
+        0.0,
+        -0.21
+      ],
+      "local_bounds_max_m": [
+        0.95,
+        0.2,
+        0.17
+      ],
+      "attach_local_m": [
+        -0.0,
+        2.5,
+        0.48
+      ],
+      "attach_author_m": [
+        2.5,
+        0.0,
+        0.48
+      ],
+      "mass_fraction": 0.015,
+      "tris": 216,
+      "submesh_index_counts": [
+        324,
+        324
+      ],
+      "mount_normal": "-Y",
+      "dent_impulse": 800.0,
+      "loosen_impulse": 1760.0,
+      "detach_impulse": 2560.0,
+      "stiffness": 8e-05,
+      "max_crush_m": 0.07,
+      "zone": "front"
+    },
+    {
+      "part": "bumper_r",
+      "obj": "bumper_r.obj",
+      "vmdl": "models/vehicles/pickup_kit/bumper_r.vmdl",
+      "kind": "bolton",
+      "pivot_semantics": "mount-plane",
+      "rotation_axis_local": null,
+      "dims_m": [
+        1.95,
+        0.1,
+        0.38
+      ],
+      "local_bounds_min_m": [
+        -0.975,
+        -0.1,
+        -0.19
+      ],
+      "local_bounds_max_m": [
+        0.975,
+        0.0,
+        0.19
+      ],
+      "attach_local_m": [
+        -0.0,
+        -2.6,
+        0.48
+      ],
+      "attach_author_m": [
+        -2.6,
+        0.0,
+        0.48
+      ],
+      "mass_fraction": 0.015,
+      "tris": 132,
+      "submesh_index_counts": [
+        324,
+        72
+      ],
+      "mount_normal": "+Y",
+      "dent_impulse": 800.0,
+      "loosen_impulse": 1760.0,
+      "detach_impulse": 2560.0,
+      "stiffness": 8e-05,
+      "max_crush_m": 0.05,
+      "zone": "rear"
+    },
+    {
+      "part": "grille",
+      "obj": "grille.obj",
+      "vmdl": "models/vehicles/pickup_kit/grille.vmdl",
+      "kind": "fascia",
+      "pivot_semantics": "mount-plane",
+      "rotation_axis_local": null,
+      "dims_m": [
+        1.5,
+        0.09,
+        0.44
+      ],
+      "local_bounds_min_m": [
+        -0.75,
+        0.0,
+        -0.22
+      ],
+      "local_bounds_max_m": [
+        0.75,
+        0.09,
+        0.22
+      ],
+      "attach_local_m": [
+        -0.0,
+        2.56,
+        0.85
+      ],
+      "attach_author_m": [
+        2.56,
+        0.0,
+        0.85
+      ],
+      "mass_fraction": 0.01,
+      "tris": 96,
+      "submesh_index_counts": [
+        36,
+        108,
+        72,
+        72
+      ],
+      "mount_normal": "-Y",
+      "dent_impulse": 750.0,
+      "loosen_impulse": 1500.0,
+      "detach_impulse": 2250.0,
+      "stiffness": 9e-05,
+      "max_crush_m": 0.05,
+      "zone": "front"
+    },
+    {
+      "part": "mirror_l",
+      "obj": "mirror_l.obj",
+      "vmdl": "models/vehicles/pickup_kit/mirror_l.vmdl",
+      "kind": "mirror",
+      "pivot_semantics": "door-mount",
+      "rotation_axis_local": null,
+      "dims_m": [
+        0.25,
+        0.079,
+        0.18
+      ],
+      "local_bounds_min_m": [
+        -0.25,
+        -0.044,
+        -0.015
+      ],
+      "local_bounds_max_m": [
+        0.0,
+        0.035,
+        0.165
+      ],
+      "attach_local_m": [
+        -0.94,
+        0.72,
+        1.18
+      ],
+      "attach_author_m": [
+        0.72,
+        0.94,
+        1.18
+      ],
+      "mass_fraction": 0.002,
+      "tris": 36,
+      "submesh_index_counts": [
+        72,
+        36
+      ],
+      "mount_normal": "-X",
+      "dent_impulse": 250.0,
+      "loosen_impulse": 400.0,
+      "detach_impulse": 550.0,
+      "stiffness": 0.00012,
+      "max_crush_m": 0.05,
+      "zone": "door"
+    },
+    {
+      "part": "mirror_r",
+      "obj": "mirror_r.obj",
+      "vmdl": "models/vehicles/pickup_kit/mirror_r.vmdl",
+      "kind": "mirror",
+      "pivot_semantics": "door-mount",
+      "rotation_axis_local": null,
+      "dims_m": [
+        0.25,
+        0.079,
+        0.18
+      ],
+      "local_bounds_min_m": [
+        0.0,
+        -0.044,
+        -0.015
+      ],
+      "local_bounds_max_m": [
+        0.25,
+        0.035,
+        0.165
+      ],
+      "attach_local_m": [
+        0.94,
+        0.72,
+        1.18
+      ],
+      "attach_author_m": [
+        0.72,
+        -0.94,
+        1.18
+      ],
+      "mass_fraction": 0.002,
+      "tris": 36,
+      "submesh_index_counts": [
+        72,
+        36
+      ],
+      "mount_normal": "+X",
+      "dent_impulse": 250.0,
+      "loosen_impulse": 400.0,
+      "detach_impulse": 550.0,
+      "stiffness": 0.00012,
+      "max_crush_m": 0.05,
+      "zone": "door"
+    },
+    {
+      "part": "rollbar",
+      "obj": "rollbar.obj",
+      "vmdl": "models/vehicles/pickup_kit/rollbar.vmdl",
+      "kind": "accessory",
+      "pivot_semantics": "bed-rail-mount",
+      "rotation_axis_local": null,
+      "dims_m": [
+        1.48,
+        0.125,
+        0.645
+      ],
+      "local_bounds_min_m": [
+        -0.74,
+        -0.04,
+        0.0
+      ],
+      "local_bounds_max_m": [
+        0.74,
+        0.085,
+        0.645
+      ],
+      "attach_local_m": [
+        -0.0,
+        -0.85,
+        1.1
+      ],
+      "attach_author_m": [
+        -0.85,
+        0.0,
+        1.1
+      ],
+      "mass_fraction": 0.01,
+      "tris": 60,
+      "submesh_index_counts": [
+        108,
+        72
+      ],
+      "mount_normal": "+Z",
+      "dent_impulse": 400.0,
+      "loosen_impulse": 720.0,
+      "detach_impulse": 1000.0,
+      "stiffness": 0.0001,
+      "max_crush_m": 0.05,
+      "zone": "rear"
+    }
+  ]
+}

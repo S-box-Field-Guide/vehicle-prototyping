@@ -1,0 +1,546 @@
+{
+  "bands": "sanity-matrix (wide recorders)",
+  "note": "cars x assists SANITY MATRIX (data-gathering, 2026-07-13). 4 cars x Casual(0)/Sport(1)/Sim(2). Bands are deliberately WIDE recorders, not tuning targets -- a PASS means the run completed cleanly (no flip/fall-through, no spin-out where asserted) and the KPI is captured for docs/assist-matrix.md. assist re-applied every tick by the pilot (docs/testing-harness.md 7.1). NOT a hard gate.",
+  "suite": [
+    {
+      "maneuver": "slalom",
+      "car": "hatch",
+      "station": "slalom",
+      "params": {
+        "coneSpacingM": 18.0,
+        "coneCount": 8,
+        "weaveAmpM": 1.0,
+        "cruiseSpeedMs": 16.0,
+        "maxRunS": 30.0,
+        "assist": 0
+      },
+      "asserts": [
+        {
+          "metric": "elapsedS",
+          "op": "between",
+          "value": [
+            0.0,
+            30.0
+          ],
+          "note": "measured slalom completion time; >=30 = DNF (timeout)"
+        },
+        {
+          "metric": "coneStrikes",
+          "op": "between",
+          "value": [
+            0,
+            100
+          ],
+          "note": "cones struck; data cell"
+        },
+        {
+          "metric": "spunOut",
+          "op": "==",
+          "value": false,
+          "note": "pass shape: no spin-out (FAIL = red cell)"
+        },
+        {
+          "metric": "flips",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        }
+      ]
+    },
+    {
+      "maneuver": "slalom",
+      "car": "hatch",
+      "station": "slalom",
+      "params": {
+        "coneSpacingM": 18.0,
+        "coneCount": 8,
+        "weaveAmpM": 1.0,
+        "cruiseSpeedMs": 16.0,
+        "maxRunS": 30.0,
+        "assist": 1
+      },
+      "asserts": [
+        {
+          "metric": "elapsedS",
+          "op": "between",
+          "value": [
+            0.0,
+            30.0
+          ],
+          "note": "measured slalom completion time; >=30 = DNF (timeout)"
+        },
+        {
+          "metric": "coneStrikes",
+          "op": "between",
+          "value": [
+            0,
+            100
+          ],
+          "note": "cones struck; data cell"
+        },
+        {
+          "metric": "spunOut",
+          "op": "==",
+          "value": false,
+          "note": "pass shape: no spin-out (FAIL = red cell)"
+        },
+        {
+          "metric": "flips",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        }
+      ]
+    },
+    {
+      "maneuver": "slalom",
+      "car": "hatch",
+      "station": "slalom",
+      "params": {
+        "coneSpacingM": 18.0,
+        "coneCount": 8,
+        "weaveAmpM": 1.0,
+        "cruiseSpeedMs": 16.0,
+        "maxRunS": 30.0,
+        "assist": 2
+      },
+      "asserts": [
+        {
+          "metric": "elapsedS",
+          "op": "between",
+          "value": [
+            0.0,
+            30.0
+          ],
+          "note": "measured slalom completion time; >=30 = DNF (timeout)"
+        },
+        {
+          "metric": "coneStrikes",
+          "op": "between",
+          "value": [
+            0,
+            100
+          ],
+          "note": "cones struck; data cell"
+        },
+        {
+          "metric": "spunOut",
+          "op": "==",
+          "value": false,
+          "note": "pass shape: no spin-out (FAIL = red cell)"
+        },
+        {
+          "metric": "flips",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        }
+      ]
+    },
+    {
+      "maneuver": "slalom",
+      "car": "coupe",
+      "station": "slalom",
+      "params": {
+        "coneSpacingM": 18.0,
+        "coneCount": 8,
+        "weaveAmpM": 1.0,
+        "cruiseSpeedMs": 20.0,
+        "maxRunS": 30.0,
+        "assist": 0
+      },
+      "asserts": [
+        {
+          "metric": "elapsedS",
+          "op": "between",
+          "value": [
+            0.0,
+            30.0
+          ],
+          "note": "measured slalom completion time; >=30 = DNF (timeout)"
+        },
+        {
+          "metric": "coneStrikes",
+          "op": "between",
+          "value": [
+            0,
+            100
+          ],
+          "note": "cones struck; data cell"
+        },
+        {
+          "metric": "spunOut",
+          "op": "==",
+          "value": false,
+          "note": "pass shape: no spin-out (FAIL = red cell)"
+        },
+        {
+          "metric": "flips",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        }
+      ]
+    },
+    {
+      "maneuver": "slalom",
+      "car": "coupe",
+      "station": "slalom",
+      "params": {
+        "coneSpacingM": 18.0,
+        "coneCount": 8,
+        "weaveAmpM": 1.0,
+        "cruiseSpeedMs": 20.0,
+        "maxRunS": 30.0,
+        "assist": 1
+      },
+      "asserts": [
+        {
+          "metric": "elapsedS",
+          "op": "between",
+          "value": [
+            0.0,
+            30.0
+          ],
+          "note": "measured slalom completion time; >=30 = DNF (timeout)"
+        },
+        {
+          "metric": "coneStrikes",
+          "op": "between",
+          "value": [
+            0,
+            100
+          ],
+          "note": "cones struck; data cell"
+        },
+        {
+          "metric": "spunOut",
+          "op": "==",
+          "value": false,
+          "note": "pass shape: no spin-out (FAIL = red cell)"
+        },
+        {
+          "metric": "flips",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        }
+      ]
+    },
+    {
+      "maneuver": "slalom",
+      "car": "coupe",
+      "station": "slalom",
+      "params": {
+        "coneSpacingM": 18.0,
+        "coneCount": 8,
+        "weaveAmpM": 1.0,
+        "cruiseSpeedMs": 20.0,
+        "maxRunS": 30.0,
+        "assist": 2
+      },
+      "asserts": [
+        {
+          "metric": "elapsedS",
+          "op": "between",
+          "value": [
+            0.0,
+            30.0
+          ],
+          "note": "measured slalom completion time; >=30 = DNF (timeout)"
+        },
+        {
+          "metric": "coneStrikes",
+          "op": "between",
+          "value": [
+            0,
+            100
+          ],
+          "note": "cones struck; data cell"
+        },
+        {
+          "metric": "spunOut",
+          "op": "==",
+          "value": false,
+          "note": "pass shape: no spin-out (FAIL = red cell)"
+        },
+        {
+          "metric": "flips",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        }
+      ]
+    },
+    {
+      "maneuver": "slalom",
+      "car": "kart",
+      "station": "slalom",
+      "params": {
+        "coneSpacingM": 18.0,
+        "coneCount": 8,
+        "weaveAmpM": 1.0,
+        "cruiseSpeedMs": 14.0,
+        "maxRunS": 30.0,
+        "assist": 0
+      },
+      "asserts": [
+        {
+          "metric": "elapsedS",
+          "op": "between",
+          "value": [
+            0.0,
+            30.0
+          ],
+          "note": "measured slalom completion time; >=30 = DNF (timeout)"
+        },
+        {
+          "metric": "coneStrikes",
+          "op": "between",
+          "value": [
+            0,
+            100
+          ],
+          "note": "cones struck; data cell"
+        },
+        {
+          "metric": "spunOut",
+          "op": "==",
+          "value": false,
+          "note": "pass shape: no spin-out (FAIL = red cell)"
+        },
+        {
+          "metric": "flips",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        }
+      ]
+    },
+    {
+      "maneuver": "slalom",
+      "car": "kart",
+      "station": "slalom",
+      "params": {
+        "coneSpacingM": 18.0,
+        "coneCount": 8,
+        "weaveAmpM": 1.0,
+        "cruiseSpeedMs": 14.0,
+        "maxRunS": 30.0,
+        "assist": 1
+      },
+      "asserts": [
+        {
+          "metric": "elapsedS",
+          "op": "between",
+          "value": [
+            0.0,
+            30.0
+          ],
+          "note": "measured slalom completion time; >=30 = DNF (timeout)"
+        },
+        {
+          "metric": "coneStrikes",
+          "op": "between",
+          "value": [
+            0,
+            100
+          ],
+          "note": "cones struck; data cell"
+        },
+        {
+          "metric": "spunOut",
+          "op": "==",
+          "value": false,
+          "note": "pass shape: no spin-out (FAIL = red cell)"
+        },
+        {
+          "metric": "flips",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        }
+      ]
+    },
+    {
+      "maneuver": "slalom",
+      "car": "kart",
+      "station": "slalom",
+      "params": {
+        "coneSpacingM": 18.0,
+        "coneCount": 8,
+        "weaveAmpM": 1.0,
+        "cruiseSpeedMs": 14.0,
+        "maxRunS": 30.0,
+        "assist": 2
+      },
+      "asserts": [
+        {
+          "metric": "elapsedS",
+          "op": "between",
+          "value": [
+            0.0,
+            30.0
+          ],
+          "note": "measured slalom completion time; >=30 = DNF (timeout)"
+        },
+        {
+          "metric": "coneStrikes",
+          "op": "between",
+          "value": [
+            0,
+            100
+          ],
+          "note": "cones struck; data cell"
+        },
+        {
+          "metric": "spunOut",
+          "op": "==",
+          "value": false,
+          "note": "pass shape: no spin-out (FAIL = red cell)"
+        },
+        {
+          "metric": "flips",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        }
+      ]
+    },
+    {
+      "maneuver": "slalom",
+      "car": "pickup",
+      "station": "slalom",
+      "params": {
+        "coneSpacingM": 18.0,
+        "coneCount": 8,
+        "weaveAmpM": 1.0,
+        "cruiseSpeedMs": 15.0,
+        "maxRunS": 30.0,
+        "assist": 0
+      },
+      "asserts": [
+        {
+          "metric": "elapsedS",
+          "op": "between",
+          "value": [
+            0.0,
+            30.0
+          ],
+          "note": "measured slalom completion time; >=30 = DNF (timeout)"
+        },
+        {
+          "metric": "coneStrikes",
+          "op": "between",
+          "value": [
+            0,
+            100
+          ],
+          "note": "cones struck; data cell"
+        },
+        {
+          "metric": "spunOut",
+          "op": "==",
+          "value": false,
+          "note": "pass shape: no spin-out (FAIL = red cell)"
+        },
+        {
+          "metric": "flips",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        }
+      ]
+    },
+    {
+      "maneuver": "slalom",
+      "car": "pickup",
+      "station": "slalom",
+      "params": {
+        "coneSpacingM": 18.0,
+        "coneCount": 8,
+        "weaveAmpM": 1.0,
+        "cruiseSpeedMs": 15.0,
+        "maxRunS": 30.0,
+        "assist": 1
+      },
+      "asserts": [
+        {
+          "metric": "elapsedS",
+          "op": "between",
+          "value": [
+            0.0,
+            30.0
+          ],
+          "note": "measured slalom completion time; >=30 = DNF (timeout)"
+        },
+        {
+          "metric": "coneStrikes",
+          "op": "between",
+          "value": [
+            0,
+            100
+          ],
+          "note": "cones struck; data cell"
+        },
+        {
+          "metric": "spunOut",
+          "op": "==",
+          "value": false,
+          "note": "pass shape: no spin-out (FAIL = red cell)"
+        },
+        {
+          "metric": "flips",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        }
+      ]
+    },
+    {
+      "maneuver": "slalom",
+      "car": "pickup",
+      "station": "slalom",
+      "params": {
+        "coneSpacingM": 18.0,
+        "coneCount": 8,
+        "weaveAmpM": 1.0,
+        "cruiseSpeedMs": 15.0,
+        "maxRunS": 30.0,
+        "assist": 2
+      },
+      "asserts": [
+        {
+          "metric": "elapsedS",
+          "op": "between",
+          "value": [
+            0.0,
+            30.0
+          ],
+          "note": "measured slalom completion time; >=30 = DNF (timeout)"
+        },
+        {
+          "metric": "coneStrikes",
+          "op": "between",
+          "value": [
+            0,
+            100
+          ],
+          "note": "cones struck; data cell"
+        },
+        {
+          "metric": "spunOut",
+          "op": "==",
+          "value": false,
+          "note": "pass shape: no spin-out (FAIL = red cell)"
+        },
+        {
+          "metric": "flips",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        }
+      ]
+    }
+  ]
+}

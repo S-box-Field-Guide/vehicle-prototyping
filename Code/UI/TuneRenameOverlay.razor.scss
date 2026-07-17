@@ -1,0 +1,92 @@
+// Rename-a-saved-tune modal (Task 4). Tokens inlined from _tokens.scss (house convention: panels
+// self-contain literals — @import isn't resolved by the headless build). NO letter-spacing; font-size
+// only on the one title, per the glyph-corruption trap.
+
+TuneRenameOverlay {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	font-family: Poppins, sans-serif;
+
+	.mono { font-family: "Roboto Mono", monospace; }
+
+	// Full-screen dim that captures clicks (a click on the backdrop cancels). pointer-events:all here is
+	// what makes this a real modal — the list underneath can't be clicked through while renaming.
+	.backdrop {
+		position: absolute;
+		inset: 0;
+		background-color: rgba( 6, 7, 9, 0.55 );
+		pointer-events: all;
+	}
+
+	// Centering layer ON TOP of the backdrop. pointer-events:none so a click on empty space falls
+	// through to the backdrop (= cancel); the card re-enables events for itself. Sibling of the backdrop,
+	// so card clicks never bubble to the cancel handler (no StopPropagation needed).
+	.modalwrap {
+		position: absolute;
+		inset: 0;
+		justify-content: center;
+		align-items: center;
+		pointer-events: none;
+	}
+
+	.card {
+		width: 380px;
+		flex-direction: column;
+		gap: 16px;
+		padding: 22px 24px;
+		background-color: rgba( 15, 17, 21, 0.94 );
+		border: 1px solid rgba( 255, 255, 255, 0.10 );
+		border-radius: 18px;
+		box-shadow: 0 20px 60px rgba( 0, 0, 0, 0.6 );
+		pointer-events: all;
+
+		.rhead {
+			flex-direction: row;
+			justify-content: space-between;
+			align-items: baseline;
+
+			.title { font-size: 20px; font-weight: 700; color: #F2F4F7; }
+			.ctx { color: #F2F4F7; }
+		}
+
+		// TextEntry outer box — the engine paints the editable glyph run inside; we own the frame.
+		.renamefield {
+			color: #E8EAED;
+			background-color: rgba( 255, 255, 255, 0.05 );
+			border: 1px solid rgba( 74, 217, 242, 0.35 );
+			border-radius: 10px;
+			padding: 11px 13px;
+			min-height: 44px;
+			align-items: center;
+		}
+
+		.rfoot {
+			flex-direction: row;
+			gap: 10px;
+
+			.btn {
+				flex-grow: 1;
+				justify-content: center;
+				align-items: center;
+				font-weight: 700;
+				border-radius: 10px;
+				padding: 11px 0;
+				cursor: pointer;
+				transition: all 0.12s ease;
+
+				&.ghost {
+					color: #F2F4F7;
+					background-color: rgba( 255, 255, 255, 0.05 );
+					border: 1px solid rgba( 255, 255, 255, 0.07 );
+					&:hover { color: #E8EAED; background-color: rgba( 255, 255, 255, 0.09 ); }
+				}
+				&.primary {
+					color: #0A161A;
+					background-color: #4AD9F2;
+					&:hover { background-color: #58E1F7; }
+				}
+			}
+		}
+	}
+}

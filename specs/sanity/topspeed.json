@@ -1,0 +1,426 @@
+{
+  "bands": "sanity-matrix (wide recorders)",
+  "note": "cars x assists SANITY MATRIX (data-gathering, 2026-07-13). 4 cars x Casual(0)/Sport(1)/Sim(2). Bands are deliberately WIDE recorders, not tuning targets -- a PASS means the run completed cleanly (no flip/fall-through, no spin-out where asserted) and the KPI is captured for docs/assist-matrix.md. assist re-applied every tick by the pilot (docs/testing-harness.md 7.1). NOT a hard gate.",
+  "suite": [
+    {
+      "maneuver": "topspeed",
+      "car": "hatch",
+      "station": "dragstrip",
+      "params": {
+        "maxRunS": 40.0,
+        "assist": 0
+      },
+      "asserts": [
+        {
+          "metric": "maxSpeedMs",
+          "op": "between",
+          "value": [
+            0.0,
+            120.0
+          ],
+          "note": "measured top speed (m/s); data cell"
+        },
+        {
+          "metric": "gearAtVmax",
+          "op": "between",
+          "value": [
+            0,
+            8
+          ],
+          "note": "gear held at vmax; data cell"
+        },
+        {
+          "metric": "flips",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        }
+      ]
+    },
+    {
+      "maneuver": "topspeed",
+      "car": "hatch",
+      "station": "dragstrip",
+      "params": {
+        "maxRunS": 40.0,
+        "assist": 1
+      },
+      "asserts": [
+        {
+          "metric": "maxSpeedMs",
+          "op": "between",
+          "value": [
+            0.0,
+            120.0
+          ],
+          "note": "measured top speed (m/s); data cell"
+        },
+        {
+          "metric": "gearAtVmax",
+          "op": "between",
+          "value": [
+            0,
+            8
+          ],
+          "note": "gear held at vmax; data cell"
+        },
+        {
+          "metric": "flips",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        }
+      ]
+    },
+    {
+      "maneuver": "topspeed",
+      "car": "hatch",
+      "station": "dragstrip",
+      "params": {
+        "maxRunS": 40.0,
+        "assist": 2
+      },
+      "asserts": [
+        {
+          "metric": "maxSpeedMs",
+          "op": "between",
+          "value": [
+            0.0,
+            120.0
+          ],
+          "note": "measured top speed (m/s); data cell"
+        },
+        {
+          "metric": "gearAtVmax",
+          "op": "between",
+          "value": [
+            0,
+            8
+          ],
+          "note": "gear held at vmax; data cell"
+        },
+        {
+          "metric": "flips",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        }
+      ]
+    },
+    {
+      "maneuver": "topspeed",
+      "car": "coupe",
+      "station": "dragstrip",
+      "params": {
+        "maxRunS": 40.0,
+        "assist": 0
+      },
+      "asserts": [
+        {
+          "metric": "maxSpeedMs",
+          "op": "between",
+          "value": [
+            0.0,
+            120.0
+          ],
+          "note": "measured top speed (m/s); data cell"
+        },
+        {
+          "metric": "gearAtVmax",
+          "op": "between",
+          "value": [
+            0,
+            8
+          ],
+          "note": "gear held at vmax; data cell"
+        },
+        {
+          "metric": "flips",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        }
+      ]
+    },
+    {
+      "maneuver": "topspeed",
+      "car": "coupe",
+      "station": "dragstrip",
+      "params": {
+        "maxRunS": 40.0,
+        "assist": 1
+      },
+      "asserts": [
+        {
+          "metric": "maxSpeedMs",
+          "op": "between",
+          "value": [
+            0.0,
+            120.0
+          ],
+          "note": "measured top speed (m/s); data cell"
+        },
+        {
+          "metric": "gearAtVmax",
+          "op": "between",
+          "value": [
+            0,
+            8
+          ],
+          "note": "gear held at vmax; data cell"
+        },
+        {
+          "metric": "flips",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        }
+      ]
+    },
+    {
+      "maneuver": "topspeed",
+      "car": "coupe",
+      "station": "dragstrip",
+      "params": {
+        "maxRunS": 40.0,
+        "assist": 2
+      },
+      "asserts": [
+        {
+          "metric": "maxSpeedMs",
+          "op": "between",
+          "value": [
+            0.0,
+            120.0
+          ],
+          "note": "measured top speed (m/s); data cell"
+        },
+        {
+          "metric": "gearAtVmax",
+          "op": "between",
+          "value": [
+            0,
+            8
+          ],
+          "note": "gear held at vmax; data cell"
+        },
+        {
+          "metric": "flips",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        }
+      ]
+    },
+    {
+      "maneuver": "topspeed",
+      "car": "kart",
+      "station": "dragstrip",
+      "params": {
+        "maxRunS": 40.0,
+        "assist": 0
+      },
+      "asserts": [
+        {
+          "metric": "maxSpeedMs",
+          "op": "between",
+          "value": [
+            0.0,
+            120.0
+          ],
+          "note": "measured top speed (m/s); data cell"
+        },
+        {
+          "metric": "gearAtVmax",
+          "op": "between",
+          "value": [
+            0,
+            8
+          ],
+          "note": "gear held at vmax; data cell"
+        },
+        {
+          "metric": "flips",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        }
+      ]
+    },
+    {
+      "maneuver": "topspeed",
+      "car": "kart",
+      "station": "dragstrip",
+      "params": {
+        "maxRunS": 40.0,
+        "assist": 1
+      },
+      "asserts": [
+        {
+          "metric": "maxSpeedMs",
+          "op": "between",
+          "value": [
+            0.0,
+            120.0
+          ],
+          "note": "measured top speed (m/s); data cell"
+        },
+        {
+          "metric": "gearAtVmax",
+          "op": "between",
+          "value": [
+            0,
+            8
+          ],
+          "note": "gear held at vmax; data cell"
+        },
+        {
+          "metric": "flips",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        }
+      ]
+    },
+    {
+      "maneuver": "topspeed",
+      "car": "kart",
+      "station": "dragstrip",
+      "params": {
+        "maxRunS": 40.0,
+        "assist": 2
+      },
+      "asserts": [
+        {
+          "metric": "maxSpeedMs",
+          "op": "between",
+          "value": [
+            0.0,
+            120.0
+          ],
+          "note": "measured top speed (m/s); data cell"
+        },
+        {
+          "metric": "gearAtVmax",
+          "op": "between",
+          "value": [
+            0,
+            8
+          ],
+          "note": "gear held at vmax; data cell"
+        },
+        {
+          "metric": "flips",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        }
+      ]
+    },
+    {
+      "maneuver": "topspeed",
+      "car": "pickup",
+      "station": "dragstrip",
+      "params": {
+        "maxRunS": 40.0,
+        "assist": 0
+      },
+      "asserts": [
+        {
+          "metric": "maxSpeedMs",
+          "op": "between",
+          "value": [
+            0.0,
+            120.0
+          ],
+          "note": "measured top speed (m/s); data cell"
+        },
+        {
+          "metric": "gearAtVmax",
+          "op": "between",
+          "value": [
+            0,
+            8
+          ],
+          "note": "gear held at vmax; data cell"
+        },
+        {
+          "metric": "flips",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        }
+      ]
+    },
+    {
+      "maneuver": "topspeed",
+      "car": "pickup",
+      "station": "dragstrip",
+      "params": {
+        "maxRunS": 40.0,
+        "assist": 1
+      },
+      "asserts": [
+        {
+          "metric": "maxSpeedMs",
+          "op": "between",
+          "value": [
+            0.0,
+            120.0
+          ],
+          "note": "measured top speed (m/s); data cell"
+        },
+        {
+          "metric": "gearAtVmax",
+          "op": "between",
+          "value": [
+            0,
+            8
+          ],
+          "note": "gear held at vmax; data cell"
+        },
+        {
+          "metric": "flips",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        }
+      ]
+    },
+    {
+      "maneuver": "topspeed",
+      "car": "pickup",
+      "station": "dragstrip",
+      "params": {
+        "maxRunS": 40.0,
+        "assist": 2
+      },
+      "asserts": [
+        {
+          "metric": "maxSpeedMs",
+          "op": "between",
+          "value": [
+            0.0,
+            120.0
+          ],
+          "note": "measured top speed (m/s); data cell"
+        },
+        {
+          "metric": "gearAtVmax",
+          "op": "between",
+          "value": [
+            0,
+            8
+          ],
+          "note": "gear held at vmax; data cell"
+        },
+        {
+          "metric": "flips",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        }
+      ]
+    }
+  ]
+}

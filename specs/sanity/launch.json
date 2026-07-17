@@ -1,0 +1,621 @@
+{
+  "bands": "sanity-matrix (wide recorders)",
+  "note": "cars x assists SANITY MATRIX (data-gathering, 2026-07-13). 4 cars x Casual(0)/Sport(1)/Sim(2). Bands are deliberately WIDE recorders, not tuning targets -- a PASS means the run completed cleanly (no flip/fall-through, no spin-out where asserted) and the KPI is captured for docs/assist-matrix.md. assist re-applied every tick by the pilot (docs/testing-harness.md 7.1). NOT a hard gate.",
+  "suite": [
+    {
+      "maneuver": "launch",
+      "car": "hatch",
+      "station": "dragstrip",
+      "params": {
+        "targetSpeedMs": 27.78,
+        "maxRunS": 20.0,
+        "assist": 0
+      },
+      "asserts": [
+        {
+          "metric": "zeroToHundredS",
+          "op": "between",
+          "value": [
+            0.0,
+            60.0
+          ],
+          "note": "measured 0-100 (kart: 0-50) km/h time; data cell"
+        },
+        {
+          "metric": "wheelspinS",
+          "op": "between",
+          "value": [
+            0.0,
+            60.0
+          ],
+          "note": "measured launch wheelspin duration; the Sport launch-feel signal"
+        },
+        {
+          "metric": "pitchDeg",
+          "op": "between",
+          "value": [
+            0.0,
+            45.0
+          ],
+          "note": "squat sanity; data cell"
+        },
+        {
+          "metric": "flips",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        },
+        {
+          "metric": "fallThroughs",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        }
+      ]
+    },
+    {
+      "maneuver": "launch",
+      "car": "hatch",
+      "station": "dragstrip",
+      "params": {
+        "targetSpeedMs": 27.78,
+        "maxRunS": 20.0,
+        "assist": 1
+      },
+      "asserts": [
+        {
+          "metric": "zeroToHundredS",
+          "op": "between",
+          "value": [
+            0.0,
+            60.0
+          ],
+          "note": "measured 0-100 (kart: 0-50) km/h time; data cell"
+        },
+        {
+          "metric": "wheelspinS",
+          "op": "between",
+          "value": [
+            0.0,
+            60.0
+          ],
+          "note": "measured launch wheelspin duration; the Sport launch-feel signal"
+        },
+        {
+          "metric": "pitchDeg",
+          "op": "between",
+          "value": [
+            0.0,
+            45.0
+          ],
+          "note": "squat sanity; data cell"
+        },
+        {
+          "metric": "flips",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        },
+        {
+          "metric": "fallThroughs",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        }
+      ]
+    },
+    {
+      "maneuver": "launch",
+      "car": "hatch",
+      "station": "dragstrip",
+      "params": {
+        "targetSpeedMs": 27.78,
+        "maxRunS": 20.0,
+        "assist": 2
+      },
+      "asserts": [
+        {
+          "metric": "zeroToHundredS",
+          "op": "between",
+          "value": [
+            0.0,
+            60.0
+          ],
+          "note": "measured 0-100 (kart: 0-50) km/h time; data cell"
+        },
+        {
+          "metric": "wheelspinS",
+          "op": "between",
+          "value": [
+            0.0,
+            60.0
+          ],
+          "note": "measured launch wheelspin duration; the Sport launch-feel signal"
+        },
+        {
+          "metric": "pitchDeg",
+          "op": "between",
+          "value": [
+            0.0,
+            45.0
+          ],
+          "note": "squat sanity; data cell"
+        },
+        {
+          "metric": "flips",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        },
+        {
+          "metric": "fallThroughs",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        }
+      ]
+    },
+    {
+      "maneuver": "launch",
+      "car": "coupe",
+      "station": "dragstrip",
+      "params": {
+        "targetSpeedMs": 27.78,
+        "maxRunS": 20.0,
+        "assist": 0
+      },
+      "asserts": [
+        {
+          "metric": "zeroToHundredS",
+          "op": "between",
+          "value": [
+            0.0,
+            60.0
+          ],
+          "note": "measured 0-100 (kart: 0-50) km/h time; data cell"
+        },
+        {
+          "metric": "wheelspinS",
+          "op": "between",
+          "value": [
+            0.0,
+            60.0
+          ],
+          "note": "measured launch wheelspin duration; the Sport launch-feel signal"
+        },
+        {
+          "metric": "pitchDeg",
+          "op": "between",
+          "value": [
+            0.0,
+            45.0
+          ],
+          "note": "squat sanity; data cell"
+        },
+        {
+          "metric": "flips",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        },
+        {
+          "metric": "fallThroughs",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        }
+      ]
+    },
+    {
+      "maneuver": "launch",
+      "car": "coupe",
+      "station": "dragstrip",
+      "params": {
+        "targetSpeedMs": 27.78,
+        "maxRunS": 20.0,
+        "assist": 1
+      },
+      "asserts": [
+        {
+          "metric": "zeroToHundredS",
+          "op": "between",
+          "value": [
+            0.0,
+            60.0
+          ],
+          "note": "measured 0-100 (kart: 0-50) km/h time; data cell"
+        },
+        {
+          "metric": "wheelspinS",
+          "op": "between",
+          "value": [
+            0.0,
+            60.0
+          ],
+          "note": "measured launch wheelspin duration; the Sport launch-feel signal"
+        },
+        {
+          "metric": "pitchDeg",
+          "op": "between",
+          "value": [
+            0.0,
+            45.0
+          ],
+          "note": "squat sanity; data cell"
+        },
+        {
+          "metric": "flips",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        },
+        {
+          "metric": "fallThroughs",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        }
+      ]
+    },
+    {
+      "maneuver": "launch",
+      "car": "coupe",
+      "station": "dragstrip",
+      "params": {
+        "targetSpeedMs": 27.78,
+        "maxRunS": 20.0,
+        "assist": 2
+      },
+      "asserts": [
+        {
+          "metric": "zeroToHundredS",
+          "op": "between",
+          "value": [
+            0.0,
+            60.0
+          ],
+          "note": "measured 0-100 (kart: 0-50) km/h time; data cell"
+        },
+        {
+          "metric": "wheelspinS",
+          "op": "between",
+          "value": [
+            0.0,
+            60.0
+          ],
+          "note": "measured launch wheelspin duration; the Sport launch-feel signal"
+        },
+        {
+          "metric": "pitchDeg",
+          "op": "between",
+          "value": [
+            0.0,
+            45.0
+          ],
+          "note": "squat sanity; data cell"
+        },
+        {
+          "metric": "flips",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        },
+        {
+          "metric": "fallThroughs",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        }
+      ]
+    },
+    {
+      "maneuver": "launch",
+      "car": "kart",
+      "station": "dragstrip",
+      "params": {
+        "splitSpeedMs": 13.89,
+        "targetSpeedMs": 13.89,
+        "maxRunS": 20.0,
+        "assist": 0
+      },
+      "asserts": [
+        {
+          "metric": "zeroToHundredS",
+          "op": "between",
+          "value": [
+            0.0,
+            60.0
+          ],
+          "note": "measured 0-100 (kart: 0-50) km/h time; data cell"
+        },
+        {
+          "metric": "wheelspinS",
+          "op": "between",
+          "value": [
+            0.0,
+            60.0
+          ],
+          "note": "measured launch wheelspin duration; the Sport launch-feel signal"
+        },
+        {
+          "metric": "pitchDeg",
+          "op": "between",
+          "value": [
+            0.0,
+            45.0
+          ],
+          "note": "squat sanity; data cell"
+        },
+        {
+          "metric": "flips",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        },
+        {
+          "metric": "fallThroughs",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        }
+      ]
+    },
+    {
+      "maneuver": "launch",
+      "car": "kart",
+      "station": "dragstrip",
+      "params": {
+        "splitSpeedMs": 13.89,
+        "targetSpeedMs": 13.89,
+        "maxRunS": 20.0,
+        "assist": 1
+      },
+      "asserts": [
+        {
+          "metric": "zeroToHundredS",
+          "op": "between",
+          "value": [
+            0.0,
+            60.0
+          ],
+          "note": "measured 0-100 (kart: 0-50) km/h time; data cell"
+        },
+        {
+          "metric": "wheelspinS",
+          "op": "between",
+          "value": [
+            0.0,
+            60.0
+          ],
+          "note": "measured launch wheelspin duration; the Sport launch-feel signal"
+        },
+        {
+          "metric": "pitchDeg",
+          "op": "between",
+          "value": [
+            0.0,
+            45.0
+          ],
+          "note": "squat sanity; data cell"
+        },
+        {
+          "metric": "flips",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        },
+        {
+          "metric": "fallThroughs",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        }
+      ]
+    },
+    {
+      "maneuver": "launch",
+      "car": "kart",
+      "station": "dragstrip",
+      "params": {
+        "splitSpeedMs": 13.89,
+        "targetSpeedMs": 13.89,
+        "maxRunS": 20.0,
+        "assist": 2
+      },
+      "asserts": [
+        {
+          "metric": "zeroToHundredS",
+          "op": "between",
+          "value": [
+            0.0,
+            60.0
+          ],
+          "note": "measured 0-100 (kart: 0-50) km/h time; data cell"
+        },
+        {
+          "metric": "wheelspinS",
+          "op": "between",
+          "value": [
+            0.0,
+            60.0
+          ],
+          "note": "measured launch wheelspin duration; the Sport launch-feel signal"
+        },
+        {
+          "metric": "pitchDeg",
+          "op": "between",
+          "value": [
+            0.0,
+            45.0
+          ],
+          "note": "squat sanity; data cell"
+        },
+        {
+          "metric": "flips",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        },
+        {
+          "metric": "fallThroughs",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        }
+      ]
+    },
+    {
+      "maneuver": "launch",
+      "car": "pickup",
+      "station": "dragstrip",
+      "params": {
+        "targetSpeedMs": 27.78,
+        "maxRunS": 20.0,
+        "assist": 0
+      },
+      "asserts": [
+        {
+          "metric": "zeroToHundredS",
+          "op": "between",
+          "value": [
+            0.0,
+            60.0
+          ],
+          "note": "measured 0-100 (kart: 0-50) km/h time; data cell"
+        },
+        {
+          "metric": "wheelspinS",
+          "op": "between",
+          "value": [
+            0.0,
+            60.0
+          ],
+          "note": "measured launch wheelspin duration; the Sport launch-feel signal"
+        },
+        {
+          "metric": "pitchDeg",
+          "op": "between",
+          "value": [
+            0.0,
+            45.0
+          ],
+          "note": "squat sanity; data cell"
+        },
+        {
+          "metric": "flips",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        },
+        {
+          "metric": "fallThroughs",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        }
+      ]
+    },
+    {
+      "maneuver": "launch",
+      "car": "pickup",
+      "station": "dragstrip",
+      "params": {
+        "targetSpeedMs": 27.78,
+        "maxRunS": 20.0,
+        "assist": 1
+      },
+      "asserts": [
+        {
+          "metric": "zeroToHundredS",
+          "op": "between",
+          "value": [
+            0.0,
+            60.0
+          ],
+          "note": "measured 0-100 (kart: 0-50) km/h time; data cell"
+        },
+        {
+          "metric": "wheelspinS",
+          "op": "between",
+          "value": [
+            0.0,
+            60.0
+          ],
+          "note": "measured launch wheelspin duration; the Sport launch-feel signal"
+        },
+        {
+          "metric": "pitchDeg",
+          "op": "between",
+          "value": [
+            0.0,
+            45.0
+          ],
+          "note": "squat sanity; data cell"
+        },
+        {
+          "metric": "flips",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        },
+        {
+          "metric": "fallThroughs",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        }
+      ]
+    },
+    {
+      "maneuver": "launch",
+      "car": "pickup",
+      "station": "dragstrip",
+      "params": {
+        "targetSpeedMs": 27.78,
+        "maxRunS": 20.0,
+        "assist": 2
+      },
+      "asserts": [
+        {
+          "metric": "zeroToHundredS",
+          "op": "between",
+          "value": [
+            0.0,
+            60.0
+          ],
+          "note": "measured 0-100 (kart: 0-50) km/h time; data cell"
+        },
+        {
+          "metric": "wheelspinS",
+          "op": "between",
+          "value": [
+            0.0,
+            60.0
+          ],
+          "note": "measured launch wheelspin duration; the Sport launch-feel signal"
+        },
+        {
+          "metric": "pitchDeg",
+          "op": "between",
+          "value": [
+            0.0,
+            45.0
+          ],
+          "note": "squat sanity; data cell"
+        },
+        {
+          "metric": "flips",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        },
+        {
+          "metric": "fallThroughs",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        }
+      ]
+    }
+  ]
+}

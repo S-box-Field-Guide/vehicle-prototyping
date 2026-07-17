@@ -1,0 +1,57 @@
+{
+  "bands": "handling-targets v1",
+  "suite": [
+    {
+      "maneuver": "launch",
+      "car": "hatch",
+      "station": "dragstrip",
+      "params": { "targetSpeedMs": 27.78, "maxRunS": 20.0 },
+      "asserts": [
+        { "metric": "zeroToHundredS", "op": "between", "value": [8.0, 10.0], "note": "handling-targets v1 Hatch Launch 0-100 km/h" },
+        { "metric": "wheelspinS", "op": "<=", "value": 0.5, "note": "handling-targets v1 Hatch launch character (0.0-0.5 s)" },
+        { "metric": "pitchDeg", "op": "<=", "value": 15.0, "note": "squat sanity invariant (no handling-targets band)" },
+        { "metric": "flips", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" },
+        { "metric": "fallThroughs", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" }
+      ]
+    },
+    {
+      "maneuver": "launch",
+      "car": "coupe",
+      "station": "dragstrip",
+      "params": { "targetSpeedMs": 27.78, "maxRunS": 20.0 },
+      "asserts": [
+        { "metric": "zeroToHundredS", "op": "between", "value": [5.0, 6.0], "note": "handling-targets v1 Coupe Launch 0-100 km/h" },
+        { "metric": "wheelspinS", "op": "<=", "value": 1.2, "note": "handling-targets v1 Coupe launch character (0.3-1.2 s)" },
+        { "metric": "pitchDeg", "op": "<=", "value": 15.0, "note": "squat sanity invariant (no handling-targets band)" },
+        { "metric": "flips", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" },
+        { "metric": "fallThroughs", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" }
+      ]
+    },
+    {
+      "maneuver": "launch",
+      "car": "kart",
+      "station": "dragstrip",
+      "params": { "splitSpeedMs": 13.89, "targetSpeedMs": 13.89, "maxRunS": 20.0 },
+      "asserts": [
+        { "metric": "zeroToHundredS", "op": "between", "value": [2.0, 5.0], "note": "handling-targets v1 Kart Launch 0-50 km/h (revision: 0-100 band self-inconsistent -- kart top speed 55-70 km/h cannot reach 100; splitSpeedMs=13.89 measures 0->50 km/h into zeroToHundredS). Band set from measurement." },
+        { "metric": "wheelspinS", "op": "<=", "value": 0.6, "note": "handling-targets v1 Kart launch character (0.0-0.6 s); regression check that the '13f3d14 tame' holds" },
+        { "metric": "pitchDeg", "op": "<=", "value": 15.0, "note": "squat sanity invariant (no handling-targets band)" },
+        { "metric": "flips", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" },
+        { "metric": "fallThroughs", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" }
+      ]
+    },
+    {
+      "maneuver": "launch",
+      "car": "pickup",
+      "station": "dragstrip",
+      "params": { "targetSpeedMs": 27.78, "maxRunS": 20.0 },
+      "asserts": [
+        { "metric": "zeroToHundredS", "op": "between", "value": [10.0, 12.0], "note": "handling-targets v1 Pickup Launch 0-100 km/h" },
+        { "metric": "wheelspinS", "op": "<=", "value": 3.0, "note": "global 3 s wheelspin ceiling (no per-class launch-character row for pickup; torquey RWD offroad launch allowed brief spin)" },
+        { "metric": "pitchDeg", "op": "<=", "value": 15.0, "note": "squat sanity invariant (no handling-targets band)" },
+        { "metric": "flips", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" },
+        { "metric": "fallThroughs", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" }
+      ]
+    }
+  ]
+}

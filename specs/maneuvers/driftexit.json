@@ -1,0 +1,29 @@
+{
+  "bands": "feel session 2026-07-13 -- measured-first: baselines full-lock kart 0.54s/0.415/77.6deg, coupe 0.70s/0.502/82.2deg; acceptance = post-fix measured (soft-lock + drift-catch) +/- sanity. Retention aspiration >= 0.75 NOT reached -- gated on candidate #4 (lateral tail).",
+  "suite": [
+    {
+      "maneuver": "driftexit",
+      "car": "kart",
+      "station": "openpad",
+      "params": { "entrySpeedMs": 13.5, "driftSteer": 0.7, "yawTargetDeg": 120.0, "recoverSlipDeg": 8.0, "maxRunS": 14.0, "assist": 1 },
+      "asserts": [
+        { "metric": "exitRecoveryS", "op": "<=", "value": 1.0, "note": "work-order aspiration MET: measured 0.54 s post-fix (feel session 2026-07-13)" },
+        { "metric": "speedRetention", "op": ">=", "value": 0.43, "note": "post-fix measured 0.451 (baseline full-lock 0.415 FAILS this -- band encodes the drift-catch gain); aspiration 0.75 gated on candidate #4 (feel session 2026-07-13)" },
+        { "metric": "peakSlipDeg", "op": "<=", "value": 85.0, "note": "slide-depth sanity: measured 77.6 deg at the 120-deg yaw hold (feel session 2026-07-13)" },
+        { "metric": "flips", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" }
+      ]
+    },
+    {
+      "maneuver": "driftexit",
+      "car": "coupe",
+      "station": "openpad",
+      "params": { "entrySpeedMs": 22.0, "driftSteer": 0.7, "yawTargetDeg": 120.0, "recoverSlipDeg": 8.0, "maxRunS": 14.0, "assist": 1 },
+      "asserts": [
+        { "metric": "exitRecoveryS", "op": "<=", "value": 1.0, "note": "work-order aspiration MET: measured 0.66-0.70 s post-fix (feel session 2026-07-13)" },
+        { "metric": "speedRetention", "op": ">=", "value": 0.51, "note": "post-fix measured 0.525-0.528 (baseline full-lock 0.502 FAILS this -- band encodes the drift-catch gain); aspiration 0.75 gated on candidate #4 (feel session 2026-07-13)" },
+        { "metric": "peakSlipDeg", "op": "<=", "value": 90.0, "note": "slide-depth sanity: measured 82.2 deg at the 120-deg yaw hold (feel session 2026-07-13)" },
+        { "metric": "flips", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" }
+      ]
+    }
+  ]
+}

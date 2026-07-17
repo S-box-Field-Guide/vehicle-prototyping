@@ -1,0 +1,261 @@
+@using Sandbox;
+@using Sandbox.UI;
+@inherits PanelComponent
+@namespace VehicleProto
+
+@* Session menu (two-column redesign, 2026-07-16) — toggled by Tab ("Session"), closed by Esc.
+   Dims + blurs the game, unlocks cursor. A 760px card: LEFT column = Resume / Respawn actions +
+   labelled Drive-mode & Units segmented controls + red Quit-to-menu; RIGHT column = the vehicle
+   roster as a 2x2 thumbnail grid (click a tile OR cycle with [ ]). Resume/Respawn/Quit are live;
+   the assist selector writes onto the car, units onto UserSettings, car-switch goes through
+   CarSwitcher (same path the picker and vp_car console command use). *@
+
+<root>
+	@if ( UiState.SessionOpen )
+	{
+		<div class="backdrop">
+			<div class="card">
+
+				<div class="header">
+					<div class="titlecol">
+						<span class="title">Session</span>
+						<span class="mono ctx">@ContextLine</span>
+					</div>
+					<div class="hint">
+						<span class="hintlabel">Resume</span>
+						<span class="mono keycap">Tab</span>
+					</div>
+				</div>
+
+				<div class="cols">
+
+					<div class="leftcol">
+						<div class="btn primary" onclick=@Resume>Resume</div>
+						<div class="btn ghost" onclick=@Respawn>
+							<span>Respawn car</span>
+							<span class="mono keycap">R</span>
+						</div>
+
+						<div class="rule"></div>
+
+						<div class="field">
+							<div class="fieldlabel">
+								<span class="lbl">Drive mode</span>
+								<span class="mono val">@CurrentAssist.ToString().ToLower()</span>
+							</div>
+							<div class="segbar">
+								@foreach ( var a in Levels )
+								{
+									var aa = a;
+									<div class="mono seg @(CurrentAssist == aa ? "on" : "")" onclick=@( () => SetAssist( aa ) )>@aa.ToString().ToLower()</div>
+								}
+							</div>
+						</div>
+
+						<div class="field">
+							<div class="fieldlabel">
+								<span class="lbl">Units</span>
+								<span class="mono val">@CurrentUnitLabel</span>
+							</div>
+							<div class="segbar">
+								@foreach ( var u in UnitOptions )
+								{
+									var uu = u.Unit;
+									<div class="mono seg @(CurrentUnit == uu ? "on" : "")" onclick=@( () => SetUnit( uu ) )>@u.Label</div>
+								}
+							</div>
+						</div>
+
+						<div class="spacer"></div>
+						<div class="rule"></div>
+						<div class="btn quit" onclick=@QuitToMenu>Quit</div>
+					</div>
+
+					<div class="vrule"></div>
+
+					<div class="rightcol">
+						<div class="rosterhead">
+							<span class="lbl">Vehicle</span>
+							<span class="cyclehint">
+								<span class="mono keycap">[ ]</span>
+								<span class="cyclelbl">cycle</span>
+							</span>
+						</div>
+
+						<div class="roster">
+							@for ( int i = 0; i < Picks.Length; i++ )
+							{
+								var pid = Picks[i].Id;
+								var num = (i + 1).ToString();
+								<div class="tile @(CurrentId == pid ? "on" : "")" onclick=@( () => PickCar( pid ) )>
+									<CarThumb class="thumb" CarId=@pid Selected=@(CurrentId == pid) />
+									<div class="tilefoot">
+										<span class="name">@Picks[i].Label</span>
+										<span class="mono status">@(CurrentId == pid ? "driving" : num)</span>
+									</div>
+								</div>
+							}
+						</div>
+
+						<div class="caption">Switching respawns you in the new car at the same spot.</div>
+					</div>
+
+				</div>
+			</div>
+		</div>
+	}
+</root>
+
+@code {
+	public VehicleController Target { get; set; }
+
+	static readonly AssistLevel[] Levels = { AssistLevel.Casual, AssistLevel.Sport, AssistLevel.Sim };
+	AssistLevel CurrentAssist => Target?.Assists ?? AssistLevel.Casual;
+
+	// Speed-unit selector — DISPLAY ONLY (UserSettings.SpeedUnit; every metric/spec/telemetry stays SI).
+	static readonly (SpeedUnit Unit, string Label)[] UnitOptions =
+	{
+		(SpeedUnit.Kmh, "km/h"),
+		(SpeedUnit.Mph, "mph"),
+	};
+	SpeedUnit CurrentUnit => UserSettings.SpeedUnit;
+	string CurrentUnitLabel => UnitOptions.FirstOrDefault( u => u.Unit == CurrentUnit ).Label ?? "km/h";
+
+	// Data-driven car picker: one tile per roster car, in cycle order. Each tile renders a live,
+	// slowly-rotating 3D model of the car via CarThumb (a ScenePanel that assembles the part kit from
+	// its manifest); if a kit fails to resolve, CarThumb falls back to the static ui/cars/<id>.png.
+	// Adding a roster car = add a row here (id → kit is derived, not hand-wired), keeping its png as the
+	// fallback. Ids resolve through VehiclePilot.ResolveCar (same table CarSwitcher uses).
+	static readonly (string Id, string Label)[] Picks =
+	{
+		("hatch", "Hatch"),
+		("coupe", "Coupe"),
+		("kart", "Kart"),
+		("pickup", "Pickup"),
+	};
+
+	// Which roster id the active car is, so the picker can highlight it + label its status "driving".
+	string CurrentId => CarSwitcher.CurrentId( Target );
+
+	string ContextLine => $"{Target?.Definition?.Name ?? "car"} · {CurrentAssist.ToString().ToLower()} assists";
+
+	protected override void OnUpdate()
+	{
+		if ( Input.Pressed( "Session" ) )
+		{
+			UiState.SessionOpen = !UiState.SessionOpen;
+			Mouse.Visibility = UiState.SessionOpen ? MouseVisibility.Visible : MouseVisibility.Hidden;
+		}
+
+		// [ and ] cycle the roster prev/next — an Input action, so it also works while driving with the
+		// menu closed. Frame-scoped Input.Pressed read in OnUpdate (per the edge-latch gotcha this is the
+		// correct place; only OnFixedUpdate reads need the latch).
+		if ( Input.Pressed( "CyclePrev" ) )
+			CycleCar( -1 );
+		if ( Input.Pressed( "CycleNext" ) )
+			CycleCar( +1 );
+
+		if ( UiState.SessionOpen )
+		{
+			Mouse.Visibility = MouseVisibility.Visible;
+
+			// Esc = Resume. EscapePressed is a real GET/SET bool: read to detect, set false to CONSUME so
+			// the engine doesn't then route to its own pause menu. Only consumed while our menu is open, so
+			// other panels / the host keep their Esc.
+			if ( Input.EscapePressed )
+			{
+				Input.EscapePressed = false;
+				Resume();
+			}
+		}
+	}
+
+	void Resume()
+	{
+		UiState.SessionOpen = false;
+		Mouse.Visibility = UiState.AnyCursorModalOpen ? MouseVisibility.Visible : MouseVisibility.Hidden;
+		StateHasChanged();
+	}
+
+	void Respawn()
+	{
+		Target?.Respawn();
+		Resume();
+	}
+
+	// Live car swap. Clicking a picker tile switches straight to that car in place via CarSwitcher —
+	// which rewires camera/HUD/pilot (and re-points our own Target through UiRig.Retarget) — and closes
+	// the menu back to driving. Re-picking the active car is a no-op (avoids a pointless despawn/respawn);
+	// we still close.
+	void PickCar( string id )
+	{
+		SwitchToId( id );
+		Resume();
+	}
+
+	// [ / ] cycle: step to the prev/next roster car in Picks order and switch to it, WITHOUT changing the
+	// menu's open/closed state (so you can keep tapping to flip through, open or closed). No-op result
+	// (same car) can't happen here since we always move by one.
+	void CycleCar( int dir )
+	{
+		int idx = System.Array.IndexOf( Roster, CurrentId );
+		if ( idx < 0 ) idx = 0;
+		int next = (idx + dir + Roster.Length) % Roster.Length;
+		SwitchToId( Roster[next] );
+		StateHasChanged();
+	}
+
+	static string[] Roster => CarSwitcher.Roster;
+
+	void SwitchToId( string id )
+	{
+		if ( id == CurrentId )
+			return;
+
+		var scene = Target?.Scene ?? Game.ActiveScene;
+		if ( scene is null )
+			return;
+
+		var next = CarSwitcher.SwitchTo( scene, id );
+		if ( next is not null )
+			Target = next;
+	}
+
+	void SetAssist( AssistLevel a )
+	{
+		if ( Target is not null )
+			Target.Assists = a;
+		StateHasChanged();
+	}
+
+	// Units write straight to the persisted store (default km/h) — applies to the HUD readout the same
+	// frame; existing players who never touch it keep km/h byte-identically.
+	void SetUnit( SpeedUnit u )
+	{
+		UserSettings.SpeedUnit = u;
+		StateHasChanged();
+	}
+
+	// Quit to menu: leave the game to the s&box main menu. Game.Close() is the proven, whitelist-safe
+	// leave path; in the editor it ends play mode sanely,
+	// in a published client it returns to the menu. vp is single-player, so there's no live network
+	// session to disconnect first.
+	void QuitToMenu()
+	{
+		Game.Close();
+	}
+
+	protected override int BuildHash() => System.HashCode.Combine(
+		UiState.SessionOpen, Target?.Definition?.Name, CurrentAssist, UserSettings.SpeedUnit );
+
+	/// <summary>Console parity for opening/closing the Tab session menu — same idiom as
+	/// <see cref="GameBootstrap.VpSetWorld"/>: the Tab keypress can't be injected in headless UI
+	/// verification, so this toggles (or forces) <see cref="UiState.SessionOpen"/> for screenshots.
+	/// <c>vp_session</c> toggles; <c>vp_session 1</c>/<c>vp_session 0</c> force open/closed.</summary>
+	[ConCmd( "vp_session" )]
+	public static void VpSession( int open = -1 )
+	{
+		UiState.SessionOpen = open < 0 ? !UiState.SessionOpen : open != 0;
+		Mouse.Visibility = UiState.SessionOpen ? MouseVisibility.Visible : MouseVisibility.Hidden;
+	}
+}

@@ -1,0 +1,204 @@
+@using Sandbox;
+@using Sandbox.UI;
+@inherits PanelComponent
+@namespace VehicleProto
+
+@* Instrumented overlay (design board 1b) — toggled by L ("Telemetry"). Read-only, no cursor.
+   Rides a LETTER key: the standalone/published s&box client captures F1–F12 for its own
+   overlays, so the old F4 bind toggled nothing outside the editor (same host-capture trap that
+   put Help on I, World on M).
+   Timing + run verdict come from UiFeed (harness-fed); pedals/steer/grip/slip are live. *@
+
+<root>
+	@if ( UiState.TelemetryOpen && Target is not null )
+	{
+		<div class="timing @(UiFeed.TimingRunning ? "running" : "")">
+			<div class="thead">
+				<div class="tt"><div class="dot @(UiFeed.TimingRunning ? "" : "idle")"></div><div class="tlabel">@UiFeed.TimingTitle</div></div>
+				<div class="mono ctx">@UiFeed.TimingContext</div>
+			</div>
+			<div class="tvalrow">
+				<div class="mono tval">@UiFeed.TimingValue<span class="tunit"> @UiFeed.TimingUnit</span></div>
+				@if ( !string.IsNullOrEmpty( UiFeed.TimingBest ) )
+				{
+					<div class="mono tbest">@UiFeed.TimingBest</div>
+				}
+			</div>
+			<div class="tfoot">
+				<div class="mono">@UiFeed.TimingExtra1</div>
+				<div class="mono">@UiFeed.TimingExtra2</div>
+				<div class="mono">@UiFeed.TimingExtra3</div>
+			</div>
+		</div>
+
+		@if ( UiFeed.HasLastRun )
+		{
+			<div class="verdict">
+				<div class="vhead">
+					<div class="vtitle">
+						<div class="vkicker">last run</div>
+						<div class="vname">@UiFeed.LastRunTitle</div>
+					</div>
+					<div class="mono badge @VerdictClass">@VerdictText</div>
+				</div>
+				<div class="rule"></div>
+				<div class="metrics">
+					@foreach ( var m in UiFeed.LastRunMetrics )
+					{
+						<div class="metric">
+							<div class="mrow"><div class="mlbl">@m.Label</div><div class="mono mval @(m.Pass ? "pass" : "fail")">@m.Value</div></div>
+							@if ( m.HasBar )
+							{
+								<div class="mbar">
+									<div class="band @(m.Pass ? "pass" : "fail")" style="left: @UiFmt.Pct( m.BandLo * 100f )%; width: @UiFmt.Pct( (m.BandHi - m.BandLo) * 100f )%"></div>
+									<div class="mark @(m.Pass ? "pass" : "fail")" style="left: @UiFmt.Pct( m.Frac * 100f )%"></div>
+								</div>
+								<div class="mono mband">@m.Band</div>
+							}
+						</div>
+					}
+					@if ( !string.IsNullOrEmpty( UiFeed.LastRunYaw ) )
+					{
+						<div class="mrow"><div class="mlbl">Yaw stability</div><div class="mono mval pass">@UiFeed.LastRunYaw</div></div>
+					}
+					@if ( !string.IsNullOrEmpty( UiFeed.LastRunEvents ) )
+					{
+						<div class="mrow"><div class="mlbl">Assist events</div><div class="mono mval">@UiFeed.LastRunEvents</div></div>
+					}
+				</div>
+				@if ( !string.IsNullOrEmpty( UiFeed.LastRunLine ) )
+				{
+					<div class="mono runline">@UiFeed.LastRunLine</div>
+				}
+			</div>
+		}
+
+		<div class="detail">
+			<div class="card steer">
+				<div class="dhead"><div class="lbl">Steer</div><div class="mono sval">@SteerText</div></div>
+				<div class="strack">
+					<div class="scenter"></div>
+					<div class="smark" style="left: @UiFmt.Pct( 48f + (Target?.Steer ?? 0f) * 44f )%"></div>
+				</div>
+			</div>
+
+			<div class="card pedals">
+				<div class="ped">
+					<div class="bar"><div class="fill thr" style="height: @UiFmt.Pct( (Target?.Throttle ?? 0f) * 100f )%"></div></div>
+					<div class="plbl">thr</div>
+				</div>
+				<div class="ped">
+					<div class="bar @(BrakeAbs ? "absbar" : "")"><div class="fill brk @(BrakeAbs ? "abs" : "")" style="height: @UiFmt.Pct( (Target?.Brake ?? 0f) * 100f )%"></div></div>
+					<div class="plbl @(BrakeAbs ? "hot" : "")">brk</div>
+				</div>
+				<div class="ped">
+					<div class="bar"><div class="fill hbk" style="height: @UiFmt.Pct( Handbrake ? 100f : 0f )%"></div></div>
+					<div class="plbl @(Handbrake ? "on" : "")">hbk</div>
+				</div>
+			</div>
+
+			<div class="card gripcard">
+				<div class="gplan">
+					<div class="axle">
+						<div class="wcell"><div class="wchip @WheelState( 0 )"></div><div class="mono wlbl">FL</div></div>
+						<div class="wcell"><div class="wchip @WheelState( 1 )"></div><div class="mono wlbl">FR</div></div>
+					</div>
+					<div class="body"></div>
+					<div class="axle">
+						<div class="wcell"><div class="wchip @WheelState( 2 )"></div><div class="mono wlbl">RL</div></div>
+						<div class="wcell"><div class="wchip @WheelState( 3 )"></div><div class="mono wlbl">RR</div></div>
+					</div>
+				</div>
+				<div class="gcap">grip</div>
+			</div>
+		</div>
+
+		<div class="slip">
+			<div class="shead">
+				<div class="skicker">slip · 10 s</div>
+				<div class="leg">
+					<div class="li"><span class="d cyan"></span>ratio</div>
+					<div class="li"><span class="d amber"></span>angle</div>
+				</div>
+			</div>
+			<div class="graph">
+				<div class="mid"></div>
+				@foreach ( var s in _samples )
+				{
+					<div class="col">
+						<div class="up" style="height: @UiFmt.Pct( s.Ratio * 46f )%"></div>
+						<div class="dn" style="height: @UiFmt.Pct( s.Angle * 46f )%"></div>
+					</div>
+				}
+			</div>
+		</div>
+	}
+</root>
+
+@code {
+	public VehicleController Target { get; set; }
+
+	struct Sample { public float Ratio; public float Angle; }
+	readonly List<Sample> _samples = new();
+	const int MaxSamples = 50;
+	TimeSince _sinceSample;
+	int _pushCount;
+
+	bool Handbrake => Target?.Handbrake ?? false;
+	string SteerText => (Target?.Steer ?? 0f).ToString( "F2" );
+
+	// ABS is inferred: braking hard while a front wheel is locking under a non-Sim assist
+	bool BrakeAbs
+	{
+		get
+		{
+			if ( Target is null || (Target.Brake) < 0.1f || Target.Assists == AssistLevel.Sim ) return false;
+			foreach ( var w in Target.Wheels )
+				if ( w.IsSteering && w.IsGrounded && w.SlipRatio < -0.3f ) return true;
+			return false;
+		}
+	}
+
+	string VerdictText => UiFeed.LastRunOutOfBand ? "OUT OF BAND" : UiFeed.LastRunPass ? "PASS" : "FAIL";
+	string VerdictClass => UiFeed.LastRunOutOfBand ? "warn" : UiFeed.LastRunPass ? "pass" : "fail";
+
+	string WheelState( int i )
+	{
+		if ( Target is null || i >= Target.Wheels.Count ) return "air";
+		var w = Target.Wheels[i];
+		if ( !w.IsGrounded ) return "air";
+		float slip = MathF.Max( MathF.Abs( w.SlipRatio ), MathF.Abs( w.SlipAngle ) * 2f );
+		return slip > 0.5f ? "sliding" : slip > 0.15f ? "working" : "grip";
+	}
+
+	protected override void OnUpdate()
+	{
+		if ( Input.Pressed( "Telemetry" ) )
+			UiState.TelemetryOpen = !UiState.TelemetryOpen;
+
+		if ( !UiState.TelemetryOpen || Target is null )
+			return;
+
+		if ( _sinceSample > 0.2f )
+		{
+			_sinceSample = 0;
+			var fronts = Target.Wheels.Where( w => w.IsSteering && w.IsGrounded ).ToList();
+			float ratio = fronts.Count > 0 ? MathF.Abs( (float)fronts.Average( w => w.SlipRatio ) ) : 0f;
+			float angle = fronts.Count > 0 ? MathF.Abs( (float)fronts.Average( w => w.SlipAngle ) ) * 3f : 0f;
+			_samples.Add( new Sample { Ratio = Math.Clamp( ratio, 0f, 1f ), Angle = Math.Clamp( angle, 0f, 1f ) } );
+			if ( _samples.Count > MaxSamples ) _samples.RemoveAt( 0 );
+			_pushCount++;
+		}
+	}
+
+	protected override int BuildHash()
+	{
+		if ( !UiState.TelemetryOpen )
+			return 0;
+		return System.HashCode.Combine(
+			(int)((Target?.Throttle ?? 0f) * 20f), (int)((Target?.Brake ?? 0f) * 20f),
+			(int)((Target?.Steer ?? 0f) * 40f), Handbrake, BrakeAbs,
+			Target?.Wheels.Sum( w => (int)(MathF.Abs( w.SlipRatio ) * 10f) + (w.IsGrounded ? 100 : 0) ) ?? 0,
+			_pushCount, UiFeed.RunHash() );
+	}
+}

@@ -1,0 +1,174 @@
+{
+  "bands": "handling-targets v1",
+  "note": "figure8 3-assist-level sweep ('clean under all 3 assist levels'): 4 cars x Casual(0)/Sport(1)/Sim(2) = 12 rows (grown 2026-07-13 wave-2 from the 4 one-assist-per-car rows). Per-car lateral-g bands are UNCHANGED across the three assist levels -- they are anchored on each car's MEASURED baseline-metrics skidpad reality (docs/handling-targets.md figure8 provenance table), and the grip envelope is the same envelope the player's assist layer sits on top of; the sweep proves the pass SHAPE (no spin, in-band g) holds under every assist, not three different targets. assist re-applied every tick by the pilot (docs/testing-harness.md §7.1). Bands are v1 -- pre-measurement; aspirational rows may honest-red (do not tune).",
+  "suite": [
+    {
+      "maneuver": "figure8",
+      "car": "hatch",
+      "station": "skidpad",
+      "params": { "radiusM": 20.0, "lobes": 2, "assist": 0, "maxRunS": 35.0 },
+      "asserts": [
+        { "metric": "lateralGAvg", "op": "between", "value": [0.55, 0.80], "note": "measured skidpad 0.687 g anchor (NOT the aspirational 0.80-0.90 skidpad band). Casual (assist:0) = hatch default. v1 -- pre-measurement" },
+        { "metric": "lateralGPeak", "op": "<=", "value": 0.95, "note": "lobe-consistency proxy (no per-lobe telemetry field). v1 -- pre-measurement" },
+        { "metric": "yawRateAvgDeg", "op": "between", "value": [5.0, 60.0], "note": "steady-state yaw stability sanity (skidpad.json style)" },
+        { "metric": "spunOut", "op": "==", "value": false, "note": "figure8 pass shape: clean transitions = no spin-out. §6.2 spunOut maneuver list extended to cover figure8" },
+        { "metric": "flips", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" },
+        { "metric": "elapsedS", "op": "<=", "value": 35.0, "note": "completion sanity (DNF guard, mirrors slalom.json)" }
+      ]
+    },
+    {
+      "maneuver": "figure8",
+      "car": "hatch",
+      "station": "skidpad",
+      "params": { "radiusM": 20.0, "lobes": 2, "assist": 1, "maxRunS": 35.0 },
+      "asserts": [
+        { "metric": "lateralGAvg", "op": "between", "value": [0.55, 0.80], "note": "measured skidpad 0.687 g anchor. Sport (assist:1). v1 -- pre-measurement" },
+        { "metric": "lateralGPeak", "op": "<=", "value": 0.95, "note": "lobe-consistency proxy. v1 -- pre-measurement" },
+        { "metric": "yawRateAvgDeg", "op": "between", "value": [5.0, 60.0], "note": "steady-state yaw stability sanity" },
+        { "metric": "spunOut", "op": "==", "value": false, "note": "figure8 pass shape: no spin-out" },
+        { "metric": "flips", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" },
+        { "metric": "elapsedS", "op": "<=", "value": 35.0, "note": "completion sanity (DNF guard)" }
+      ]
+    },
+    {
+      "maneuver": "figure8",
+      "car": "hatch",
+      "station": "skidpad",
+      "params": { "radiusM": 20.0, "lobes": 2, "assist": 2, "maxRunS": 35.0 },
+      "asserts": [
+        { "metric": "lateralGAvg", "op": "between", "value": [0.55, 0.80], "note": "measured skidpad 0.687 g anchor. Sim (assist:2) removes most driver aids. v1 -- pre-measurement" },
+        { "metric": "lateralGPeak", "op": "<=", "value": 0.95, "note": "lobe-consistency proxy. v1 -- pre-measurement" },
+        { "metric": "yawRateAvgDeg", "op": "between", "value": [5.0, 60.0], "note": "steady-state yaw stability sanity" },
+        { "metric": "spunOut", "op": "==", "value": false, "note": "figure8 pass shape: no spin-out" },
+        { "metric": "flips", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" },
+        { "metric": "elapsedS", "op": "<=", "value": 35.0, "note": "completion sanity (DNF guard)" }
+      ]
+    },
+    {
+      "maneuver": "figure8",
+      "car": "coupe",
+      "station": "skidpad",
+      "params": { "radiusM": 20.0, "lobes": 2, "assist": 0, "maxRunS": 35.0 },
+      "asserts": [
+        { "metric": "lateralGAvg", "op": "between", "value": [0.55, 0.80], "note": "measured skidpad 0.680 g anchor (NOT the aspirational 0.95-1.05 skidpad band). Casual (assist:0) -- §7.1 flags Casual's stability damper may tame RWD rotation; the sweep proves whether the g-band still holds here. v1 -- pre-measurement" },
+        { "metric": "lateralGPeak", "op": "<=", "value": 0.95, "note": "lobe-consistency proxy. v1 -- pre-measurement" },
+        { "metric": "yawRateAvgDeg", "op": "between", "value": [5.0, 60.0], "note": "steady-state yaw stability sanity" },
+        { "metric": "spunOut", "op": "==", "value": false, "note": "figure8 pass shape: no spin-out" },
+        { "metric": "flips", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" },
+        { "metric": "elapsedS", "op": "<=", "value": 35.0, "note": "completion sanity (DNF guard)" }
+      ]
+    },
+    {
+      "maneuver": "figure8",
+      "car": "coupe",
+      "station": "skidpad",
+      "params": { "radiusM": 20.0, "lobes": 2, "assist": 1, "maxRunS": 35.0 },
+      "asserts": [
+        { "metric": "lateralGAvg", "op": "between", "value": [0.55, 0.80], "note": "measured skidpad 0.680 g anchor. Sport (assist:1) -- the level §7.1 pins for RWD aggressive maneuvers. v1 -- pre-measurement" },
+        { "metric": "lateralGPeak", "op": "<=", "value": 0.95, "note": "lobe-consistency proxy. v1 -- pre-measurement" },
+        { "metric": "yawRateAvgDeg", "op": "between", "value": [5.0, 60.0], "note": "steady-state yaw stability sanity" },
+        { "metric": "spunOut", "op": "==", "value": false, "note": "figure8 pass shape: no spin-out" },
+        { "metric": "flips", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" },
+        { "metric": "elapsedS", "op": "<=", "value": 35.0, "note": "completion sanity (DNF guard)" }
+      ]
+    },
+    {
+      "maneuver": "figure8",
+      "car": "coupe",
+      "station": "skidpad",
+      "params": { "radiusM": 20.0, "lobes": 2, "assist": 2, "maxRunS": 35.0 },
+      "asserts": [
+        { "metric": "lateralGAvg", "op": "between", "value": [0.55, 0.80], "note": "measured skidpad 0.680 g anchor. Sim (assist:2) -- most likely to spin the RWD coupe if the profile over-rotates; spunOut assert is the guard. v1 -- pre-measurement" },
+        { "metric": "lateralGPeak", "op": "<=", "value": 0.95, "note": "lobe-consistency proxy. v1 -- pre-measurement" },
+        { "metric": "yawRateAvgDeg", "op": "between", "value": [5.0, 60.0], "note": "steady-state yaw stability sanity" },
+        { "metric": "spunOut", "op": "==", "value": false, "note": "figure8 pass shape: no spin-out" },
+        { "metric": "flips", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" },
+        { "metric": "elapsedS", "op": "<=", "value": 35.0, "note": "completion sanity (DNF guard)" }
+      ]
+    },
+    {
+      "maneuver": "figure8",
+      "car": "kart",
+      "station": "skidpad",
+      "params": { "radiusM": 20.0, "lobes": 2, "assist": 0, "maxRunS": 35.0 },
+      "asserts": [
+        { "metric": "lateralGAvg", "op": "between", "value": [0.65, 0.90], "note": "measured skidpad 0.770 g anchor (roster's highest; NOT the aspirational 1.00-1.20 skidpad band). Casual (assist:0). v1 -- pre-measurement" },
+        { "metric": "lateralGPeak", "op": "<=", "value": 1.05, "note": "lobe-consistency proxy. v1 -- pre-measurement" },
+        { "metric": "yawRateAvgDeg", "op": "between", "value": [5.0, 90.0], "note": "steady-state yaw stability sanity (kart's tiny wheelbase yaws faster, wider band per skidpad.json)" },
+        { "metric": "spunOut", "op": "==", "value": false, "note": "figure8 pass shape: no spin-out" },
+        { "metric": "flips", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" },
+        { "metric": "elapsedS", "op": "<=", "value": 35.0, "note": "completion sanity (DNF guard)" }
+      ]
+    },
+    {
+      "maneuver": "figure8",
+      "car": "kart",
+      "station": "skidpad",
+      "params": { "radiusM": 20.0, "lobes": 2, "assist": 1, "maxRunS": 35.0 },
+      "asserts": [
+        { "metric": "lateralGAvg", "op": "between", "value": [0.65, 0.90], "note": "measured skidpad 0.770 g anchor. Sport (assist:1) -- the 'Tame the kart' stability assist band regression. v1 -- pre-measurement" },
+        { "metric": "lateralGPeak", "op": "<=", "value": 1.05, "note": "lobe-consistency proxy. v1 -- pre-measurement" },
+        { "metric": "yawRateAvgDeg", "op": "between", "value": [5.0, 90.0], "note": "steady-state yaw stability sanity (kart wider band)" },
+        { "metric": "spunOut", "op": "==", "value": false, "note": "figure8 pass shape: no spin-out" },
+        { "metric": "flips", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" },
+        { "metric": "elapsedS", "op": "<=", "value": 35.0, "note": "completion sanity (DNF guard)" }
+      ]
+    },
+    {
+      "maneuver": "figure8",
+      "car": "kart",
+      "station": "skidpad",
+      "params": { "radiusM": 20.0, "lobes": 2, "assist": 2, "maxRunS": 35.0 },
+      "asserts": [
+        { "metric": "lateralGAvg", "op": "between", "value": [0.65, 0.90], "note": "measured skidpad 0.770 g anchor. Sim (assist:2) -- with the tame removed the light RWD kart is most spin-prone; spunOut guards it. v1 -- pre-measurement" },
+        { "metric": "lateralGPeak", "op": "<=", "value": 1.05, "note": "lobe-consistency proxy. v1 -- pre-measurement" },
+        { "metric": "yawRateAvgDeg", "op": "between", "value": [5.0, 90.0], "note": "steady-state yaw stability sanity (kart wider band)" },
+        { "metric": "spunOut", "op": "==", "value": false, "note": "figure8 pass shape: no spin-out" },
+        { "metric": "flips", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" },
+        { "metric": "elapsedS", "op": "<=", "value": 35.0, "note": "completion sanity (DNF guard)" }
+      ]
+    },
+    {
+      "maneuver": "figure8",
+      "car": "pickup",
+      "station": "skidpad",
+      "params": { "radiusM": 20.0, "lobes": 2, "assist": 0, "maxRunS": 35.0 },
+      "asserts": [
+        { "metric": "lateralGAvg", "op": "between", "value": [0.50, 0.72], "note": "measured skidpad 0.655 g anchor (roster's lowest, still grip-saturated; NOT the aspirational 0.70-0.80 skidpad band). Casual (assist:0). v1 -- pre-measurement" },
+        { "metric": "lateralGPeak", "op": "<=", "value": 0.87, "note": "lobe-consistency proxy. v1 -- pre-measurement" },
+        { "metric": "yawRateAvgDeg", "op": "between", "value": [5.0, 60.0], "note": "steady-state yaw stability sanity" },
+        { "metric": "spunOut", "op": "==", "value": false, "note": "figure8 pass shape: no spin-out" },
+        { "metric": "flips", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" },
+        { "metric": "elapsedS", "op": "<=", "value": 35.0, "note": "completion sanity (DNF guard, pickup DNF'd slalom during tuning at similar cruise speeds)" }
+      ]
+    },
+    {
+      "maneuver": "figure8",
+      "car": "pickup",
+      "station": "skidpad",
+      "params": { "radiusM": 20.0, "lobes": 2, "assist": 1, "maxRunS": 35.0 },
+      "asserts": [
+        { "metric": "lateralGAvg", "op": "between", "value": [0.50, 0.72], "note": "measured skidpad 0.655 g anchor. Sport (assist:1). v1 -- pre-measurement" },
+        { "metric": "lateralGPeak", "op": "<=", "value": 0.87, "note": "lobe-consistency proxy. v1 -- pre-measurement" },
+        { "metric": "yawRateAvgDeg", "op": "between", "value": [5.0, 60.0], "note": "steady-state yaw stability sanity" },
+        { "metric": "spunOut", "op": "==", "value": false, "note": "figure8 pass shape: no spin-out" },
+        { "metric": "flips", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" },
+        { "metric": "elapsedS", "op": "<=", "value": 35.0, "note": "completion sanity (DNF guard)" }
+      ]
+    },
+    {
+      "maneuver": "figure8",
+      "car": "pickup",
+      "station": "skidpad",
+      "params": { "radiusM": 20.0, "lobes": 2, "assist": 2, "maxRunS": 35.0 },
+      "asserts": [
+        { "metric": "lateralGAvg", "op": "between", "value": [0.50, 0.72], "note": "measured skidpad 0.655 g anchor. Sim (assist:2). v1 -- pre-measurement" },
+        { "metric": "lateralGPeak", "op": "<=", "value": 0.87, "note": "lobe-consistency proxy. v1 -- pre-measurement" },
+        { "metric": "yawRateAvgDeg", "op": "between", "value": [5.0, 60.0], "note": "steady-state yaw stability sanity" },
+        { "metric": "spunOut", "op": "==", "value": false, "note": "figure8 pass shape: no spin-out" },
+        { "metric": "flips", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" },
+        { "metric": "elapsedS", "op": "<=", "value": 35.0, "note": "completion sanity (DNF guard)" }
+      ]
+    }
+  ]
+}

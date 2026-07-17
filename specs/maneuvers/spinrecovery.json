@@ -1,0 +1,27 @@
+{
+  "bands": "re-anchored measured 2026-07-15 @ SpinRecoveryAssist default 7.0 (tested 6->7 on the hatch) — bands anchored to the assist-ON run with headroom so they FAIL if the assist stops firing (OFF baselines unchanged, assist-off=0 regardless of default: hatch 3.02 s / 9.38 m, coupe 1.64 s / 5.52 m). Prior 6.0-anchored bands were 2.2/6.0 (hatch) and 1.3/4.0 (coupe).",
+  "suite": [
+    {
+      "maneuver": "spinrecovery",
+      "car": "hatch",
+      "station": "openpad",
+      "params": { "entrySpeedMs": 15.0, "flickSteer": 1.0, "flickThrottle": 0.3, "spinTargetDeg": 160.0, "rotSafetyS": 4.0, "maxRunS": 14.0 },
+      "asserts": [
+        { "metric": "recoveryS", "op": "<=", "value": 2.0, "note": "measured 1.12 s assist-on @7.0 (Casual); OFF baseline 3.02 s — deterministic, headroom for dial tweaks while still failing on assist-off" },
+        { "metric": "rollbackM", "op": "<=", "value": 5.0, "note": "measured 2.36 m assist-on @7.0; OFF baseline 9.38 m (furthest travel in the old backward direction after the spin)" },
+        { "metric": "flips", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" }
+      ]
+    },
+    {
+      "maneuver": "spinrecovery",
+      "car": "coupe",
+      "station": "openpad",
+      "params": { "entrySpeedMs": 15.0, "flickSteer": 1.0, "flickThrottle": 0.3, "spinTargetDeg": 160.0, "rotSafetyS": 4.0, "maxRunS": 14.0, "assist": 1 },
+      "asserts": [
+        { "metric": "recoveryS", "op": "<=", "value": 1.2, "note": "measured 0.80 s assist-on @7.0 (assist:1 Sport, same precedent as the jturn coupe row); OFF baseline 1.64 s" },
+        { "metric": "rollbackM", "op": "<=", "value": 3.5, "note": "measured 1.73 m assist-on @7.0; OFF baseline 5.52 m" },
+        { "metric": "flips", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" }
+      ]
+    }
+  ]
+}

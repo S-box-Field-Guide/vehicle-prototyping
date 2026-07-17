@@ -1,0 +1,107 @@
+// World & Terrain panel. Tokens inlined from _tokens.scss (see note there). Zero font-size /
+// letter-spacing (glyph-corruption law); font-family only.
+
+WorldControls {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	font-family: Poppins, sans-serif;
+
+	.mono { font-family: "Roboto Mono", monospace; }
+
+	.panel {
+		position: absolute;
+		top: 108px;
+		right: 32px;
+		width: 300px;
+		pointer-events: all;
+		flex-direction: column;
+		gap: 12px;
+		padding: 20px;
+		background-color: rgba( 15, 17, 21, 0.94 );
+		border: 1px solid rgba( 255, 255, 255, 0.07 );
+		border-radius: 18px;
+		box-shadow: 0 20px 60px rgba( 0, 0, 0, 0.6 );
+	}
+
+	.phead {
+		flex-direction: row;
+		justify-content: space-between;
+		align-items: center;
+
+		.ptitle { font-weight: 700; color: #F2F4F7; }
+		.kbd {
+			color: #F2F4F7;
+			border: 1px solid rgba( 255, 255, 255, 0.10 );
+			border-radius: 5px;
+			padding: 3px 8px;
+			background-color: rgba( 255, 255, 255, 0.04 );
+		}
+	}
+
+	.section {
+		flex-direction: row;
+		align-items: center;
+		gap: 6px;
+		color: #F2F4F7;
+		font-weight: 600;
+		.stitle { color: #F2F4F7; font-weight: 600; }
+		.hint { color: #F2F4F7; font-weight: 400; }
+	}
+
+	.worlds {
+		flex-direction: column;
+		gap: 8px;
+
+		.wbtn {
+			flex-direction: column;
+			gap: 2px;
+			padding: 12px 14px;
+			border-radius: 12px;
+			background-color: rgba( 255, 255, 255, 0.05 );
+			border: 1px solid rgba( 255, 255, 255, 0.07 );
+			cursor: pointer;
+			transition: all 0.12s ease;
+
+			.wname { font-weight: 600; color: #E8EAED; }
+			.wsub { color: #F2F4F7; }
+
+			&:hover { background-color: rgba( 255, 255, 255, 0.09 ); }
+
+			&.on {
+				background-color: rgba( 74, 217, 242, 0.12 );
+				border: 1px solid rgba( 74, 217, 242, 0.55 );
+				.wname { color: #4AD9F2; }
+			}
+		}
+	}
+
+	.terrain {
+		flex-direction: row;
+		background-color: rgba( 255, 255, 255, 0.05 );
+		border-radius: 10px;
+		padding: 3px;
+		gap: 2px;
+
+		.seg {
+			flex-grow: 1;
+			justify-content: center;
+			align-items: center;
+			color: #F2F4F7;
+			padding: 9px 0;
+			border-radius: 8px;
+			cursor: pointer;
+			transition: all 0.12s ease;
+
+			&:hover { color: #E8EAED; }
+			&.on { color: #0A161A; background-color: #4AD9F2; font-weight: 600; }
+		}
+
+		&.disabled {
+			opacity: 0.4;
+			.seg { cursor: default; &:hover { color: #F2F4F7; } &.on { background-color: #464C56; color: #F2F4F7; } }
+		}
+	}
+
+	.foot { color: #F2F4F7; }
+}

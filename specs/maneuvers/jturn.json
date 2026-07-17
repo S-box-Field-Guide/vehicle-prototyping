@@ -1,0 +1,53 @@
+{
+  "bands": "handling-targets v1",
+  "suite": [
+    {
+      "maneuver": "jturn",
+      "car": "hatch",
+      "station": "openpad",
+      "params": { "entrySpeedMs": 13.9, "rotThrottleFrac": 0.6, "settleYawDeg": 15.0, "settleWindowS": 1.2, "maxRunS": 12.0 },
+      "asserts": [
+        { "metric": "jturnTimeS", "op": "between", "value": [2.2, 3.0], "note": "handling-targets v1 Hatch Handbrake J-turn 180 deg time (FWD front-pull is slow to rotate)" },
+        { "metric": "yawOvershootDeg", "op": "<=", "value": 40.0, "note": "pass shape: yaw settles, no spin past 220 deg (=40 deg past 180)" },
+        { "metric": "catchable", "op": "==", "value": true, "note": "handling-targets v1 Catchability: yaw under 15 deg/s within 1.2 s, never past 220 deg" },
+        { "metric": "flips", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" }
+      ]
+    },
+    {
+      "maneuver": "jturn",
+      "car": "coupe",
+      "station": "openpad",
+      "params": { "entrySpeedMs": 13.9, "rotThrottleFrac": 0.6, "settleYawDeg": 20.0, "settleWindowS": 1.5, "maxRunS": 12.0, "assist": 1, "hbInitiateS": 1.6 },
+      "asserts": [
+        { "metric": "jturnTimeS", "op": "between", "value": [1.4, 2.0], "note": "KNOWN GRIP-LIMIT RED, re-anchor pending (battery-honest-reds 2026-07-15). The v1 1.4-2.0 s 'crisp RWD rear steps out cleanly' band is an aspiration the tuned grippy tires cannot meet: the coupe J-turn is floored at ~3.50 s (measured, bit-identical x2), same root cause across ALL RWD cars (pickup 4.18 s, kart 4.02 s) -- the accepted grip lift resists a scripted handbrake power-slide, so rotation is slow. Entry-speed and throttle sweeps confirm ~3.5 s is the floor (higher entry = SLOWER). Left red + documented per the standing rule that a real accepted-physics characteristic stays red; re-anchoring the crisp-RWD CHARACTER claim to measured grippy reality is a feel call. See baseline-metrics.md." },
+        { "metric": "yawOvershootDeg", "op": "<=", "value": 40.0, "note": "pass shape: yaw settles, no spin past 220 deg (measured 5.8 deg -- clean, well inside)" },
+        { "metric": "catchable", "op": "==", "value": true, "note": "FIXED (battery-honest-reds 2026-07-15): was FALSE (jturnTimeS=0, no 180 deg). The default 0.35 s handbrake initiation was too short to break the coupe's grippy rear loose, so it never rotated -- a PILOT deficiency, not a car limit. hbInitiateS 0.35->1.6 (same lever the pickup already uses at 1.0) breaks the rear loose; the coupe now completes a clean catchable 180 deg (yaw settles < 20 deg/s within 1.5 s, never past 220 deg). NO CarDefinition dial touched." },
+        { "metric": "flips", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" }
+      ]
+    },
+    {
+      "maneuver": "jturn",
+      "car": "kart",
+      "station": "openpad",
+      "params": { "entrySpeedMs": 13.9, "rotThrottleFrac": 0.6, "settleYawDeg": 25.0, "settleWindowS": 1.0, "maxRunS": 12.0, "assist": 1 },
+      "asserts": [
+        { "metric": "jturnTimeS", "op": "between", "value": [1.0, 1.6], "note": "handling-targets v1 Kart Handbrake J-turn 180 deg time (light RWD rotates almost instantly; stability assist bounds it)" },
+        { "metric": "yawOvershootDeg", "op": "<=", "value": 40.0, "note": "pass shape: yaw settles, no spin past 220 deg" },
+        { "metric": "catchable", "op": "==", "value": true, "note": "handling-targets v1 Catchability: yaw under 25 deg/s within 1.0 s, never past 220 deg" },
+        { "metric": "flips", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" }
+      ]
+    },
+    {
+      "maneuver": "jturn",
+      "car": "pickup",
+      "station": "openpad",
+      "params": { "entrySpeedMs": 13.9, "rotThrottleFrac": 0.6, "settleYawDeg": 20.0, "settleWindowS": 1.3, "maxRunS": 12.0, "assist": 1, "hbInitiateS": 1.0 },
+      "asserts": [
+        { "metric": "jturnTimeS", "op": "between", "value": [2.0, 2.8], "note": "handling-targets v1 Pickup Handbrake J-turn 180 deg time (RWD, high yaw inertia -- slower than Coupe)" },
+        { "metric": "yawOvershootDeg", "op": "<=", "value": 40.0, "note": "pass shape: yaw settles, no spin past 220 deg" },
+        { "metric": "catchable", "op": "==", "value": true, "note": "handling-targets v1 Catchability: yaw settles, never past 220 deg" },
+        { "metric": "flips", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" }
+      ]
+    }
+  ]
+}

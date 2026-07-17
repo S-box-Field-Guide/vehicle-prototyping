@@ -1,0 +1,57 @@
+{
+  "bands": "handling-targets v1",
+  "suite": [
+    {
+      "maneuver": "liftoff",
+      "car": "hatch",
+      "station": "bankedcurve",
+      "params": { "entrySpeedMs": 22.0, "liftoffApexFrac": 0.5, "settleYawDeg": 15.0, "settleWindowS": 1.0, "maxRunS": 10.0 },
+      "asserts": [
+        { "metric": "yawOvershootDeg", "op": "<=", "value": 15.0, "note": "handling-targets v1 Hatch Lift-off oversteer yaw overshoot <=15 deg, damped within 1.0 s (FWD mild tuck-in, existing band reused verbatim). v1 -- pre-measurement" },
+        { "metric": "spunOut", "op": "==", "value": false, "note": "liftoff pass shape: no spin. DOC GAP: testing-harness.md §6.2 lists spunOut's applicable maneuvers as 'skidpad' only -- semantically applicable to liftoff too, and the table could be extended to cover it" },
+        { "metric": "lateralGPeak", "op": "<=", "value": 1.5, "note": "sanity ceiling only (NaN/runaway guard) -- not a handling-targets band" },
+        { "metric": "elapsedS", "op": "<=", "value": 8.0, "note": "completion sanity only (did-not-stick guard), NOT a measurement of the 1.0 s damping window -- see report: no dedicated liftoff time-to-settle field exists in the frozen telemetry contract" },
+        { "metric": "flips", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" }
+      ]
+    },
+    {
+      "maneuver": "liftoff",
+      "car": "coupe",
+      "station": "bankedcurve",
+      "params": { "entrySpeedMs": 26.0, "liftoffApexFrac": 0.5, "settleYawDeg": 20.0, "settleWindowS": 1.2, "maxRunS": 10.0 },
+      "asserts": [
+        { "metric": "yawOvershootDeg", "op": "between", "value": [20.0, 35.0], "note": "handling-targets v1 Coupe Lift-off oversteer yaw overshoot 20-35 deg, damped within 1.2 s, never past 220 deg -- the archetypal RWD sports-car trait, existing band reused verbatim. 'never past 220' is trivially satisfied by this band (35 << 220) so no separate assert added. v1 -- pre-measurement" },
+        { "metric": "spunOut", "op": "==", "value": false, "note": "liftoff pass shape: no spin. DOC GAP: same as hatch entry -- spunOut documented only against skidpad in §6.2" },
+        { "metric": "lateralGPeak", "op": "<=", "value": 1.5, "note": "sanity ceiling only -- not a handling-targets band" },
+        { "metric": "elapsedS", "op": "<=", "value": 8.0, "note": "completion sanity only, not a damping-time measurement (see report)" },
+        { "metric": "flips", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" }
+      ]
+    },
+    {
+      "maneuver": "liftoff",
+      "car": "kart",
+      "station": "bankedcurve",
+      "params": { "entrySpeedMs": 15.0, "liftoffApexFrac": 0.5, "settleYawDeg": 25.0, "settleWindowS": 0.8, "maxRunS": 10.0 },
+      "asserts": [
+        { "metric": "yawOvershootDeg", "op": "<=", "value": 20.0, "note": "handling-targets v1 Kart Lift-off oversteer yaw overshoot <=20 deg, damped within 0.8 s, never past 220 deg -- directly grounded in the 'Tame the kart' fix (13f3d14), effectively a regression check. Existing band reused verbatim. v1 -- pre-measurement" },
+        { "metric": "spunOut", "op": "==", "value": false, "note": "liftoff pass shape: no spin. DOC GAP: same as hatch entry" },
+        { "metric": "lateralGPeak", "op": "<=", "value": 1.5, "note": "sanity ceiling only -- not a handling-targets band" },
+        { "metric": "elapsedS", "op": "<=", "value": 8.0, "note": "completion sanity only, not a damping-time measurement (see report)" },
+        { "metric": "flips", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" }
+      ]
+    },
+    {
+      "maneuver": "liftoff",
+      "car": "pickup",
+      "station": "bankedcurve",
+      "params": { "entrySpeedMs": 20.0, "liftoffApexFrac": 0.5, "settleYawDeg": 20.0, "settleWindowS": 1.3, "maxRunS": 10.0 },
+      "asserts": [
+        { "metric": "yawOvershootDeg", "op": "<=", "value": 20.0, "note": "handling-targets v1 Pickup Lift-off oversteer yaw overshoot <=20 deg, damped within 1.3 s, never past 220 deg -- softened slow push-then-rotate from the gradual offroad lateral curve. Existing band reused verbatim. v1 -- pre-measurement" },
+        { "metric": "spunOut", "op": "==", "value": false, "note": "liftoff pass shape: no spin. DOC GAP: same as hatch entry" },
+        { "metric": "lateralGPeak", "op": "<=", "value": 1.5, "note": "sanity ceiling only -- not a handling-targets band" },
+        { "metric": "elapsedS", "op": "<=", "value": 8.0, "note": "completion sanity only, not a damping-time measurement (see report)" },
+        { "metric": "flips", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "schema": "vp.partkit/1",
+  "generator": "tools/gen_vehicle.py",
+  "kit": "test_kit",
+  "parts": []
+}

@@ -1,0 +1,49 @@
+{
+  "bands": "hatch-kit equivalence guard -- the kit must stay within ~2-3% of the fused hatch (kit-equivalence exit criterion). SINCE THE DE-KENNEY COLLAPSE (2026-07-13): the roster car 'hatch' now SPAWNS THE hatch_kit PART KIT directly (the separate 'hatchkit' slot was removed), so this suite runs car='hatch' = the kit. The fused twin (car='hatchfused') was RETIRED 2026-07-15 along with the kenney fused-body fallback; the bands below stay anchored to its last measured ledger values as frozen reference constants (a live kit-vs-fused A/B is no longer possible). Bands stay anchored to the fused/measured ledger +/-2-3%; refresh them whenever the shared hatch dials change. Run manually: python tools/vp_test.py specs/hatchkit-equivalence.json --url <editor /mcp URL>.",
+  "suite": [
+    {
+      "maneuver": "launch",
+      "car": "hatch",
+      "station": "dragstrip",
+      "params": { "targetSpeedMs": 27.78, "maxRunS": 20.0 },
+      "asserts": [
+        { "metric": "zeroToHundredS", "op": "between", "value": [8.0, 10.0], "note": "hatch band; refreshed to hatch-measured value +/- 2-3% after each hatch tuning iteration" },
+        { "metric": "flips", "op": "==", "value": 0 },
+        { "metric": "fallThroughs", "op": "==", "value": 0 }
+      ]
+    },
+    {
+      "maneuver": "brake",
+      "car": "hatch",
+      "station": "brakezone",
+      "params": { "entrySpeedMs": 27.78, "maxRunS": 15.0 },
+      "asserts": [
+        { "metric": "brakeDistanceM", "op": "between", "value": [42.0, 48.0], "note": "hatch band re-anchored to the accepted state (feel session 2026-07-12); tracks specs/maneuvers/brake.json hatch 42-48. HatchKit must stay within ~2% of the fused hatch" },
+        { "metric": "flips", "op": "==", "value": 0 }
+      ]
+    },
+    {
+      "maneuver": "skidpad",
+      "car": "hatch",
+      "station": "skidpad",
+      "params": { "radiusM": 20.0, "laps": 2, "maxRunS": 40.0 },
+      "asserts": [
+        { "metric": "lateralGAvg", "op": "between", "value": [0.66, 0.72], "note": "refreshed to hatch-MEASURED 0.687 +/- ~3% per this spec's own contract (2026-07-12 feel session; kit measured 0.694 = 1.0% delta). The aspirational 0.80-0.90 band was never hatch-measured after tuning — the fused hatch reads 0.687 against it too (documented skidpad measurement-profile artifact, baseline-metrics.md); an equivalence guard must compare kit vs hatch, not kit vs aspiration" },
+        { "metric": "spunOut", "op": "==", "value": false },
+        { "metric": "flips", "op": "==", "value": 0 }
+      ]
+    },
+    {
+      "maneuver": "slalom",
+      "car": "hatch",
+      "station": "slalom",
+      "params": { "coneSpacingM": 18.0, "coneCount": 8, "weaveAmpM": 1.0, "cruiseSpeedMs": 16.0, "maxRunS": 30.0 },
+      "asserts": [
+        { "metric": "coneStrikes", "op": "==", "value": 0, "note": "pass shape" },
+        { "metric": "elapsedS", "op": "between", "value": [14.63, 15.53], "note": "TRANSIENT-YAW equivalence guard (follow-up, 2026-07-13). launch/brake/skidpad are longitudinal/steady-state and CANNOT catch the kit path's compound-collider INERTIA shift; a slalom (transient yaw) can. Anchored to the fused-hatch reference elapsedS 15.08 s (hatchfused A/B) +/-3%. The MEASURED kit-vs-fused delta is <=1.6% elapsed (kit 14.84 vs fused 15.08), so +/-3% brackets the real truth without flapping. A drift beyond this = the kit part-colliders moved yaw inertia (the blind spot that let the kart slalom drift silently) -- a KIT bug, not tuning" },
+        { "metric": "yawRatePeakDeg", "op": "between", "value": [35.29, 37.47], "note": "transient-yaw guard: fused-hatch reference yawRatePeakDeg 36.38 deg/s (A/B) +/-3%; measured kit-vs-fused delta <=1.1% (kit 35.98 vs fused 36.38)" },
+        { "metric": "flips", "op": "==", "value": 0 }
+      ]
+    }
+  ]
+}

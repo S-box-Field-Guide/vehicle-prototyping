@@ -1,0 +1,61 @@
+{
+  "bands": "handling-targets v1",
+  "suite": [
+    {
+      "maneuver": "jump",
+      "car": "hatch",
+      "station": "ramps",
+      "params": { "approachSpeedMs": 22.0, "maxRunS": 15.0 },
+      "asserts": [
+        { "metric": "flips", "op": "==", "value": 0, "note": "handling-targets v1 Hatch Ramp-jump landing settle: 0 flips" },
+        { "metric": "settleS", "op": "<=", "value": 1.3, "note": "handling-targets v1 Hatch Ramp-jump landing settle < 1.3 s" },
+        { "metric": "airtimeS", "op": "between", "value": [0.2, 3.0], "note": "airtime sanity (ramp-geometry dependent; no per-class handling-targets band)" },
+        { "metric": "landingPitchDeg", "op": "<=", "value": 25.0, "note": "landing-attitude sanity (no per-class handling-targets band)" },
+        { "metric": "landingRollDeg", "op": "<=", "value": 25.0, "note": "landing-attitude sanity (no per-class handling-targets band)" },
+        { "metric": "fallThroughs", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" }
+      ]
+    },
+    {
+      "maneuver": "jump",
+      "car": "coupe",
+      "station": "ramps",
+      "params": { "approachSpeedMs": 22.0, "maxRunS": 15.0 },
+      "asserts": [
+        { "metric": "flips", "op": "==", "value": 0, "note": "handling-targets v1 Coupe Ramp-jump landing settle: 0 flips" },
+        { "metric": "settleS", "op": "<=", "value": 1.0, "note": "handling-targets v1 Coupe Ramp-jump landing settle < 1.0 s (stiff sport dampers)" },
+        { "metric": "airtimeS", "op": "between", "value": [0.2, 3.0], "note": "airtime sanity (ramp-geometry dependent; no per-class handling-targets band)" },
+        { "metric": "landingPitchDeg", "op": "<=", "value": 25.0, "note": "landing-attitude sanity (no per-class handling-targets band)" },
+        { "metric": "landingRollDeg", "op": "<=", "value": 25.0, "note": "landing-attitude sanity (no per-class handling-targets band)" },
+        { "metric": "fallThroughs", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" }
+      ]
+    },
+    {
+      "maneuver": "jump",
+      "car": "kart",
+      "station": "ramps",
+      "params": { "approachSpeedMs": 18.0, "maxRunS": 15.0 },
+      "asserts": [
+        { "metric": "flips", "op": "==", "value": 0, "note": "handling-targets v1 Kart Ramp-jump landing settle: 0 flips" },
+        { "metric": "settleS", "op": "<=", "value": 1.0, "note": "handling-targets v1 Kart Ramp-jump landing settle < 1.0 s (light chassis settles fast)" },
+        { "metric": "airtimeS", "op": "between", "value": [0.2, 3.0], "note": "airtime sanity; approach capped near kart top speed (~65 km/h)" },
+        { "metric": "landingPitchDeg", "op": "<=", "value": 25.0, "note": "landing-attitude sanity (no per-class handling-targets band)" },
+        { "metric": "landingRollDeg", "op": "<=", "value": 25.0, "note": "landing-attitude sanity (no per-class handling-targets band)" },
+        { "metric": "fallThroughs", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" }
+      ]
+    },
+    {
+      "maneuver": "jump",
+      "car": "pickup",
+      "station": "ramps",
+      "params": { "approachSpeedMs": 22.0, "maxRunS": 15.0 },
+      "asserts": [
+        { "metric": "flips", "op": "==", "value": 0, "note": "handling-targets v1 Pickup Ramp-jump landing settle: 0 flips" },
+        { "metric": "settleS", "op": "<=", "value": 1.5, "note": "handling-targets v1 Pickup Ramp-jump landing settle < 1.5 s (softest/longest-travel suspension, sits at global ceiling)" },
+        { "metric": "airtimeS", "op": "between", "value": [0.2, 3.0], "note": "airtime sanity (ramp-geometry dependent; no per-class handling-targets band)" },
+        { "metric": "landingPitchDeg", "op": "<=", "value": 25.0, "note": "landing-attitude sanity (no per-class handling-targets band)" },
+        { "metric": "landingRollDeg", "op": "<=", "value": 25.0, "note": "landing-attitude sanity (no per-class handling-targets band)" },
+        { "metric": "fallThroughs", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" }
+      ]
+    }
+  ]
+}

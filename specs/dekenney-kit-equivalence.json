@@ -1,0 +1,69 @@
+{
+  "bands": "custom-kit equivalence guard -- the coupe and kart now spawn their PART KITS on the SAME CarDefinition (physics untouched; the kenney fused-body fallback was retired 2026-07-15). Unlike hatchkit (a separate roster twin), the fused twin here is the measured ledger itself: every assert is the docs/baseline-metrics.md final MEASURED value +/-3% (hatchkit-equivalence precedent), NOT the aspirational handling-targets band. A drift beyond +/-3% means the kit's part colliders changed physics (early bump-stop, inertia shift) -- that is a KIT bug, not a tuning item. Run per-spec: python tools/vp_test.py specs/dekenney-kit-equivalence.json --url <editor /mcp URL>. The regenerated hatch v2 kit is covered by the existing specs/hatchkit-equivalence.json (same dims, same def). TRANSIENT-YAW guard (follow-up 2026-07-13): the launch/brake/skidpad rows here are longitudinal/steady-state and CANNOT catch a compound-collider INERTIA shift (the blind spot that let the kart slalom drift silently). That guard lives on the STABLE hatch slalom in specs/hatchkit-equivalence.json (fused reference +/-3%) -- the coupe/kart slalom are too chaotic (marginal-stability fishtail, coupe DNF) to hold an equivalence tolerance, so a step-steer/slalom transient-yaw guard is anchored to the hatch where it is deterministic.",
+  "suite": [
+    {
+      "maneuver": "launch",
+      "car": "coupe",
+      "station": "dragstrip",
+      "params": { "targetSpeedMs": 27.78, "maxRunS": 20.0 },
+      "asserts": [
+        { "metric": "zeroToHundredS", "op": "between", "value": [6.7, 7.2], "note": "measured 6.94 s +/-3% (baseline-metrics final state). The 5-6 s handling-target red is a TUNING item, not this guard's business" },
+        { "metric": "flips", "op": "==", "value": 0 },
+        { "metric": "fallThroughs", "op": "==", "value": 0 }
+      ]
+    },
+    {
+      "maneuver": "brake",
+      "car": "coupe",
+      "station": "brakezone",
+      "params": { "entrySpeedMs": 27.78, "maxRunS": 15.0 },
+      "asserts": [
+        { "metric": "brakeDistanceM", "op": "between", "value": [45.5, 48.7], "note": "measured 47.2 m +/-3% (accepted braking state, band 42-48)" },
+        { "metric": "flips", "op": "==", "value": 0 }
+      ]
+    },
+    {
+      "maneuver": "skidpad",
+      "car": "coupe",
+      "station": "skidpad",
+      "params": { "radiusM": 20.0, "laps": 2, "maxRunS": 40.0 },
+      "asserts": [
+        { "metric": "lateralGAvg", "op": "between", "value": [0.66, 0.70], "note": "measured 0.680 g +/-3% (measurement-profile reality, NOT the aspirational 0.95-1.05 -- same lesson as hatchkit-equivalence)" },
+        { "metric": "spunOut", "op": "==", "value": false },
+        { "metric": "flips", "op": "==", "value": 0 }
+      ]
+    },
+    {
+      "maneuver": "launch",
+      "car": "kart",
+      "station": "dragstrip",
+      "params": { "splitSpeedMs": 13.89, "targetSpeedMs": 13.89, "maxRunS": 20.0 },
+      "asserts": [
+        { "metric": "zeroToHundredS", "op": "between", "value": [3.75, 4.05], "note": "measured 3.90 s (0-50 km/h split) +/-3%" },
+        { "metric": "flips", "op": "==", "value": 0 },
+        { "metric": "fallThroughs", "op": "==", "value": 0 }
+      ]
+    },
+    {
+      "maneuver": "brake",
+      "car": "kart",
+      "station": "brakezone",
+      "params": { "entrySpeedMs": 17.0, "maxRunS": 15.0 },
+      "asserts": [
+        { "metric": "brakeDistanceM", "op": "between", "value": [17.5, 18.7], "note": "measured 18.1 m +/-3% (the 8-14 handling-target red stays a tuning item; this guard only proves the kit did not move physics)" },
+        { "metric": "flips", "op": "==", "value": 0 }
+      ]
+    },
+    {
+      "maneuver": "skidpad",
+      "car": "kart",
+      "station": "skidpad",
+      "params": { "radiusM": 20.0, "laps": 2, "maxRunS": 40.0 },
+      "asserts": [
+        { "metric": "lateralGAvg", "op": "between", "value": [0.745, 0.795], "note": "measured 0.770 g +/-3%" },
+        { "metric": "spunOut", "op": "==", "value": false },
+        { "metric": "flips", "op": "==", "value": 0 }
+      ]
+    }
+  ]
+}

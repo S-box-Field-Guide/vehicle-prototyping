@@ -1,0 +1,7 @@
+# Blender's OBJ exporter (tools/gen_vehicle.py, tools/gen_buildings.py) uses platform line
+# endings, so kit regeneration churned these CRLF<->LF against the LF index whenever
+# core.autocrlf flipped the working copies. The .vmdl/.vmat writers already emit LF, so only
+# the exporter-written .obj/.mtl need pinning. Pin them to LF (matching the index) so a
+# regen produces no EOL-only diff.
+*.obj text eol=lf
+*.mtl text eol=lf

@@ -1,0 +1,137 @@
+@using Sandbox;
+@using Sandbox.UI;
+@inherits PanelComponent
+@namespace VehicleProto
+
+@* Dial-explainer overlay for the Tuning panel (the "?" button in its header opens this). A short,
+   plain-language summary of every tuning dial for players who aren't car experts — the condensed
+   companion to docs/tuning-guide.md.
+
+   WHY A SEPARATE PANEL (same reason as TuneRenameOverlay): TuningPanel folds live suspension load
+   into its BuildHash, so it rebuilds EVERY FRAME while driving. Anything interactive placed inside it
+   is torn down and recreated each frame. This overlay lives on its own PanelComponent whose BuildHash
+   reads ONLY UiState.TuneHelpOpen (constant while open), so it is built once on open and never rebuilt
+   mid-view — clicks land reliably.
+
+   GLYPH-CORRUPTION DISCIPLINE (see HelpOverlay): ZERO font-size / letter-spacing; every text node is
+   wrapped in a <span>, and each flex row holds ONLY element children (never a bare text node beside an
+   element child) — that combination corrupted descriptions to solid blocks in past panels. *@
+
+<root>
+	@if ( UiState.TuneHelpOpen )
+	{
+		@* Backdrop and card wrap are SIBLINGS (TuneRenameOverlay idiom): a click on the card never bubbles
+		   to the backdrop's close, so no StopPropagation is needed; a click on empty space falls through
+		   the pointer-events:none wrap to the backdrop below and closes. *@
+		<div class="backdrop" onclick=@Close></div>
+		<div class="modalwrap">
+			<div class="card">
+				<div class="chead">
+					<span class="title">Tuning dials — quick guide</span>
+					<div class="xbtn" onclick=@Close>×</div>
+				</div>
+				<span class="lede">What each dial does, and which way to move it. Drag one, drive, and feel the change.</span>
+
+				@* Scroll region. FLAT child list (sections and rows are DIRECT children of the scroller, no
+				   per-group wrapper): the owner screenshot showed the first cut's rows compressed to a small
+				   fixed height with text painting over the neighbours — the yoga column was squeezing its
+				   (shrinkable) children into the capped height instead of scrolling. Every child here is
+				   flex-shrink:0 in scss, the scroller has an EXPLICIT height and overflow-y:scroll (the
+				   proven TuningPanel .plist recipe), so rows keep their natural size and the region scrolls. *@
+				<div class="scrollbody">
+					@foreach ( var group in GroupOrder )
+					{
+						<span class="section">@group</span>
+						@foreach ( var d in Dials.Where( x => x.Group == group ) )
+						{
+							<div class="drow">
+								<span class="dname">@d.Name</span>
+								<span class="dsum">@d.Summary</span>
+							</div>
+						}
+					}
+				</div>
+
+				<div class="cfoot">
+					<span class="fnote">Full walkthrough: docs/tuning-guide.md</span>
+					<div class="btn" onclick=@Close>Back to the dials</div>
+				</div>
+			</div>
+		</div>
+	}
+</root>
+
+@code {
+	// One source of truth for the summaries (condensed from docs/tuning-guide.md — keep the two in sync).
+	// Plain nested class + ctor (house idiom, mirrors TuningPanel.Param) so the target-typed new(...)
+	// entries below stay terse without leaning on any record codegen.
+	class DialInfo
+	{
+		public string Group, Name, Summary;
+		public DialInfo( string group, string name, string summary )
+		{
+			Group = group;
+			Name = name;
+			Summary = summary;
+		}
+	}
+
+	static readonly string[] GroupOrder = { "Engine", "Tires", "Suspension", "Assists" };
+
+	static readonly DialInfo[] Dials =
+	{
+		// --- Engine ---
+		new( "Engine", "Engine torque", "The engine's pulling power. Up for stronger acceleration (and more wheelspin); down for a gentler, smoother car." ),
+		new( "Engine", "Final drive", "The overall gearing. Up for punchier acceleration but a lower top speed; down for taller gearing and a higher top speed." ),
+		new( "Engine", "Launch boost", "Extra torque at a standstill to help you launch. Up for a harder getaway (and more wheelspin); 1× turns it off." ),
+		new( "Engine", "Engine brake", "How much lifting off the throttle slows you. Up to scrub speed and settle into corners on a lift; down to coast freely." ),
+		new( "Engine", "Redline", "The engine's rev ceiling. Up to pull longer in each gear; down to shift earlier. It carries the auto shift points with it." ),
+
+		// --- Tires ---
+		new( "Tires", "Grip", "Overall tire stick, for cornering and braking alike — the main \"how planted\" dial. Up for sharp and glued; down for loose and slidey." ),
+		new( "Tires", "Drift grip (handbrake)", "How much rear grip is left with the handbrake pulled. Down for easy, big slides; up and the handbrake barely upsets the car." ),
+		new( "Tires", "Brake torque", "Straight-line stopping power. Up for shorter stops (easier to lock up); down for longer, softer braking." ),
+		new( "Tires", "Brake assist", "An extra assisted-deceleration layer on top of the brakes. Up for stronger stopping; 0 turns it off." ),
+		new( "Tires", "Handbrake torque", "How hard the handbrake grabs the rear. Up for an instant, snappy lock; down for a gentler pull." ),
+
+		// --- Suspension ---
+		new( "Suspension", "Spring rate", "Suspension stiffness. Up for flat and responsive but harsher over bumps; down for soft, more roll, and a floatier ride." ),
+		new( "Suspension", "Damper rate", "How fast the suspension settles. Up for tight control and less bounce; down and the car keeps bobbing." ),
+		new( "Suspension", "Mass", "The car's weight. Up for stable and momentum-heavy but slower to turn and stop; down for nimble but easily unsettled." ),
+		new( "Suspension", "Gravity", "How hard everything is pulled down (a whole-scene setting). Up to plant the car and land jumps heavy; down for floaty, moon-like jumps." ),
+
+		// --- Assists ---
+		new( "Assists", "Steer speed", "How fast the wheels follow your input. Up for snappy, instant steering; down for slower and smoother." ),
+		new( "Assists", "Steer lock (low speed)", "Max steering angle when slow. Up for tighter turns — hairpins and parking; down for a wider circle." ),
+		new( "Assists", "Steer lock (high speed)", "Max steering angle at speed (cars steer less the faster they go). Up for responsive but twitchy; down for calm and stable." ),
+		new( "Assists", "Reverse speed cap", "Top speed in reverse. Up to back up faster; down to cap it lower." ),
+		new( "Assists", "Spin recovery", "An assist that kills leftover motion after a spin so you point where you steer again. Up for a snappy arcade catch; 0 for a raw feel." ),
+	};
+
+	protected override void OnUpdate()
+	{
+		if ( !UiState.TuneHelpOpen )
+			return;
+
+		// Esc backs out of THIS overlay only (not the whole Tuning panel). CONSUME it so neither VehicleHud's
+		// global "close any cursor modal" handler nor the host pause menu also fires — VehicleHud is guarded
+		// to skip Esc while TuneHelpOpen is set, so this panel owns the key here.
+		// (g-game-input-escapepressed-real-getset-consumable)
+		if ( Input.EscapePressed )
+		{
+			Input.EscapePressed = false;
+			Close();
+		}
+	}
+
+	void Close()
+	{
+		UiState.TuneHelpOpen = false;
+		// Cursor stays visible: the Tuning panel is still open behind us and forces it every frame.
+		StateHasChanged();
+	}
+
+	// Rebuild ONLY on open/close. No live/per-frame data here — that constant-while-open hash is what keeps
+	// the overlay from being torn down while you read it (mirrors TuneRenameOverlay's decoupling).
+	protected override int BuildHash() => System.HashCode.Combine( UiState.TuneHelpOpen );
+}

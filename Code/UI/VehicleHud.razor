@@ -1,0 +1,157 @@
+@using Sandbox;
+@using Sandbox.UI;
+@inherits PanelComponent
+@namespace VehicleProto
+
+@* Drive HUD — clean mode (design board 1a). Always visible while driving unless H hides it. *@
+
+<root>
+	@if ( UiState.HudHidden )
+	{
+		<div class="hints restore" onclick=@ToggleHud>
+			<div class="hint">
+				<span class="mono key">H</span>
+				<span class="cap">Show UI</span>
+			</div>
+		</div>
+	}
+	else
+	{
+		<div class="topbar left">
+			<div class="chip brand">
+				<div class="dot"></div>
+				<div class="name">VEHICLE PROTOTYPING</div>
+			</div>
+		</div>
+
+		<div class="topbar right">
+			<div class="chip">
+				<div class="lbl">Car</div>
+				<div class="carname">@CarName</div>
+				<div class="mono tag">@CarClass</div>
+			</div>
+			<div class="chip">
+				<div class="lbl">Assist</div>
+				<div class="assist">@AssistText</div>
+			</div>
+		</div>
+
+		<div class="cluster">
+			<div class="topline">
+				<div class="speedblock">
+					<div class="mono speed">@SpeedDisplay</div>
+					<div class="unit">@UserSettings.SpeedUnitLabel</div>
+				</div>
+				<div class="gearblock">
+					<div class="mono gearchip @GearState">@GearText</div>
+					<div class="gearlbl @(GearState == "shifting" ? "hot" : "")">@GearCaption</div>
+				</div>
+			</div>
+
+			<div class="rpmblock">
+				<div class="rpmhead">
+					<div class="lbl">RPM</div>
+					<div class="mono rpmtext @(RpmFraction > 0.97f ? "over" : "")">@RpmText <span>/ @RedlineText</span></div>
+				</div>
+				<div class="rpm">
+					<div class="redzone"></div>
+					<div class="fill @(RpmFraction > 0.9f ? "redline" : "")" style="width: @UiFmt.Pct( RpmFraction * 100f )%"></div>
+				</div>
+			</div>
+		</div>
+
+		@if ( !UiState.TelemetryOpen )
+		{
+			<div class="hints">
+				<div class="hint"><span class="mono key">L</span><span class="cap">Telemetry</span></div>
+				<div class="hint"><span class="mono key">T</span><span class="cap">Tuning</span></div>
+				<div class="hint"><span class="mono key">M</span><span class="cap">World</span></div>
+				<div class="hint"><span class="mono key">I</span><span class="cap">Help</span></div>
+				<div class="hint"><span class="mono key">TAB</span><span class="cap">Session</span></div>
+				<div class="hint hide" onclick=@ToggleHud>
+					<span class="mono key">H</span>
+					<span class="cap">Hide UI</span>
+				</div>
+			</div>
+		}
+	}
+</root>
+
+@code {
+	public VehicleController Target { get; set; }
+
+	// DISPLAY ONLY: SignedSpeedMs stays SI (magnitude = SpeedMs, sign = travel direction); UserSettings
+	// picks km/h vs mph at the last mile. Truncate toward zero (int cast) so reverse reads a negative
+	// number and standstill jitter stays a steady 0 — the old abs-magnitude "F0" round-nearest flapped
+	// 0/1 as the crawl speed crossed the 0.5-unit boundary when easing into reverse.
+	string SpeedDisplay => ((int)UserSettings.ToDisplaySpeed( Target?.SignedSpeedMs ?? 0f )).ToString();
+	string RpmText => (Target?.Drivetrain?.Rpm ?? 0f).ToString( "F0" );
+	string RedlineText => (Target?.Definition?.RedlineRpm ?? 0f).ToString( "F0" );
+	string CarName => Target?.Definition?.Name ?? "—";
+	string CarClass => (Target?.Definition?.Layout ?? DriveLayout.FWD).ToString().ToLower();
+	string AssistText => (Target?.Assists ?? AssistLevel.Casual).ToString().ToUpper();
+
+	float RpmFraction => Target?.Drivetrain is null || Target.Definition is null
+		? 0f
+		: Math.Clamp( Target.Drivetrain.Rpm / Target.Definition.RedlineRpm, 0f, 1f );
+
+	int GearNum => Target?.Drivetrain?.Gear ?? 1;
+
+	string GearText => GearNum switch
+	{
+		-1 => "R",
+		0 => "N",
+		var g => g.ToString()
+	};
+
+	// normal / shifting / limiter / neutral / reverse (design 1d gear-chip states)
+	string GearState
+	{
+		get
+		{
+			if ( Target?.Drivetrain is null ) return "";
+			if ( Target.Drivetrain.IsShifting ) return "shifting";
+			if ( GearNum == -1 ) return "reverse";
+			if ( GearNum == 0 ) return "neutral";
+			if ( RpmFraction > 0.97f && (Target?.Throttle ?? 0f) > 0.1f ) return "limiter";
+			return "";
+		}
+	}
+
+	string GearCaption => GearState == "shifting" ? "shifting" : "gear";
+
+	void ToggleHud()
+	{
+		UiState.HudHidden = !UiState.HudHidden;
+		StateHasChanged();
+	}
+
+	protected override void OnUpdate()
+	{
+		if ( Input.Pressed( "HideHud" ) )
+			ToggleHud();
+
+		// Esc is host-routed to the pause menu unless we CONSUME it via EscapePressed.
+		// Close any cursor modal with Esc (same key that players expect); leave Esc alone
+		// when nothing of ours is open so the engine pause path still works.
+		// GUARD: while a tune rename OR the tuning dial-help overlay is active, that overlay owns Esc (Esc
+		// backs out of the nested overlay, not the whole Tuning panel) — skip here so we don't consume first.
+		if ( Input.EscapePressed && UiState.AnyCursorModalOpen && !TuneRenameState.Active && !UiState.TuneHelpOpen )
+		{
+			UiState.TuningOpen = false;
+			UiState.SessionOpen = false;
+			UiState.WorldOpen = false;
+			UiState.HelpOpen = false;
+			Input.EscapePressed = false;
+			Mouse.Visibility = MouseVisibility.Hidden;
+			StateHasChanged();
+		}
+	}
+
+	protected override int BuildHash() => System.HashCode.Combine(
+		System.HashCode.Combine( SpeedDisplay, GearText, GearState, (int)(RpmFraction * 60f),
+			CarName, AssistText, UiState.TelemetryOpen ),
+		// UserSettings.SpeedUnit: re-render the unit label the instant the player flips km/h↔mph,
+		// even while stationary (both units read "0", so SpeedDisplay alone wouldn't change the hash).
+		System.HashCode.Combine( UiState.HudHidden, UserSettings.SpeedUnit ) );
+}

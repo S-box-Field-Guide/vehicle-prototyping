@@ -1,0 +1,226 @@
+{
+  "schema": "vp.partkit/3",
+  "generator": "tools/gen_vehicle.py",
+  "kit": "test_kit_v3",
+  "parts": [
+    {
+      "part": "chassis_shell",
+      "vmdl": "models/test/chassis_shell.vmdl",
+      "kind": "chassis",
+      "pivot_semantics": "x",
+      "rotation_axis_local": null,
+      "dims_m": [
+        1.75,
+        3.71,
+        1.3
+      ],
+      "local_bounds_min_m": [
+        -0.875,
+        -1.855,
+        0.15
+      ],
+      "local_bounds_max_m": [
+        0.875,
+        1.855,
+        1.45
+      ],
+      "attach_local_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "attach_author_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "mass_fraction": 0.66,
+      "dent_impulse": -5.0,
+      "loosen_impulse": 6500.0,
+      "detach_impulse": 1000000000.0,
+      "stiffness": 3e-05,
+      "max_crush_m": 0.234,
+      "zone": "cabin"
+    },
+    {
+      "part": "wheel_fl",
+      "vmdl": "models/test/wheel_fl.vmdl",
+      "kind": "wheel",
+      "pivot_semantics": "x",
+      "rotation_axis_local": "X",
+      "dims_m": [
+        0.22,
+        0.6,
+        0.6
+      ],
+      "local_bounds_min_m": [
+        -0.11,
+        -0.3,
+        -0.3
+      ],
+      "local_bounds_max_m": [
+        0.11,
+        0.3,
+        0.3
+      ],
+      "attach_local_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "attach_author_m": [
+        1.2,
+        0.75,
+        0.3
+      ],
+      "mass_fraction": 0.045,
+      "steer": true,
+      "mirror": false
+    },
+    {
+      "part": "wheel_fr",
+      "vmdl": "models/test/wheel_fr.vmdl",
+      "kind": "wheel",
+      "pivot_semantics": "x",
+      "rotation_axis_local": "X",
+      "dims_m": [
+        0.22,
+        0.6,
+        0.6
+      ],
+      "local_bounds_min_m": [
+        -0.11,
+        -0.3,
+        -0.3
+      ],
+      "local_bounds_max_m": [
+        0.11,
+        0.3,
+        0.3
+      ],
+      "attach_local_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "attach_author_m": [
+        1.2,
+        -0.75,
+        0.3
+      ],
+      "mass_fraction": 0.045,
+      "steer": true,
+      "mirror": true
+    },
+    {
+      "part": "wheel_rl",
+      "vmdl": "models/test/wheel_rl.vmdl",
+      "kind": "wheel",
+      "pivot_semantics": "x",
+      "rotation_axis_local": "X",
+      "dims_m": [
+        0.22,
+        0.6,
+        0.6
+      ],
+      "local_bounds_min_m": [
+        -0.11,
+        -0.3,
+        -0.3
+      ],
+      "local_bounds_max_m": [
+        0.11,
+        0.3,
+        0.3
+      ],
+      "attach_local_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "attach_author_m": [
+        -1.2,
+        0.75,
+        0.3
+      ],
+      "mass_fraction": 0.045,
+      "steer": false,
+      "mirror": false
+    },
+    {
+      "part": "wheel_rr",
+      "vmdl": "models/test/wheel_rr.vmdl",
+      "kind": "wheel",
+      "pivot_semantics": "x",
+      "rotation_axis_local": "X",
+      "dims_m": [
+        0.22,
+        0.6,
+        0.6
+      ],
+      "local_bounds_min_m": [
+        -0.11,
+        -0.3,
+        -0.3
+      ],
+      "local_bounds_max_m": [
+        0.11,
+        0.3,
+        0.3
+      ],
+      "attach_local_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "attach_author_m": [
+        -1.2,
+        -0.75,
+        0.3
+      ],
+      "mass_fraction": 0.045,
+      "steer": false,
+      "mirror": true
+    },
+    {
+      "part": "bumper_f",
+      "vmdl": "models/test/bumper_f.vmdl",
+      "kind": "bolton",
+      "pivot_semantics": "x",
+      "rotation_axis_local": null,
+      "dims_m": [
+        1.55,
+        0.15,
+        0.31
+      ],
+      "local_bounds_min_m": [
+        -0.775,
+        -0.15,
+        -0.15
+      ],
+      "local_bounds_max_m": [
+        0.775,
+        0.0,
+        0.16
+      ],
+      "attach_local_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "attach_author_m": [
+        1.85,
+        0.0,
+        0.45
+      ],
+      "mass_fraction": 0.02,
+      "mount_normal": "-Y",
+      "dent_impulse": 800.0,
+      "loosen_impulse": 1760.0,
+      "detach_impulse": 2560.0,
+      "stiffness": 8e-05,
+      "max_crush_m": 0.0525,
+      "zone": "front"
+    }
+  ]
+}

@@ -1,0 +1,122 @@
+@using Sandbox;
+@using Sandbox.UI;
+@inherits PanelComponent
+@namespace VehicleProto
+
+@* Rename-a-saved-tune modal (Task 4). A SEPARATE panel from TuningPanel on purpose: TuningPanel
+   rebuilds every frame off live suspension load, which would destroy a focused TextEntry each frame.
+   This panel's BuildHash reads only TuneRenameState.Active + Revision (constant while typing), so it
+   never rebuilds mid-edit — the TextEntry is created once and keeps focus. See TuneRenameState. *@
+
+<root>
+	@if ( TuneRenameState.Active )
+	{
+		@* Backdrop and card are SIBLINGS (not parent/child) so a click on the card never bubbles to the
+		   backdrop's cancel — avoids needing StopPropagation (no whitelist precedent here). The wrap
+		   centers the card and is pointer-events:none, so clicks on empty space fall through to the
+		   backdrop below and cancel. *@
+		<div class="backdrop" onclick=@Cancel></div>
+		<div class="modalwrap">
+			<div class="card">
+				<div class="rhead">
+					<span class="title">Rename tune</span>
+					<span class="mono ctx">@CarName</span>
+				</div>
+
+				@* MaxLength MUST be a C# expression @(40), not "40"/40 — the editor razor codegen emits a
+				   quoted/bare numeric attr as a STRING and fails CS0029 int? conversion, even though headless
+				   builds green (KB g-ui-unquoted-numeric-attr-headless-vs-editor-codegen). *@
+				<TextEntry @ref="InputBox" class="renamefield mono" MaxLength=@(40)
+					Placeholder="Tune name…  ·  Enter to save  ·  Esc to cancel"
+					onsubmit=@Save />
+
+				<div class="rfoot">
+					<div class="btn ghost" onclick=@Cancel>Cancel</div>
+					<div class="btn primary" onclick=@Save>Save</div>
+				</div>
+			</div>
+		</div>
+	}
+</root>
+
+@code {
+	// @ref must bind to a PROPERTY, not a bare field (g-ui-ref-field-bare-private-field-silently).
+	TextEntry InputBox { get; set; }
+
+	// Focus-acquire latch (engine ChatPanel idiom): keep asking for focus until the freshly-created
+	// TextEntry actually takes it. Because this panel does NOT rebuild while typing, this fires only
+	// during the open transition, never mid-edit.
+	bool _wantsFocus;
+
+	// The target we've already seeded the field for, so we prefill the current name exactly once per
+	// rename (and never clobber what the player has typed on a later OnTreeBuilt).
+	TunePreset _seeded;
+
+	string CarName => TuneRenameState.Target?.CarId ?? "";
+
+	protected override void OnUpdate()
+	{
+		if ( !TuneRenameState.Active )
+			return;
+
+		// Esc cancels the rename. CONSUME it (set false) so neither the host pause menu nor VehicleHud's
+		// global "close any cursor modal" Esc handler also fires — VehicleHud is guarded to skip Esc while
+		// a rename is active, so this panel owns the key. (g-game-input-escapepressed-real-getset-consumable)
+		if ( Input.EscapePressed )
+		{
+			Input.EscapePressed = false;
+			Cancel();
+			return;
+		}
+
+		// Cursor is already free (TuningPanel forces it visible while open); keep re-focusing until taken.
+		if ( _wantsFocus && InputBox is not null )
+		{
+			InputBox.Focus();
+			if ( InputBox.HasFocus )
+				_wantsFocus = false;
+		}
+	}
+
+	// PanelComponent post-build hook (NOT OnAfterTreeRender — that's Panel-only and fails CS0115 here;
+	// g-ui-panelcomponent-overrides-ontreebuilt-ontreef). Seed the field + grab focus on a fresh open.
+	protected override void OnTreeBuilt()
+	{
+		var target = TuneRenameState.Target;
+
+		if ( target is null )
+		{
+			_seeded = null; // reset so the next open re-seeds
+			return;
+		}
+
+		if ( !ReferenceEquals( target, _seeded ) )
+		{
+			_seeded = target;
+			_wantsFocus = true;
+			if ( InputBox is not null )
+				InputBox.Text = target.Name ?? "";
+		}
+
+		if ( _wantsFocus )
+			InputBox?.Focus();
+	}
+
+	void Save()
+	{
+		// Reads the live TextEntry text; the store rejects empty/whitespace (keeps the old name) and
+		// enforces per-car uniqueness. Either way the modal closes.
+		TuneRenameState.Commit( InputBox?.Text ?? "" );
+		InputBox?.Blur();
+	}
+
+	void Cancel()
+	{
+		InputBox?.Blur();
+		TuneRenameState.Cancel();
+	}
+
+	// Rebuild ONLY on open/close (Active) and the begin/cancel/commit counter (Revision). Deliberately
+	// NO live/per-frame data here — that constant-while-typing hash is what keeps the TextEntry alive.
+	protected override int BuildHash() => System.HashCode.Combine( TuneRenameState.Active, TuneRenameState.Revision );
+}

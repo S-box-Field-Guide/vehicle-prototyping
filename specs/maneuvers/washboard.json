@@ -1,0 +1,53 @@
+{
+  "bands": "handling-targets v1",
+  "suite": [
+    {
+      "maneuver": "washboard",
+      "car": "hatch",
+      "station": "washboard",
+      "params": { "approachSpeedMs": 15.0, "maxRunS": 12.0 },
+      "asserts": [
+        { "metric": "wheelContactLossPct", "op": "between", "value": [2.0, 8.0], "note": "handling-targets v1 Hatch Washboard contact-loss (existing band, reused verbatim per pre-read). METRIC CORRECTED 2026-07-13 (wave-2 live finding): band provenance is handling-targets feel-heuristic 3 = PER-WHEEL IsGrounded loss; the frozen contactLossPct (full-airborne ticks) read 0.0 on every car live, so the assert now uses wheelContactLossPct (avg % of wheel contact lost), band VALUES unchanged. v1 -- pre-measurement" },
+        { "metric": "settleS", "op": "<=", "value": 1.3, "note": "handling-targets v1 Hatch Tire-bounce-quality post-settle ceiling, reused as the washboard no-resonance check (testing-harness.md §6.2 lists settleS for washboard). v1 -- pre-measurement" },
+        { "metric": "flips", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" },
+        { "metric": "fallThroughs", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" }
+      ]
+    },
+    {
+      "maneuver": "washboard",
+      "car": "coupe",
+      "station": "washboard",
+      "params": { "approachSpeedMs": 15.0, "maxRunS": 12.0 },
+      "asserts": [
+        { "metric": "wheelContactLossPct", "op": "between", "value": [0.0, 5.0], "note": "handling-targets v1 Coupe Washboard contact-loss -- performance suspension tracks rough ground well at speed (existing band, reused; per-wheel metric per hatch-entry correction note). v1 -- pre-measurement" },
+        { "metric": "settleS", "op": "<=", "value": 1.0, "note": "handling-targets v1 Coupe Tire-bounce-quality post-settle ceiling (stiff sport dampers), reused for washboard no-resonance. v1 -- pre-measurement" },
+        { "metric": "flips", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" },
+        { "metric": "fallThroughs", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" }
+      ]
+    },
+    {
+      "maneuver": "washboard",
+      "car": "kart",
+      "station": "washboard",
+      "params": { "approachSpeedMs": 10.0, "maxRunS": 12.0 },
+      "asserts": [
+        { "metric": "wheelContactLossPct", "op": "between", "value": [5.0, 15.0], "note": "handling-targets v1 Kart Washboard contact-loss -- DELIBERATELY up (small wheels/short travel is the kart's tire-bounce signature, not a defect), existing band reused; per-wheel metric per hatch-entry correction note. v1 -- pre-measurement" },
+        { "metric": "settleS", "op": "<=", "value": 1.0, "note": "handling-targets v1 Kart Tire-bounce-quality post-settle ceiling (light chassis settles fast despite bouncing more), reused for washboard no-resonance. v1 -- pre-measurement" },
+        { "metric": "flips", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" },
+        { "metric": "fallThroughs", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" }
+      ]
+    },
+    {
+      "maneuver": "washboard",
+      "car": "pickup",
+      "station": "washboard",
+      "params": { "approachSpeedMs": 15.0, "maxRunS": 12.0 },
+      "asserts": [
+        { "metric": "wheelContactLossPct", "op": "between", "value": [1.0, 6.0], "note": "handling-targets v1 Pickup Washboard contact-loss -- DELIBERATELY the roster's best (long travel + soft 1.50 Hz springs), existing band reused; per-wheel metric per hatch-entry correction note. v1 -- pre-measurement" },
+        { "metric": "settleS", "op": "<=", "value": 1.5, "note": "no dedicated Pickup row in the handling-targets Tire-bounce-quality table (authored pre-pickup); extrapolated from the pickup's own Ramp-jump settle ceiling (also 1.5 s, the roster's softest/longest-travel suspension sits at the global ceiling on purpose). v1 -- pre-measurement, flagged as extrapolation" },
+        { "metric": "flips", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" },
+        { "metric": "fallThroughs", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "bands": "handling-targets v1",
+  "suite": [
+    {
+      "maneuver": "hillclimb",
+      "car": "hatch",
+      "station": "hillclimb",
+      "params": { "entrySpeedMs": 10.0, "gradePct": 27.5, "maxRunS": 20.0 },
+      "asserts": [
+        { "metric": "climbed", "op": "==", "value": true, "note": "handling-targets v1 Hatch Hill grade: holds 25-30% grade, no stall/rollback. v1 -- pre-measurement. SCHEMA/WORLD-GEOMETRY FLAG: proving-grounds.md's hillclimb station (TestTrack.cs, drafted/uncompiled) currently builds only 4 discrete grade segments at 5/10/15/20% -- this 25-30% target EXCEEDS the built station's max segment. See report." },
+        { "metric": "rollbackM", "op": "<=", "value": 0.5, "note": "no-rollback sanity ceiling, generous placeholder (no hillclimb telemetry has ever been measured). v1 -- pre-measurement" },
+        { "metric": "wheelspinS", "op": "<=", "value": 3.0, "note": "global wheelspin ceiling (handling-targets has no per-class hillclimb wheelspin band). v1 -- pre-measurement" },
+        { "metric": "flips", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" },
+        { "metric": "fallThroughs", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" }
+      ]
+    },
+    {
+      "maneuver": "hillclimb",
+      "car": "coupe",
+      "station": "hillclimb",
+      "params": { "entrySpeedMs": 10.0, "gradePct": 37.5, "maxRunS": 20.0 },
+      "asserts": [
+        { "metric": "climbed", "op": "==", "value": true, "note": "handling-targets v1 Coupe Hill grade: holds 35-40% grade (high RWD torque, street-tire grip assumption). v1 -- pre-measurement. SCHEMA/WORLD-GEOMETRY FLAG: exceeds the built hillclimb station's max 20% grade segment by a wide margin -- see report." },
+        { "metric": "rollbackM", "op": "<=", "value": 0.5, "note": "no-rollback sanity ceiling, generous placeholder. v1 -- pre-measurement" },
+        { "metric": "wheelspinS", "op": "<=", "value": 3.0, "note": "global wheelspin ceiling (no per-class hillclimb band). v1 -- pre-measurement" },
+        { "metric": "flips", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" },
+        { "metric": "fallThroughs", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" }
+      ]
+    },
+    {
+      "maneuver": "hillclimb",
+      "car": "kart",
+      "station": "hillclimb",
+      "params": { "entrySpeedMs": 8.0, "gradePct": 17.5, "maxRunS": 20.0 },
+      "asserts": [
+        { "metric": "climbed", "op": "==", "value": true, "note": "handling-targets v1 Kart Hill grade: holds 15-20% grade only (low torque + short gearing + tiny mass = weak hill climber, no deliberate deviation). v1 -- pre-measurement. The ONLY roster class whose band (15-20%) fits within the current station's built max 20% grade segment -- testable as-authored once the C# harness lands, no geometry blocker." },
+        { "metric": "rollbackM", "op": "<=", "value": 0.5, "note": "no-rollback sanity ceiling, generous placeholder. v1 -- pre-measurement" },
+        { "metric": "wheelspinS", "op": "<=", "value": 3.0, "note": "global wheelspin ceiling (no per-class hillclimb band). v1 -- pre-measurement" },
+        { "metric": "flips", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" },
+        { "metric": "fallThroughs", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" }
+      ]
+    },
+    {
+      "maneuver": "hillclimb",
+      "car": "pickup",
+      "station": "hillclimb",
+      "params": { "entrySpeedMs": 10.0, "gradePct": 42.5, "maxRunS": 20.0 },
+      "asserts": [
+        { "metric": "climbed", "op": "==", "value": true, "note": "handling-targets v1 Pickup Hill grade: holds 40-45% grade, no stall/rollback -- THE roster's signature strength trait (strongest climber by design). v1 -- pre-measurement. SCHEMA/WORLD-GEOMETRY FLAG: exceeds the built hillclimb station's max 20% grade segment by the largest margin in the roster -- see report; the station cannot currently demonstrate the pickup's headline trait." },
+        { "metric": "rollbackM", "op": "<=", "value": 0.5, "note": "no-rollback sanity ceiling, generous placeholder. v1 -- pre-measurement" },
+        { "metric": "wheelspinS", "op": "<=", "value": 3.0, "note": "global wheelspin ceiling (no per-class hillclimb band). v1 -- pre-measurement" },
+        { "metric": "flips", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" },
+        { "metric": "fallThroughs", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" }
+      ]
+    }
+  ]
+}

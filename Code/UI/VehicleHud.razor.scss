@@ -1,0 +1,219 @@
+// Drive HUD — clean mode (design 1a). Tokens inlined from _tokens.scss (see note there).
+// NO letter-spacing anywhere; font-size only on the two hero numerals (speed, gear).
+
+VehicleHud {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	font-family: Poppins, sans-serif;
+
+	.mono { font-family: "Roboto Mono", monospace; }
+
+	.topbar {
+		position: absolute;
+		top: 32px;
+		flex-direction: row;
+		align-items: center;
+		gap: 12px;
+
+		&.left { left: 32px; }
+		&.right { right: 32px; }
+	}
+
+	.chip {
+		flex-direction: row;
+		align-items: center;
+		gap: 10px;
+		padding: 12px 18px;
+		background-color: rgba( 15, 17, 21, 0.90 );
+		border: 1px solid rgba( 255, 255, 255, 0.07 );
+		border-radius: 12px;
+
+		.dot {
+			width: 9px;
+			height: 9px;
+			border-radius: 99px;
+			background-color: #4AD9F2;
+		}
+
+		.name { font-weight: 700; color: #F2F4F7; }
+		.lbl { color: #F2F4F7; }
+		.val { color: #E8EAED; }
+		.carname { font-weight: 600; color: #E8EAED; }
+		.tag { color: #F2F4F7; }
+		.assist { font-weight: 700; color: #4AD9F2; }
+	}
+
+	.cluster {
+		position: absolute;
+		left: 48px;
+		bottom: 48px;
+		width: 520px;
+		flex-direction: column;
+		gap: 16px;
+		padding: 28px 32px;
+		background-color: rgba( 15, 17, 21, 0.90 );
+		border: 1px solid rgba( 255, 255, 255, 0.07 );
+		border-radius: 18px;
+		box-shadow: 0 20px 60px rgba( 0, 0, 0, 0.6 );
+
+		.topline {
+			flex-direction: row;
+			justify-content: space-between;
+			align-items: flex-end;
+		}
+
+		.speedblock {
+			flex-direction: row;
+			align-items: baseline;
+			gap: 14px;
+
+			.speed {
+				font-size: 118px;
+				font-weight: 600;
+				line-height: 0.9;
+				color: #F2F4F7;
+			}
+
+			.unit { font-weight: 600; color: #F2F4F7; }
+		}
+
+		.gearblock {
+			flex-direction: column;
+			align-items: center;
+			gap: 8px;
+
+			.gearchip {
+				width: 76px;
+				height: 76px;
+				justify-content: center;
+				align-items: center;
+				background-color: rgba( 255, 255, 255, 0.05 );
+				border: 1px solid rgba( 255, 255, 255, 0.10 );
+				border-radius: 14px;
+				font-size: 40px;
+				font-weight: 700;
+				color: #4AD9F2;
+
+				&.shifting {
+					background-color: rgba( 74, 217, 242, 0.10 );
+					border: 1px solid rgba( 74, 217, 242, 0.55 );
+				}
+				&.limiter {
+					background-color: rgba( 255, 107, 107, 0.10 );
+					border: 1px solid rgba( 255, 107, 107, 0.55 );
+					color: #FF6B6B;
+				}
+				&.neutral { color: #E8EAED; }
+				&.reverse { color: #F2C94A; }
+			}
+
+			.gearlbl {
+				font-weight: 600;
+				text-transform: uppercase;
+				color: #F2F4F7;
+				&.hot { color: #4AD9F2; }
+			}
+		}
+
+		.rpmblock {
+			flex-direction: column;
+			gap: 8px;
+
+			.rpmhead {
+				flex-direction: row;
+				justify-content: space-between;
+				align-items: center;
+			}
+
+			.lbl { color: #F2F4F7; }
+
+			.rpmtext {
+				color: #F2F4F7;
+				span { color: #F2F4F7; }
+				&.over { color: #FF6B6B; }
+			}
+
+			.rpm {
+				position: relative;
+				height: 14px;
+				border-radius: 99px;
+				background-color: rgba( 255, 255, 255, 0.12 );
+				// NO overflow:hidden — clipping this track warps the absolute .fill into a floating
+				// comet/lens (repro'd pinned at 44%, 2026-07-13).
+				// Children carry their own radii instead of relying on parent clipping.
+
+				.redzone {
+					position: absolute;
+					right: 0;
+					top: 0;
+					height: 100%;
+					width: 12%;
+					// outer corner matches the track pill now that the track no longer clips children
+					border-radius: 0 99px 99px 0;
+					background-color: rgba( 255, 107, 107, 0.20 );
+				}
+
+				.fill {
+					// FIXED-RAIL FIX — matches the engine's own
+					// addons/base/code/UI/Controls/SliderControl.razor.scss `.track-active` ground
+					// truth: a single anchor offset + explicit height:100%, NOT top+bottom double
+					// offsets. The double-offset form let the fill's cross-axis feed back into this
+					// empty (no in-flow children) container's own layout pass, warping the bar.
+					position: absolute;
+					left: 0px;
+					height: 100%;
+					border-radius: 99px;
+					background: linear-gradient( to right, #3AC4DE, #4AD9F2 );
+					&.redline { background: linear-gradient( to right, #3AC4DE, #4AD9F2 78%, #FF6B6B ); }
+				}
+			}
+		}
+	}
+
+	.hints {
+		position: absolute;
+		right: 48px;
+		bottom: 48px;
+		flex-direction: row;
+		align-items: center;
+		gap: 18px;
+		padding: 14px 20px;
+		background-color: rgba( 15, 17, 21, 0.82 );
+		border: 1px solid rgba( 255, 255, 255, 0.10 );
+		border-radius: 12px;
+		pointer-events: none; // labels only — don't steal mouse from chase look
+
+		.hint {
+			flex-direction: row;
+			align-items: center;
+			gap: 8px;
+
+			&.hide, &.restore {
+				pointer-events: all; // only the Hide/Show chip is clickable
+				cursor: pointer;
+				padding: 4px 6px;
+				border-radius: 8px;
+				transition: background-color 0.12s ease;
+				&:hover { background-color: rgba( 74, 217, 242, 0.12 ); }
+			}
+		}
+
+		// Keycaps need to read over bright road/sky — ghost #6E7480 was illegible.
+		.key {
+			color: #F2F4F7;
+			font-weight: 600;
+			border: 1px solid rgba( 255, 255, 255, 0.28 );
+			border-radius: 5px;
+			padding: 3px 8px;
+			background-color: rgba( 255, 255, 255, 0.12 );
+		}
+
+		.cap { color: #F2F4F7; }
+
+		&.restore {
+			cursor: pointer;
+			&:hover { border: 1px solid rgba( 74, 217, 242, 0.45 ); }
+		}
+	}
+}

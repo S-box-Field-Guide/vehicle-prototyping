@@ -1,0 +1,593 @@
+{
+  "schema": "vp.partkit/3",
+  "generator": "tools/gen_vehicle.py",
+  "kit": "kart_kit",
+  "spec_m": {
+    "length": 1.9,
+    "width": 1.32,
+    "height": 0.55,
+    "wheelbase": 1.55,
+    "track": 1.14,
+    "wheel_radius": 0.16,
+    "wheel_width": 0.12,
+    "wheel_width_r": 0.18,
+    "body_color": "body_acid"
+  },
+  "units": "metres (multiply by 39.37 for s&box units at the engine boundary)",
+  "frames": {
+    "authoring": "+X forward, +Y left, +Z up (Blender)",
+    "chassis_local": "+X right, +Y FRONT, +Z up (nose points local +Y; -90 deg yaw faces root +X) \u2014 EMPIRICALLY PROVEN 2026-07-11",
+    "author_to_local": "(mx,my,mz) = (-bY, +bX, bZ)",
+    "obj_import": "model = (objZ, objX, objY) \u2014 plain Y-up->Z-up cyclic permutation, no sign flips"
+  },
+  "material_route": "per-part usemtl -> shared flat vmats (white.png + g_vColorTint)",
+  "collision": "render-only vmdls; the assembler attaches code-side BoxColliders per part",
+  "mass_fraction_note": "suggestion only; the assembler assigns absolute masses from CarDefinition total",
+  "total_tris": 2972,
+  "parts": [
+    {
+      "part": "frame",
+      "obj": "frame.obj",
+      "vmdl": "models/vehicles/kart_kit/frame.vmdl",
+      "kind": "chassis",
+      "pivot_semantics": "footprint-centre@ground",
+      "rotation_axis_local": null,
+      "dims_m": [
+        1.14,
+        1.5906,
+        0.085
+      ],
+      "local_bounds_min_m": [
+        -0.57,
+        -0.8,
+        0.1
+      ],
+      "local_bounds_max_m": [
+        0.57,
+        0.7906,
+        0.185
+      ],
+      "attach_local_m": [
+        -0.0,
+        0.0,
+        0.0
+      ],
+      "attach_author_m": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "mass_fraction": 0.3,
+      "tris": 444,
+      "submesh_index_counts": [
+        912,
+        420
+      ],
+      "dent_impulse": 1000000000.0,
+      "loosen_impulse": 1000000000.0,
+      "detach_impulse": 1000000000.0,
+      "stiffness": 0.0,
+      "max_crush_m": 0.0,
+      "zone": "cabin"
+    },
+    {
+      "part": "wheel_fl",
+      "obj": "wheel_f.obj",
+      "vmdl": "models/vehicles/kart_kit/wheel_f.vmdl",
+      "kind": "wheel",
+      "pivot_semantics": "hub-centre",
+      "rotation_axis_local": "X",
+      "dims_m": [
+        0.142,
+        0.32,
+        0.32
+      ],
+      "local_bounds_min_m": [
+        -0.071,
+        -0.16,
+        -0.16
+      ],
+      "local_bounds_max_m": [
+        0.071,
+        0.16,
+        0.16
+      ],
+      "attach_local_m": [
+        -0.57,
+        0.775,
+        0.16
+      ],
+      "attach_author_m": [
+        0.775,
+        0.57,
+        0.16
+      ],
+      "mass_fraction": 0.055,
+      "tris": 292,
+      "submesh_index_counts": [
+        708,
+        108,
+        60
+      ],
+      "steer": true,
+      "mirror": false,
+      "dent_impulse": 1000000000.0,
+      "loosen_impulse": 1000000000.0,
+      "detach_impulse": 1000000000.0,
+      "stiffness": 0.0,
+      "max_crush_m": 0.0,
+      "zone": "wheel"
+    },
+    {
+      "part": "wheel_fr",
+      "obj": "wheel_f.obj",
+      "vmdl": "models/vehicles/kart_kit/wheel_f.vmdl",
+      "kind": "wheel",
+      "pivot_semantics": "hub-centre",
+      "rotation_axis_local": "X",
+      "dims_m": [
+        0.142,
+        0.32,
+        0.32
+      ],
+      "local_bounds_min_m": [
+        -0.071,
+        -0.16,
+        -0.16
+      ],
+      "local_bounds_max_m": [
+        0.071,
+        0.16,
+        0.16
+      ],
+      "attach_local_m": [
+        0.57,
+        0.775,
+        0.16
+      ],
+      "attach_author_m": [
+        0.775,
+        -0.57,
+        0.16
+      ],
+      "mass_fraction": 0.055,
+      "tris": 292,
+      "submesh_index_counts": [
+        708,
+        108,
+        60
+      ],
+      "steer": true,
+      "mirror": true,
+      "dent_impulse": 1000000000.0,
+      "loosen_impulse": 1000000000.0,
+      "detach_impulse": 1000000000.0,
+      "stiffness": 0.0,
+      "max_crush_m": 0.0,
+      "zone": "wheel"
+    },
+    {
+      "part": "wheel_rl",
+      "obj": "wheel_r.obj",
+      "vmdl": "models/vehicles/kart_kit/wheel_r.vmdl",
+      "kind": "wheel",
+      "pivot_semantics": "hub-centre",
+      "rotation_axis_local": "X",
+      "dims_m": [
+        0.202,
+        0.32,
+        0.32
+      ],
+      "local_bounds_min_m": [
+        -0.101,
+        -0.16,
+        -0.16
+      ],
+      "local_bounds_max_m": [
+        0.101,
+        0.16,
+        0.16
+      ],
+      "attach_local_m": [
+        -0.57,
+        -0.775,
+        0.16
+      ],
+      "attach_author_m": [
+        -0.775,
+        0.57,
+        0.16
+      ],
+      "mass_fraction": 0.055,
+      "tris": 292,
+      "submesh_index_counts": [
+        708,
+        108,
+        60
+      ],
+      "steer": false,
+      "mirror": false,
+      "dent_impulse": 1000000000.0,
+      "loosen_impulse": 1000000000.0,
+      "detach_impulse": 1000000000.0,
+      "stiffness": 0.0,
+      "max_crush_m": 0.0,
+      "zone": "wheel"
+    },
+    {
+      "part": "wheel_rr",
+      "obj": "wheel_r.obj",
+      "vmdl": "models/vehicles/kart_kit/wheel_r.vmdl",
+      "kind": "wheel",
+      "pivot_semantics": "hub-centre",
+      "rotation_axis_local": "X",
+      "dims_m": [
+        0.202,
+        0.32,
+        0.32
+      ],
+      "local_bounds_min_m": [
+        -0.101,
+        -0.16,
+        -0.16
+      ],
+      "local_bounds_max_m": [
+        0.101,
+        0.16,
+        0.16
+      ],
+      "attach_local_m": [
+        0.57,
+        -0.775,
+        0.16
+      ],
+      "attach_author_m": [
+        -0.775,
+        -0.57,
+        0.16
+      ],
+      "mass_fraction": 0.055,
+      "tris": 292,
+      "submesh_index_counts": [
+        708,
+        108,
+        60
+      ],
+      "steer": false,
+      "mirror": true,
+      "dent_impulse": 1000000000.0,
+      "loosen_impulse": 1000000000.0,
+      "detach_impulse": 1000000000.0,
+      "stiffness": 0.0,
+      "max_crush_m": 0.0,
+      "zone": "wheel"
+    },
+    {
+      "part": "nose",
+      "obj": "nose.obj",
+      "vmdl": "models/vehicles/kart_kit/nose.vmdl",
+      "kind": "fascia",
+      "pivot_semantics": "mount-plane",
+      "rotation_axis_local": null,
+      "dims_m": [
+        0.44,
+        0.36,
+        0.1621
+      ],
+      "local_bounds_min_m": [
+        -0.22,
+        -0.03,
+        -0.0462
+      ],
+      "local_bounds_max_m": [
+        0.22,
+        0.33,
+        0.1159
+      ],
+      "attach_local_m": [
+        -0.0,
+        0.62,
+        0.16
+      ],
+      "attach_author_m": [
+        0.62,
+        0.0,
+        0.16
+      ],
+      "mass_fraction": 0.05,
+      "tris": 264,
+      "submesh_index_counts": [
+        648,
+        108,
+        36
+      ],
+      "mount_normal": "-Y",
+      "dent_impulse": 750.0,
+      "loosen_impulse": 1500.0,
+      "detach_impulse": 2250.0,
+      "stiffness": 9e-05,
+      "max_crush_m": 0.05,
+      "zone": "front"
+    },
+    {
+      "part": "pod_l",
+      "obj": "pod_l.obj",
+      "vmdl": "models/vehicles/kart_kit/pod_l.vmdl",
+      "kind": "bolton",
+      "pivot_semantics": "side-rail-mount",
+      "rotation_axis_local": null,
+      "dims_m": [
+        0.165,
+        0.55,
+        0.11
+      ],
+      "local_bounds_min_m": [
+        -0.165,
+        -0.275,
+        -0.04
+      ],
+      "local_bounds_max_m": [
+        0.0,
+        0.275,
+        0.07
+      ],
+      "attach_local_m": [
+        -0.3,
+        -0.05,
+        0.15
+      ],
+      "attach_author_m": [
+        -0.05,
+        0.3,
+        0.15
+      ],
+      "mass_fraction": 0.045,
+      "tris": 120,
+      "submesh_index_counts": [
+        324,
+        36
+      ],
+      "mount_normal": "-X",
+      "dent_impulse": 800.0,
+      "loosen_impulse": 1760.0,
+      "detach_impulse": 2560.0,
+      "stiffness": 8e-05,
+      "max_crush_m": 0.05,
+      "zone": "door"
+    },
+    {
+      "part": "pod_r",
+      "obj": "pod_r.obj",
+      "vmdl": "models/vehicles/kart_kit/pod_r.vmdl",
+      "kind": "bolton",
+      "pivot_semantics": "side-rail-mount",
+      "rotation_axis_local": null,
+      "dims_m": [
+        0.165,
+        0.55,
+        0.11
+      ],
+      "local_bounds_min_m": [
+        0.0,
+        -0.275,
+        -0.04
+      ],
+      "local_bounds_max_m": [
+        0.165,
+        0.275,
+        0.07
+      ],
+      "attach_local_m": [
+        0.3,
+        -0.05,
+        0.15
+      ],
+      "attach_author_m": [
+        -0.05,
+        -0.3,
+        0.15
+      ],
+      "mass_fraction": 0.045,
+      "tris": 120,
+      "submesh_index_counts": [
+        324,
+        36
+      ],
+      "mount_normal": "+X",
+      "dent_impulse": 800.0,
+      "loosen_impulse": 1760.0,
+      "detach_impulse": 2560.0,
+      "stiffness": 8e-05,
+      "max_crush_m": 0.05,
+      "zone": "door"
+    },
+    {
+      "part": "bumper_r",
+      "obj": "bumper_r.obj",
+      "vmdl": "models/vehicles/kart_kit/bumper_r.vmdl",
+      "kind": "bolton",
+      "pivot_semantics": "mount-plane",
+      "rotation_axis_local": null,
+      "dims_m": [
+        0.9,
+        0.11,
+        0.05
+      ],
+      "local_bounds_min_m": [
+        -0.45,
+        -0.1,
+        -0.025
+      ],
+      "local_bounds_max_m": [
+        0.45,
+        0.01,
+        0.025
+      ],
+      "attach_local_m": [
+        -0.0,
+        -0.85,
+        0.16
+      ],
+      "attach_author_m": [
+        -0.85,
+        0.0,
+        0.16
+      ],
+      "mass_fraction": 0.04,
+      "tris": 132,
+      "submesh_index_counts": [
+        396
+      ],
+      "mount_normal": "+Y",
+      "dent_impulse": 800.0,
+      "loosen_impulse": 1760.0,
+      "detach_impulse": 2560.0,
+      "stiffness": 8e-05,
+      "max_crush_m": 0.05,
+      "zone": "rear"
+    },
+    {
+      "part": "seat",
+      "obj": "seat.obj",
+      "vmdl": "models/vehicles/kart_kit/seat.vmdl",
+      "kind": "accessory",
+      "pivot_semantics": "frame-mount",
+      "rotation_axis_local": null,
+      "dims_m": [
+        0.38,
+        0.4,
+        0.41
+      ],
+      "local_bounds_min_m": [
+        -0.19,
+        -0.22,
+        0.0
+      ],
+      "local_bounds_max_m": [
+        0.19,
+        0.18,
+        0.41
+      ],
+      "attach_local_m": [
+        -0.0,
+        -0.32,
+        0.14
+      ],
+      "attach_author_m": [
+        -0.32,
+        0.0,
+        0.14
+      ],
+      "mass_fraction": 0.07,
+      "tris": 432,
+      "submesh_index_counts": [
+        1296
+      ],
+      "mount_normal": "+Z",
+      "required": true,
+      "dent_impulse": 400.0,
+      "loosen_impulse": 720.0,
+      "detach_impulse": 1000.0,
+      "stiffness": 0.0001,
+      "max_crush_m": 0.114,
+      "zone": "cabin"
+    },
+    {
+      "part": "engine",
+      "obj": "engine.obj",
+      "vmdl": "models/vehicles/kart_kit/engine.vmdl",
+      "kind": "accessory",
+      "pivot_semantics": "frame-mount",
+      "rotation_axis_local": null,
+      "dims_m": [
+        0.2075,
+        0.43,
+        0.2
+      ],
+      "local_bounds_min_m": [
+        -0.1,
+        -0.3,
+        -0.02
+      ],
+      "local_bounds_max_m": [
+        0.1075,
+        0.13,
+        0.18
+      ],
+      "attach_local_m": [
+        0.34,
+        -0.45,
+        0.14
+      ],
+      "attach_author_m": [
+        -0.45,
+        -0.34,
+        0.14
+      ],
+      "mass_fraction": 0.2,
+      "tris": 160,
+      "submesh_index_counts": [
+        360,
+        120
+      ],
+      "mount_normal": "+Z",
+      "dent_impulse": 400.0,
+      "loosen_impulse": 720.0,
+      "detach_impulse": 1000.0,
+      "stiffness": 0.0001,
+      "max_crush_m": 0.06,
+      "zone": "rear"
+    },
+    {
+      "part": "steering",
+      "obj": "steering.obj",
+      "vmdl": "models/vehicles/kart_kit/steering.vmdl",
+      "kind": "accessory",
+      "pivot_semantics": "floor-mount",
+      "rotation_axis_local": null,
+      "dims_m": [
+        0.2,
+        0.2953,
+        0.3575
+      ],
+      "local_bounds_min_m": [
+        -0.1,
+        -0.2455,
+        -0.0179
+      ],
+      "local_bounds_max_m": [
+        0.1,
+        0.0498,
+        0.3396
+      ],
+      "attach_local_m": [
+        -0.0,
+        0.3,
+        0.14
+      ],
+      "attach_author_m": [
+        0.3,
+        0.0,
+        0.14
+      ],
+      "mass_fraction": 0.03,
+      "tris": 132,
+      "submesh_index_counts": [
+        36,
+        360
+      ],
+      "mount_normal": "+Z",
+      "dent_impulse": 400.0,
+      "loosen_impulse": 720.0,
+      "detach_impulse": 1000.0,
+      "stiffness": 0.0001,
+      "max_crush_m": 0.06,
+      "zone": "cabin"
+    }
+  ],
+  "driver_seat_author_m": [
+    -0.2,
+    0.0,
+    0.12
+  ]
+}

@@ -1,0 +1,110 @@
+@using Sandbox;
+@using Sandbox.UI;
+@inherits PanelComponent
+@namespace VehicleProto
+
+@* First-run controls / help overlay (public UX) — toggled by I ("Help"). Auto-shows ONCE on a
+   fresh clone (dismiss persisted to FileSystem.Data), reopenable any time with I. F1/Esc are stolen
+   by the s&box editor/host, so Help rides a letter key. All binds are the REAL Input.config values
+   (keyboard + gamepad), not guessed. Cursor-interactive while open.
+
+   GLYPH-CORRUPTION DISCIPLINE: computed text nodes can render blank or as solid blocks, and glyph
+   corruption is cumulative in the text-run count — so keep the text-run count low and NEVER mix a
+   bare text node with an element child in one flex row (that corrupted the descriptions to solid
+   blocks on the first cut) — every text is wrapped in a <span>, key labels are single chips, and the
+   gamepad binds are folded into one footer line. Verified clean on a play-mode screenshot. *@
+
+<root>
+	@if ( UiState.HelpOpen )
+	{
+		<div class="backdrop">
+			<div class="card">
+				<div class="head">
+					<span class="title">Vehicle Prototyping</span>
+					<span class="sub">A free s&box driving field kit.</span>
+				</div>
+
+				<span class="section">Drive</span>
+				<div class="rows">
+					<div class="row"><span class="key">W A S D</span><span class="d">Throttle, brake &amp; steer</span></div>
+					<div class="row"><span class="key">Space</span><span class="d">Handbrake</span></div>
+					<div class="row"><span class="key">G</span><span class="d">Auto / manual gearbox</span></div>
+					<div class="row"><span class="key">E / Q</span><span class="d">Shift up / down (manual)</span></div>
+					<div class="row"><span class="key">R</span><span class="d">Reset / unflip the car</span></div>
+					<div class="row"><span class="key">Mouse</span><span class="d">Orbit look · wheel zooms</span></div>
+				</div>
+
+				<span class="section">Panels</span>
+				<div class="rows">
+					<div class="row"><span class="key">Tab</span><span class="d">Change car · respawn</span></div>
+					<div class="row"><span class="key">M</span><span class="d">World &amp; terrain</span></div>
+					<div class="row"><span class="key">T</span><span class="d">Live tuning dials</span></div>
+						<div class="row"><span class="key">L</span><span class="d">Telemetry overlay</span></div>
+					<div class="row"><span class="key">H</span><span class="d">Hide / show the HUD</span></div>
+					<div class="row"><span class="key">I</span><span class="d">Reopen this help</span></div>
+				</div>
+
+				<div class="footwrap">
+					<span class="foot">Gamepad: left stick · RT/LT pedals</span>
+					<span class="foot">A handbrake · R1/L1 shift · X reset</span>
+					<span class="foot">@($"build {VpBuild.PublishStamp} · {VpBuild.PublishStampNote}")</span>
+				</div>
+				<div class="btn" onclick=@Dismiss>Got it — let's drive</div>
+			</div>
+		</div>
+	}
+</root>
+
+@code {
+	// FileSystem.Data flag file — the sanctioned, whitelisted persistence path for
+	// small local UI state that should survive between sessions.
+	const string SeenFlagFile = "vp_seen_help.flag";
+
+	protected override void OnStart()
+	{
+		// First run on a fresh clone: no flag yet → show the overlay once. Reopen is always I.
+		if ( !HasSeen() )
+		{
+			UiState.HelpOpen = true;
+			Mouse.Visibility = MouseVisibility.Visible;
+		}
+	}
+
+	protected override void OnUpdate()
+	{
+		if ( Input.Pressed( "Help" ) )
+		{
+			UiState.HelpOpen = !UiState.HelpOpen;
+			Mouse.Visibility = UiState.HelpOpen ? MouseVisibility.Visible : MouseVisibility.Hidden;
+		}
+
+		if ( UiState.HelpOpen )
+			Mouse.Visibility = MouseVisibility.Visible;
+	}
+
+	void Dismiss()
+	{
+		UiState.HelpOpen = false;
+		Mouse.Visibility = UiState.AnyCursorModalOpen ? MouseVisibility.Visible : MouseVisibility.Hidden;
+		MarkSeen();
+		StateHasChanged();
+	}
+
+	static bool HasSeen()
+	{
+		try { return FileSystem.Data.FileExists( SeenFlagFile ); }
+		catch { return false; }
+	}
+
+	static void MarkSeen()
+	{
+		try
+		{
+			if ( !FileSystem.Data.FileExists( SeenFlagFile ) )
+				FileSystem.Data.WriteAllText( SeenFlagFile, "1" );
+		}
+		catch { /* persistence is best-effort — a failed write just reshows the overlay next launch */ }
+	}
+
+	protected override int BuildHash() => System.HashCode.Combine( UiState.HelpOpen );
+}

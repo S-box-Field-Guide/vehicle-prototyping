@@ -1,0 +1,549 @@
+{
+  "bands": "sanity-matrix (wide recorders)",
+  "note": "cars x assists SANITY MATRIX (data-gathering, 2026-07-13). 4 cars x Casual(0)/Sport(1)/Sim(2). Bands are deliberately WIDE recorders, not tuning targets -- a PASS means the run completed cleanly (no flip/fall-through, no spin-out where asserted) and the KPI is captured for docs/assist-matrix.md. assist re-applied every tick by the pilot (docs/testing-harness.md 7.1). NOT a hard gate.",
+  "suite": [
+    {
+      "maneuver": "jturn",
+      "car": "hatch",
+      "station": "openpad",
+      "params": {
+        "entrySpeedMs": 13.9,
+        "rotThrottleFrac": 0.6,
+        "settleYawDeg": 15.0,
+        "settleWindowS": 1.2,
+        "maxRunS": 12.0,
+        "assist": 0
+      },
+      "asserts": [
+        {
+          "metric": "jturnTimeS",
+          "op": "between",
+          "value": [
+            0.0,
+            12.0
+          ],
+          "note": "measured j-turn rotate+settle time; >=12 = DNF"
+        },
+        {
+          "metric": "yawOvershootDeg",
+          "op": "between",
+          "value": [
+            0.0,
+            360.0
+          ],
+          "note": "yaw overshoot past target heading; data cell"
+        },
+        {
+          "metric": "spunOut",
+          "op": "==",
+          "value": false,
+          "note": "pass shape: rotates without spinning out (FAIL = red cell)"
+        },
+        {
+          "metric": "flips",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        }
+      ]
+    },
+    {
+      "maneuver": "jturn",
+      "car": "hatch",
+      "station": "openpad",
+      "params": {
+        "entrySpeedMs": 13.9,
+        "rotThrottleFrac": 0.6,
+        "settleYawDeg": 15.0,
+        "settleWindowS": 1.2,
+        "maxRunS": 12.0,
+        "assist": 1
+      },
+      "asserts": [
+        {
+          "metric": "jturnTimeS",
+          "op": "between",
+          "value": [
+            0.0,
+            12.0
+          ],
+          "note": "measured j-turn rotate+settle time; >=12 = DNF"
+        },
+        {
+          "metric": "yawOvershootDeg",
+          "op": "between",
+          "value": [
+            0.0,
+            360.0
+          ],
+          "note": "yaw overshoot past target heading; data cell"
+        },
+        {
+          "metric": "spunOut",
+          "op": "==",
+          "value": false,
+          "note": "pass shape: rotates without spinning out (FAIL = red cell)"
+        },
+        {
+          "metric": "flips",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        }
+      ]
+    },
+    {
+      "maneuver": "jturn",
+      "car": "hatch",
+      "station": "openpad",
+      "params": {
+        "entrySpeedMs": 13.9,
+        "rotThrottleFrac": 0.6,
+        "settleYawDeg": 15.0,
+        "settleWindowS": 1.2,
+        "maxRunS": 12.0,
+        "assist": 2
+      },
+      "asserts": [
+        {
+          "metric": "jturnTimeS",
+          "op": "between",
+          "value": [
+            0.0,
+            12.0
+          ],
+          "note": "measured j-turn rotate+settle time; >=12 = DNF"
+        },
+        {
+          "metric": "yawOvershootDeg",
+          "op": "between",
+          "value": [
+            0.0,
+            360.0
+          ],
+          "note": "yaw overshoot past target heading; data cell"
+        },
+        {
+          "metric": "spunOut",
+          "op": "==",
+          "value": false,
+          "note": "pass shape: rotates without spinning out (FAIL = red cell)"
+        },
+        {
+          "metric": "flips",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        }
+      ]
+    },
+    {
+      "maneuver": "jturn",
+      "car": "coupe",
+      "station": "openpad",
+      "params": {
+        "entrySpeedMs": 13.9,
+        "rotThrottleFrac": 0.6,
+        "settleYawDeg": 20.0,
+        "settleWindowS": 1.5,
+        "maxRunS": 12.0,
+        "assist": 0
+      },
+      "asserts": [
+        {
+          "metric": "jturnTimeS",
+          "op": "between",
+          "value": [
+            0.0,
+            12.0
+          ],
+          "note": "measured j-turn rotate+settle time; >=12 = DNF"
+        },
+        {
+          "metric": "yawOvershootDeg",
+          "op": "between",
+          "value": [
+            0.0,
+            360.0
+          ],
+          "note": "yaw overshoot past target heading; data cell"
+        },
+        {
+          "metric": "spunOut",
+          "op": "==",
+          "value": false,
+          "note": "pass shape: rotates without spinning out (FAIL = red cell)"
+        },
+        {
+          "metric": "flips",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        }
+      ]
+    },
+    {
+      "maneuver": "jturn",
+      "car": "coupe",
+      "station": "openpad",
+      "params": {
+        "entrySpeedMs": 13.9,
+        "rotThrottleFrac": 0.6,
+        "settleYawDeg": 20.0,
+        "settleWindowS": 1.5,
+        "maxRunS": 12.0,
+        "assist": 1
+      },
+      "asserts": [
+        {
+          "metric": "jturnTimeS",
+          "op": "between",
+          "value": [
+            0.0,
+            12.0
+          ],
+          "note": "measured j-turn rotate+settle time; >=12 = DNF"
+        },
+        {
+          "metric": "yawOvershootDeg",
+          "op": "between",
+          "value": [
+            0.0,
+            360.0
+          ],
+          "note": "yaw overshoot past target heading; data cell"
+        },
+        {
+          "metric": "spunOut",
+          "op": "==",
+          "value": false,
+          "note": "pass shape: rotates without spinning out (FAIL = red cell)"
+        },
+        {
+          "metric": "flips",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        }
+      ]
+    },
+    {
+      "maneuver": "jturn",
+      "car": "coupe",
+      "station": "openpad",
+      "params": {
+        "entrySpeedMs": 13.9,
+        "rotThrottleFrac": 0.6,
+        "settleYawDeg": 20.0,
+        "settleWindowS": 1.5,
+        "maxRunS": 12.0,
+        "assist": 2
+      },
+      "asserts": [
+        {
+          "metric": "jturnTimeS",
+          "op": "between",
+          "value": [
+            0.0,
+            12.0
+          ],
+          "note": "measured j-turn rotate+settle time; >=12 = DNF"
+        },
+        {
+          "metric": "yawOvershootDeg",
+          "op": "between",
+          "value": [
+            0.0,
+            360.0
+          ],
+          "note": "yaw overshoot past target heading; data cell"
+        },
+        {
+          "metric": "spunOut",
+          "op": "==",
+          "value": false,
+          "note": "pass shape: rotates without spinning out (FAIL = red cell)"
+        },
+        {
+          "metric": "flips",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        }
+      ]
+    },
+    {
+      "maneuver": "jturn",
+      "car": "kart",
+      "station": "openpad",
+      "params": {
+        "entrySpeedMs": 13.9,
+        "rotThrottleFrac": 0.6,
+        "settleYawDeg": 25.0,
+        "settleWindowS": 1.0,
+        "maxRunS": 12.0,
+        "assist": 0
+      },
+      "asserts": [
+        {
+          "metric": "jturnTimeS",
+          "op": "between",
+          "value": [
+            0.0,
+            12.0
+          ],
+          "note": "measured j-turn rotate+settle time; >=12 = DNF"
+        },
+        {
+          "metric": "yawOvershootDeg",
+          "op": "between",
+          "value": [
+            0.0,
+            360.0
+          ],
+          "note": "yaw overshoot past target heading; data cell"
+        },
+        {
+          "metric": "spunOut",
+          "op": "==",
+          "value": false,
+          "note": "pass shape: rotates without spinning out (FAIL = red cell)"
+        },
+        {
+          "metric": "flips",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        }
+      ]
+    },
+    {
+      "maneuver": "jturn",
+      "car": "kart",
+      "station": "openpad",
+      "params": {
+        "entrySpeedMs": 13.9,
+        "rotThrottleFrac": 0.6,
+        "settleYawDeg": 25.0,
+        "settleWindowS": 1.0,
+        "maxRunS": 12.0,
+        "assist": 1
+      },
+      "asserts": [
+        {
+          "metric": "jturnTimeS",
+          "op": "between",
+          "value": [
+            0.0,
+            12.0
+          ],
+          "note": "measured j-turn rotate+settle time; >=12 = DNF"
+        },
+        {
+          "metric": "yawOvershootDeg",
+          "op": "between",
+          "value": [
+            0.0,
+            360.0
+          ],
+          "note": "yaw overshoot past target heading; data cell"
+        },
+        {
+          "metric": "spunOut",
+          "op": "==",
+          "value": false,
+          "note": "pass shape: rotates without spinning out (FAIL = red cell)"
+        },
+        {
+          "metric": "flips",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        }
+      ]
+    },
+    {
+      "maneuver": "jturn",
+      "car": "kart",
+      "station": "openpad",
+      "params": {
+        "entrySpeedMs": 13.9,
+        "rotThrottleFrac": 0.6,
+        "settleYawDeg": 25.0,
+        "settleWindowS": 1.0,
+        "maxRunS": 12.0,
+        "assist": 2
+      },
+      "asserts": [
+        {
+          "metric": "jturnTimeS",
+          "op": "between",
+          "value": [
+            0.0,
+            12.0
+          ],
+          "note": "measured j-turn rotate+settle time; >=12 = DNF"
+        },
+        {
+          "metric": "yawOvershootDeg",
+          "op": "between",
+          "value": [
+            0.0,
+            360.0
+          ],
+          "note": "yaw overshoot past target heading; data cell"
+        },
+        {
+          "metric": "spunOut",
+          "op": "==",
+          "value": false,
+          "note": "pass shape: rotates without spinning out (FAIL = red cell)"
+        },
+        {
+          "metric": "flips",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        }
+      ]
+    },
+    {
+      "maneuver": "jturn",
+      "car": "pickup",
+      "station": "openpad",
+      "params": {
+        "entrySpeedMs": 13.9,
+        "rotThrottleFrac": 0.6,
+        "settleYawDeg": 20.0,
+        "settleWindowS": 1.3,
+        "maxRunS": 12.0,
+        "hbInitiateS": 1.0,
+        "assist": 0
+      },
+      "asserts": [
+        {
+          "metric": "jturnTimeS",
+          "op": "between",
+          "value": [
+            0.0,
+            12.0
+          ],
+          "note": "measured j-turn rotate+settle time; >=12 = DNF"
+        },
+        {
+          "metric": "yawOvershootDeg",
+          "op": "between",
+          "value": [
+            0.0,
+            360.0
+          ],
+          "note": "yaw overshoot past target heading; data cell"
+        },
+        {
+          "metric": "spunOut",
+          "op": "==",
+          "value": false,
+          "note": "pass shape: rotates without spinning out (FAIL = red cell)"
+        },
+        {
+          "metric": "flips",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        }
+      ]
+    },
+    {
+      "maneuver": "jturn",
+      "car": "pickup",
+      "station": "openpad",
+      "params": {
+        "entrySpeedMs": 13.9,
+        "rotThrottleFrac": 0.6,
+        "settleYawDeg": 20.0,
+        "settleWindowS": 1.3,
+        "maxRunS": 12.0,
+        "hbInitiateS": 1.0,
+        "assist": 1
+      },
+      "asserts": [
+        {
+          "metric": "jturnTimeS",
+          "op": "between",
+          "value": [
+            0.0,
+            12.0
+          ],
+          "note": "measured j-turn rotate+settle time; >=12 = DNF"
+        },
+        {
+          "metric": "yawOvershootDeg",
+          "op": "between",
+          "value": [
+            0.0,
+            360.0
+          ],
+          "note": "yaw overshoot past target heading; data cell"
+        },
+        {
+          "metric": "spunOut",
+          "op": "==",
+          "value": false,
+          "note": "pass shape: rotates without spinning out (FAIL = red cell)"
+        },
+        {
+          "metric": "flips",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        }
+      ]
+    },
+    {
+      "maneuver": "jturn",
+      "car": "pickup",
+      "station": "openpad",
+      "params": {
+        "entrySpeedMs": 13.9,
+        "rotThrottleFrac": 0.6,
+        "settleYawDeg": 20.0,
+        "settleWindowS": 1.3,
+        "maxRunS": 12.0,
+        "hbInitiateS": 1.0,
+        "assist": 2
+      },
+      "asserts": [
+        {
+          "metric": "jturnTimeS",
+          "op": "between",
+          "value": [
+            0.0,
+            12.0
+          ],
+          "note": "measured j-turn rotate+settle time; >=12 = DNF"
+        },
+        {
+          "metric": "yawOvershootDeg",
+          "op": "between",
+          "value": [
+            0.0,
+            360.0
+          ],
+          "note": "yaw overshoot past target heading; data cell"
+        },
+        {
+          "metric": "spunOut",
+          "op": "==",
+          "value": false,
+          "note": "pass shape: rotates without spinning out (FAIL = red cell)"
+        },
+        {
+          "metric": "flips",
+          "op": "==",
+          "value": 0,
+          "note": "standing invariant (target 0)"
+        }
+      ]
+    }
+  ]
+}

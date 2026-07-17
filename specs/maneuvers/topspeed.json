@@ -1,0 +1,49 @@
+{
+  "bands": "handling-targets v1",
+  "suite": [
+    {
+      "maneuver": "topspeed",
+      "car": "hatch",
+      "station": "dragstrip",
+      "params": { "maxRunS": 40.0 },
+      "asserts": [
+        { "metric": "maxSpeedMs", "op": "between", "value": [47.22, 54.17], "note": "handling-targets v1 Hatch Top speed 170-195 km/h" },
+        { "metric": "gearAtVmax", "op": ">=", "value": 4, "note": "should top out in (near) top gear" },
+        { "metric": "flips", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" }
+      ]
+    },
+    {
+      "maneuver": "topspeed",
+      "car": "coupe",
+      "station": "dragstrip",
+      "params": { "maxRunS": 40.0 },
+      "asserts": [
+        { "metric": "maxSpeedMs", "op": "between", "value": [63.89, 72.22], "note": "handling-targets v1 Coupe Top speed 230-260 km/h -- NOTE: the ~760 m dragstrip runway is too short to reach this; the measured value is runway-limited (harness geometry limitation, flag for the tuning pass)" },
+        { "metric": "gearAtVmax", "op": ">=", "value": 4, "note": "should top out in (near) top gear" },
+        { "metric": "flips", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" }
+      ]
+    },
+    {
+      "maneuver": "topspeed",
+      "car": "kart",
+      "station": "dragstrip",
+      "params": { "maxRunS": 40.0 },
+      "asserts": [
+        { "metric": "maxSpeedMs", "op": "between", "value": [20.0, 24.0], "note": "(feel session 2026-07-13) kart faster in general -- 'a literal race car design'; was 15.28-19.44 (gearing-capped: gear 4 pinned at redline 9000 = 62 km/h). Fixed with a 5th gear (1.1), gears 1-4 + FinalDrive untouched; measured 21.82 m/s (78.5 km/h) in gear 5" },
+        { "metric": "gearAtVmax", "op": ">=", "value": 4, "note": "kart has 5 gears since the feel session 2026-07-13; should top out in gear 5" },
+        { "metric": "flips", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" }
+      ]
+    },
+    {
+      "maneuver": "topspeed",
+      "car": "pickup",
+      "station": "dragstrip",
+      "params": { "maxRunS": 40.0 },
+      "asserts": [
+        { "metric": "maxSpeedMs", "op": "between", "value": [38.89, 45.83], "note": "handling-targets v1 Pickup Top speed 140-165 km/h" },
+        { "metric": "gearAtVmax", "op": ">=", "value": 4, "note": "should top out in (near) top gear" },
+        { "metric": "flips", "op": "==", "value": 0, "note": "standing invariant audit (target 0)" }
+      ]
+    }
+  ]
+}

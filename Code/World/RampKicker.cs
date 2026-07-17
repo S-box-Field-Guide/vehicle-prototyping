@@ -1,0 +1,187 @@
+namespace VehicleProto;
+
+/// <summary>
+/// Builds a curved SOLID launch kicker. The VISUAL is a procedural mesh (the
+/// <see cref="PlaygroundTerrain"/> <c>Model.Builder</c> idiom); the COLLISION is a stack of solid
+/// convex TANGENT BOXES, one per arc segment, each pitched to the local surface slope.
+///
+/// PROFILE: a circular arc TANGENT to the ground at the base — zero lip where a wheel first meets it,
+/// the same drivability law the flush roads follow — that steepens toward a vertical back lip of
+/// height <c>H</c> over run <c>L</c>. The car drives up smoothly from grade and launches off the back
+/// edge.
+///
+/// WHY SEGMENTED CONVEX BOXES (build 9 pass 2 — collision fix): the old collider was a single thin
+/// triangle-mesh SHELL fed straight into <c>Model.Builder.AddCollisionMesh</c>. Against this map's
+/// raycast/shapecast wheels that shell mis-behaves — a small kicker at full speed acted as a WALL
+/// instead of a launch: a thin concave mesh gives the downward wheel shapecast an unreliable hit, the
+/// chassis belly catches the face, and there is no solid volume beneath to ride on. Replacing it with
+/// a set of SOLID convex boxes fixes every failure mode of that shell at once:
+///   • Each box's TOP face lies exactly on its arc segment, so the collision surface follows the curve
+///     face-for-face at every scale — the base segment is genuinely ~0° tangent, the way the render is.
+///   • Boxes are primitive convex shapes the physics engine never hulls/AABB-simplifies (the mesh
+///     shell was the simplification suspect).
+///   • Each box is a SOLID volume buried below grade, so overlapping neighbours form one gapless solid
+///     the wheel shapecast lands on cleanly and the belly rolls over — no thin-shell penetration.
+/// The visual mesh is unchanged; only the collider architecture moved from one shell to N boxes.
+///
+/// LOCAL FRAME: the base front edge sits at the local origin, the run goes along +X to the lip at
+/// x=L, the width W is centred on Y, and the surface rises in +Z. Position/orient the whole piece
+/// with <paramref name="atM"/> (metres) + <paramref name="yawDeg"/> (a down-ramp is the same kicker
+/// placed at its far end with yawDeg+180). Deterministic: pure function of the size args, no RNG.
+/// </summary>
+public static class RampKicker
+{
+	const float M = Units.MetersToUnits;
+
+	/// <summary>Place a curved solid kicker under <paramref name="parent"/>. <paramref name="lengthM"/>
+	/// = ground run, <paramref name="widthM"/> = lateral width, <paramref name="heightM"/> = lip height.
+	/// Returns the placed GameObject.</summary>
+	public static GameObject Build( Scene scene, GameObject parent, Vector3 atM, float yawDeg,
+		float lengthM, float widthM, float heightM, Color color, int segments = 16 )
+	{
+		int segs = System.Math.Max( 3, segments );
+		var prof = Profile( lengthM, heightM, segs );
+		var model = BuildRenderModel( prof, widthM );
+
+		var go = scene.CreateObject();
+		go.Name = "Kicker";
+		go.SetParent( parent, true );
+		go.WorldPosition = atM * M;
+		go.WorldRotation = Rotation.FromYaw( yawDeg );
+
+		var renderer = go.Components.Create<ModelRenderer>();
+		renderer.Model = model;
+		renderer.Tint = color;
+
+		BuildSegmentColliders( go, prof, widthM );
+
+		go.Tags.Add( "road" );   // wheels treat the curved face as drivable ground
+		return go;
+	}
+
+	/// <summary>The sampled arc profile (x, z) in metres, tangent-to-ground at x=0. Circle centre at
+	/// (0,R), z(x) = R − √(R²−x²) with R = (L²+H²)/(2H) so z(L)=H exactly (slope 0 at the base).</summary>
+	static Vector2[] Profile( float L, float H, int segs )
+	{
+		float R = (L * L + H * H) / (2f * H);
+		var prof = new Vector2[segs + 1];
+		for ( int i = 0; i <= segs; i++ )
+		{
+			float x = L * i / segs;
+			float z = R - MathF.Sqrt( MathF.Max( 0f, R * R - x * x ) );
+			prof[i] = new Vector2( x, z );
+		}
+		return prof;
+	}
+
+	// ---------------------------------------------------------------- collision (segmented convex boxes)
+
+	/// <summary>One solid convex box per arc segment, pitched to the local slope, its top face lying on
+	/// the segment chord and its body buried below grade so overlapping neighbours make a gapless solid
+	/// whose only exposed surface is the faceted arc. This is the collider the wheels actually meet.</summary>
+	static void BuildSegmentColliders( GameObject kicker, Vector2[] prof, float W )
+	{
+		int segs = prof.Length - 1;
+		const float buryM = 1.5f;   // how far each box reaches below grade → thick, overlapping solid
+
+		for ( int i = 0; i < segs; i++ )
+		{
+			var p0 = prof[i];
+			var p1 = prof[i + 1];
+			float dx = p1.x - p0.x;
+			float dz = p1.y - p0.y;
+			float segLen = MathF.Sqrt( dx * dx + dz * dz );
+			if ( segLen < 1e-4f ) continue;
+
+			float pitchDeg = MathF.Atan2( dz, dx ).RadianToDegree();  // segment slope above horizontal
+			float midX = (p0.x + p1.x) * 0.5f;
+			float midZ = (p0.y + p1.y) * 0.5f;
+
+			// upward surface normal (perp to the tangent, points up-and-back): (-dz, dx)/segLen
+			float nX = -dz / segLen;
+			float nZ = dx / segLen;
+
+			float boxThick = midZ + buryM;                 // surface → below grade
+			float cX = midX - nX * boxThick * 0.5f;        // centre sits half a thickness below the surface
+			float cZ = midZ - nZ * boxThick * 0.5f;
+
+			var seg = kicker.Scene.CreateObject();
+			seg.Name = "KickerSeg";
+			seg.SetParent( kicker, false );                // keep parent yaw; add local pitch below
+			seg.LocalPosition = new Vector3( cX, 0f, cZ ) * M;
+			seg.LocalRotation = Rotation.FromPitch( -pitchDeg );  // +X points up the slope (nose-up)
+
+			var box = seg.Components.Create<BoxCollider>();
+			box.Scale = new Vector3( segLen, W, boxThick ) * M;   // full box size in units
+			box.Static = true;
+			seg.Tags.Add( "road" );
+		}
+	}
+
+	// ---------------------------------------------------------------- render mesh (visual only)
+
+	/// <summary>Mesh the closed curved-kicker solid for RENDER (no collision — see
+	/// <see cref="BuildSegmentColliders"/>). Top curved surface, two side skirts down to grade, a flat
+	/// underside and the vertical back lip, wound so every face points outward via the self-check.</summary>
+	static Model BuildRenderModel( Vector2[] prof, float W )
+	{
+		int segs = prof.Length - 1;
+		float hw = W * 0.5f;
+		float L = prof[segs].x;
+		float H = prof[segs].y;
+
+		var verts = new List<Vertex>();
+		var positions = new List<Vector3>();
+		var indices = new List<int>();
+
+		int AddVert( Vector3 pMeters, Vector3 normal )
+		{
+			var p = pMeters * M;
+			positions.Add( p );
+			verts.Add( new Vertex( p, normal, new Vector3( 1f, 0f, 0f ), new Vector4( pMeters.x * 0.1f, pMeters.y * 0.1f, 0f, 0f ) ) );
+			return verts.Count - 1;
+		}
+
+		// Emit a quad A-B-C-D, picking the winding so the front face points along outN (keeps the
+		// single-sided default material facing out). Same self-checking trick avoids the terrain
+		// "face-down winding" trap by construction.
+		void Quad( Vector3 A, Vector3 B, Vector3 C, Vector3 D, Vector3 outN )
+		{
+			bool flip = Vector3.Dot( Vector3.Cross( B - A, C - A ), outN ) < 0f;
+			int a = AddVert( A, outN ), b = AddVert( B, outN ), c = AddVert( C, outN ), d = AddVert( D, outN );
+			if ( !flip ) { indices.Add( a ); indices.Add( b ); indices.Add( c ); indices.Add( a ); indices.Add( c ); indices.Add( d ); }
+			else { indices.Add( a ); indices.Add( c ); indices.Add( b ); indices.Add( a ); indices.Add( d ); indices.Add( c ); }
+		}
+
+		for ( int i = 0; i < segs; i++ )
+		{
+			var p0 = prof[i]; var p1 = prof[i + 1];
+			// per-segment up-normal from the arc tangent (leans back as it steepens): (-dz,0,dx)
+			var up = new Vector3( -(p1.y - p0.y), 0f, p1.x - p0.x ).Normal;
+			// TOP (drivable curved surface)
+			Quad( new Vector3( p0.x, -hw, p0.y ), new Vector3( p1.x, -hw, p1.y ),
+				new Vector3( p1.x, hw, p1.y ), new Vector3( p0.x, hw, p0.y ), up );
+			// LEFT skirt (y = -hw) and RIGHT skirt (y = +hw) — fill under the curve down to grade
+			Quad( new Vector3( p0.x, -hw, 0f ), new Vector3( p1.x, -hw, 0f ),
+				new Vector3( p1.x, -hw, p1.y ), new Vector3( p0.x, -hw, p0.y ), new Vector3( 0f, -1f, 0f ) );
+			Quad( new Vector3( p0.x, hw, 0f ), new Vector3( p1.x, hw, 0f ),
+				new Vector3( p1.x, hw, p1.y ), new Vector3( p0.x, hw, p0.y ), new Vector3( 0f, 1f, 0f ) );
+		}
+
+		// UNDERSIDE (flat on grade) and BACK LIP (vertical face at x=L) — seal the solid
+		Quad( new Vector3( 0f, -hw, 0f ), new Vector3( L, -hw, 0f ),
+			new Vector3( L, hw, 0f ), new Vector3( 0f, hw, 0f ), new Vector3( 0f, 0f, -1f ) );
+		Quad( new Vector3( L, -hw, 0f ), new Vector3( L, hw, 0f ),
+			new Vector3( L, hw, H ), new Vector3( L, -hw, H ), new Vector3( 1f, 0f, 0f ) );
+
+		var idx = new int[indices.Count];
+		for ( int k = 0; k < idx.Length; k++ ) idx[k] = indices[k];
+
+		var mesh = new Mesh( Material.Load( "materials/default.vmat" ) );
+		mesh.CreateVertexBuffer( verts.Count, verts );
+		mesh.CreateIndexBuffer( idx.Length, idx );
+		mesh.Bounds = BBox.FromPoints( positions );
+
+		return Model.Builder.AddMesh( mesh ).Create();
+	}
+}

@@ -1,0 +1,579 @@
+@using Sandbox;
+@using Sandbox.UI;
+@inherits PanelComponent
+@namespace VehicleProto
+
+@* Lab / tuning (design board 1c) — toggled by T ("Debug"). Writes live onto the running car.
+   Left: grouped dial panel. Right: live suspension rig (bound to VehicleWheel). *@
+
+<root>
+	@if ( UiState.TuningOpen && Car.IsValid() )
+	{
+		<div class="panel">
+			<div class="phead">
+				<div class="ptitle">Tuning — @CarName</div>
+				<div class="pactions">
+					<div class="qbtn" onclick=@ToggleTuneHelp>?</div>
+					<div class="mono kbd">T</div>
+				</div>
+			</div>
+
+			<div class="tabs">
+				@foreach ( var g in Groups )
+				{
+					var gg = g;
+					<div class="mono tab @(_tab == gg ? "on" : "")" onclick=@( () => SetTab( gg ) )>@gg</div>
+				}
+			</div>
+
+			<div class="dials">
+				@foreach ( var p in ActiveParams )
+				{
+					var pp = p;
+					<div class="dial">
+						<div class="drow">
+							<div class="dname">@p.Name @if ( IsDirty( p ) ) { <span class="ddot"></span> }</div>
+							<div class="mono dval">@p.Get().ToString( p.Fmt )@p.Suffix</div>
+						</div>
+						<div class="dctl">
+							<div class="mono step" onclick=@( () => Adjust( pp, -1 ) )>−</div>
+							<div class="track"
+								onmousedown=@( e => TrackScrub( pp, e, true ) )
+								onmousemove=@( e => TrackScrub( pp, e, false ) )>
+								<div class="fill" style="width: @UiFmt.Pct( Frac( pp ) * 100f )%"></div>
+							</div>
+							<div class="mono step" onclick=@( () => Adjust( pp, +1 ) )>+</div>
+						</div>
+					</div>
+				}
+			</div>
+
+			<div class="dirty @(DirtyCount > 0 ? "" : "clean")">
+				<span class="ddot"></span>
+				<span class="dtext">@DirtyText</span>
+			</div>
+
+			<div class="presets">
+				<div class="prow phdr">
+					<div class="mono plabel">Saved tunes · @CarName</div>
+					<div class="btn primary psave" onclick=@SavePreset>Save current</div>
+				</div>
+				@if ( CarPresets.Count == 0 )
+				{
+					<div class="mono pempty">No saved tunes for this car yet — tweak the dials, then Save current.</div>
+				}
+				else
+				{
+					@* Scrollable list container (Issue 3): header/Save stay fixed above; only the ROWS
+					   scroll, capped at ~3 rows so a long list can't scrunch the panel into the HUD. *@
+					<div class="plist">
+						@foreach ( var preset in CarPresets )
+						{
+							var pr = preset;
+							<div class="prow">
+								<div class="pname" onclick=@( () => LoadPreset( pr ) )>@pr.Name</div>
+								<div class="mono pedit" onclick=@( () => BeginRename( pr ) )>Edit</div>
+								<div class="mono pload" onclick=@( () => LoadPreset( pr ) )>Load</div>
+								<div class="mono pdel" onclick=@( () => DeletePreset( pr ) )>Del</div>
+							</div>
+						}
+					</div>
+				}
+			</div>
+
+			<div class="foot">
+				<div class="frow">
+					<div class="btn ghost" onclick=@ResetAll>Reset all</div>
+					<div class="btn primary" onclick=@( () => Car.Respawn() )>Respawn car · R</div>
+				</div>
+				<div class="mono fhint">changes apply instantly to the running car</div>
+			</div>
+		</div>
+
+		<div class="suspension">
+			<div class="shead">
+				<div class="stitle">Suspension</div>
+				<div class="mono scap">travel · load</div>
+			</div>
+			<div class="rig">
+				@for ( int i = 0; i < Car.Wheels.Count && i < 4; i++ )
+				{
+					var w = Car.Wheels[i];
+					var bottomed = IsBottomed( w );
+					<div class="scol">
+						<div class="sbar @(bottomed ? "bottom" : "")">
+							<div class="sfill @(bottomed ? "bottom" : "")" style="height: @UiFmt.Pct( LoadFrac( w ) * 100f )%"></div>
+						</div>
+						<div class="mono slbl @(bottomed ? "bottom" : "")">@WheelLabel( i )@(bottomed ? " · BOTTOM" : "")</div>
+						<div class="mono skg">@LoadKg( w ) kg</div>
+					</div>
+				}
+			</div>
+		</div>
+	}
+</root>
+
+@code {
+	// Car is set once at Mount and re-pointed on every live car swap by UiRig.Retarget. The panel
+	// caches param closures over ONE definition instance (BuildParams captures `def`), so a swap must
+	// invalidate that cache — otherwise the panel keeps displaying and EDITING the orphaned old def
+	// while the player drives a car built from a fresh definition instance (tester bug: redline dial
+	// had no effect after a Tab/menu car switch). The setter drops the cached params + tuning state so
+	// the next access rebuilds against the new car's own (untuned) definition.
+	VehicleController _car;
+	public VehicleController Car
+	{
+		get => _car;
+		set
+		{
+			if ( ReferenceEquals( _car, value ) )
+				return;
+			_car = value;
+			OnCarChanged();
+		}
+	}
+
+	void OnCarChanged()
+	{
+		_params = null;   // force a rebuild of the param closures against the new def
+		_carPresets = null;  // presets are per-car — re-scope the list to the active car
+		_gripScale = 1f;  // the new car is untuned — grip multiplier resets to 1×
+		var def = _car?.Definition;
+		if ( def is not null )
+		{
+			_baseLat = def.LateralCurve;
+			_baseLong = def.LongitudinalCurve;
+		}
+		StateHasChanged();
+	}
+
+	static readonly string[] Groups = { "engine", "tires", "susp", "assists" };
+	string _tab = "engine";
+
+	class Param
+	{
+		public string Name;
+		public string Group = "engine";
+		public string Suffix = "";
+		public string Fmt = "F0";
+		public float Step, Min, Max;
+		public float Baseline;
+		public Func<float> Get;
+		public Action<float> Set;
+	}
+
+	List<Param> _params;
+	List<Param> Params => _params ??= BuildParams();
+	IEnumerable<Param> ActiveParams => Params.Where( p => p.Group == _tab );
+
+	string CarName => Car?.Definition?.Name ?? "Car";
+
+	TireCurve _baseLat, _baseLong;
+	float _gripScale = 1f;
+
+	// Shift points are absolute per-car constants in the definition, but the Redline dial must carry
+	// them so lowering redline below ShiftUpRpm doesn't limiter-stick the car (never upshifts). Capture
+	// each shift point's fraction of redline when params are (re)built for the car, then scale on Set.
+	float _shiftUpFrac = 0.92f, _shiftDownFrac = 0.35f;
+
+	// ---- player tune presets (Save / Load / Delete over the current dial set) ----
+	// Presets are per-car and persisted to FileSystem.Data (TunePresetStore), so they survive restart.
+	// The list is cached and re-scoped to the active car in OnCarChanged; _presetsRev bumps the
+	// BuildHash on any add/delete so the list re-renders even when the car is sitting still (the panel
+	// only auto-rebuilds while suspension load changes). Auto-named ("<car> tune N"): a live text field
+	// is impractical here because this panel rebuilds every frame off live load and would drop focus.
+	IReadOnlyList<TunePreset> _carPresets;
+	IReadOnlyList<TunePreset> CarPresets => _carPresets ??= TunePresetStore.ForCar( CarSwitcher.CurrentId( Car ) );
+	int _presetsRev;
+
+	void RefreshPresets()
+	{
+		_carPresets = null;
+		_presetsRev++;
+		StateHasChanged();
+	}
+
+	void SavePreset()
+	{
+		if ( !Car.IsValid() )
+			return;
+
+		var def = Car.Definition;
+		string carId = CarSwitcher.CurrentId( Car );
+		var preset = new TunePreset
+		{
+			CarId = carId,
+			Name = TunePresetStore.NextName( carId ),
+
+			PeakTorque = def.PeakTorque,
+			FinalDrive = def.FinalDrive,
+			LaunchBoost = def.LaunchBoost,
+			EngineBrakeTorque = def.EngineBrakeTorque,
+			RedlineRpm = def.RedlineRpm,
+			ShiftUpRpm = def.ShiftUpRpm,     // coupled to redline — stored verbatim
+			ShiftDownRpm = def.ShiftDownRpm, // coupled to redline — stored verbatim
+
+			GripScale = _gripScale,          // the multiplier, not the raw curve points
+			HandbrakeGripScale = def.HandbrakeGripScale,
+			BrakeTorque = def.BrakeTorque,
+			BrakeAssist = def.BrakeAssist,
+			HandbrakeTorque = def.HandbrakeTorque,
+
+			SpringRate = def.SpringRate,
+			DamperRate = def.DamperRate,
+			Mass = def.Mass,
+			GravityScale = GravityScale(),   // scene property, captured for parity
+
+			SteerRateScale = def.SteerRateScale,
+			MaxSteerAngle = def.MaxSteerAngle,
+			HighSpeedSteerAngle = def.HighSpeedSteerAngle,
+			ReverseSpeedCap = def.ReverseSpeedCap,
+			SpinRecoveryAssist = def.SpinRecoveryAssist,
+		};
+
+		TunePresetStore.Add( preset );
+		RefreshPresets();
+	}
+
+	void LoadPreset( TunePreset preset )
+	{
+		if ( !Car.IsValid() || preset is null )
+			return;
+
+		// per-car guard: never apply a preset saved for a different car (defensive — the UI only ever
+		// lists the active car's presets, but a stale click or future importable file could mismatch).
+		if ( !string.Equals( preset.CarId, CarSwitcher.CurrentId( Car ), StringComparison.OrdinalIgnoreCase ) )
+		{
+			Log.Warning( $"[vp] tune preset '{preset.Name}' is for '{preset.CarId}', active car is "
+				+ $"'{CarSwitcher.CurrentId( Car )}' — not applying" );
+			return;
+		}
+
+		var def = Car.Definition;
+
+		def.PeakTorque = preset.PeakTorque;
+		def.FinalDrive = preset.FinalDrive;
+		def.LaunchBoost = preset.LaunchBoost;
+		def.EngineBrakeTorque = preset.EngineBrakeTorque;
+		// Redline + its coupled shift points: restore all three verbatim (identical to save time), then
+		// re-derive the fractions so a later Redline dial edit scales from THIS loaded baseline.
+		def.RedlineRpm = preset.RedlineRpm;
+		def.ShiftUpRpm = preset.ShiftUpRpm;
+		def.ShiftDownRpm = preset.ShiftDownRpm;
+		if ( preset.RedlineRpm > 0f )
+		{
+			_shiftUpFrac = preset.ShiftUpRpm / preset.RedlineRpm;
+			_shiftDownFrac = preset.ShiftDownRpm / preset.RedlineRpm;
+		}
+
+		def.HandbrakeGripScale = preset.HandbrakeGripScale;
+		def.BrakeTorque = preset.BrakeTorque;
+		def.BrakeAssist = preset.BrakeAssist;
+		def.HandbrakeTorque = preset.HandbrakeTorque;
+
+		def.SpringRate = preset.SpringRate;
+		def.DamperRate = preset.DamperRate;
+		def.Mass = preset.Mass;
+
+		def.SteerRateScale = preset.SteerRateScale;
+		def.MaxSteerAngle = preset.MaxSteerAngle;
+		def.HighSpeedSteerAngle = preset.HighSpeedSteerAngle;
+		def.ReverseSpeedCap = preset.ReverseSpeedCap;
+		def.SpinRecoveryAssist = preset.SpinRecoveryAssist;
+
+		// Grip: re-apply the scale through SetGrip so the tire curves are re-derived from the PRISTINE
+		// baseline (_baseLat/_baseLong), never from an already-scaled state. SetGrip also runs ApplyWheels,
+		// which pushes the new SpringRate/DamperRate/curves onto the live wheels.
+		SetGrip( preset.GripScale );
+		// Mass onto the live rigidbody + per-wheel static loads.
+		ApplyChassis();
+		// Gravity is a scene property — re-apply for parity with the saved state.
+		SetGravity( preset.GravityScale );
+
+		// The loaded state is now the reference the dirty markers diff against.
+		if ( _params is not null )
+			foreach ( var p in _params )
+				p.Baseline = p.Get();
+
+		StateHasChanged();
+	}
+
+	void DeletePreset( TunePreset preset )
+	{
+		TunePresetStore.Delete( preset );
+		RefreshPresets();
+	}
+
+	// Open the rename modal for this preset. The text field lives in a SEPARATE panel
+	// (TuneRenameOverlay) precisely because THIS panel rebuilds every frame off live suspension load and
+	// would drop a focused TextEntry each frame — see TuneRenameState for the full rationale. The commit
+	// mutates the preset in place; our list re-renders via _presetsRev-style BuildHash folding of
+	// TuneRenameState.Revision (below) so the new name shows even with the car standing still.
+	void BeginRename( TunePreset preset ) => TuneRenameState.Begin( preset );
+
+	void SetTab( string t ) { _tab = t; StateHasChanged(); }
+
+	// "?" header button: open/close the dial-explainer overlay. The overlay is a SEPARATE PanelComponent
+	// (TuneHelpOverlay) reading UiState.TuneHelpOpen, so this flag flip re-renders THAT panel on its own
+	// constant BuildHash — nothing here rebuilds mid-view. Clicking "?" again toggles it closed.
+	void ToggleTuneHelp() => UiState.TuneHelpOpen = !UiState.TuneHelpOpen;
+
+	float Frac( Param p )
+	{
+		if ( p.Max <= p.Min ) return 0f;
+		return Math.Clamp( (p.Get() - p.Min) / (p.Max - p.Min), 0f, 1f );
+	}
+
+	bool IsDirty( Param p ) => MathF.Abs( p.Get() - p.Baseline ) > p.Step * 0.25f;
+	int DirtyCount => Params.Count( IsDirty );
+	string DirtyText => DirtyCount == 0
+		? "matches saved definition"
+		: DirtyCount == 1 ? "1 dial differs from saved definition"
+		: $"{DirtyCount} dials differ from saved definition";
+
+	// ---- suspension rig bindings (live) ----
+	static readonly string[] WheelLabels = { "FL", "FR", "RL", "RR" };
+	string WheelLabel( int i ) => i < WheelLabels.Length ? WheelLabels[i] : $"W{i}";
+	float LoadFrac( VehicleWheel w ) => w.StaticLoad > 0f ? Math.Clamp( w.Load / (w.StaticLoad * 2f), 0f, 1f ) : 0f;
+	string LoadKg( VehicleWheel w ) => (w.Load / 9.81f).ToString( "F0" );
+	bool IsBottomed( VehicleWheel w ) => w.IsGrounded && w.SuspensionLength <= w.SuspensionTravel * 0.03f;
+
+	protected override void OnUpdate()
+	{
+		if ( Input.Pressed( "Debug" ) )
+		{
+			UiState.TuningOpen = !UiState.TuningOpen;
+			Mouse.Visibility = UiState.TuningOpen ? MouseVisibility.Visible : MouseVisibility.Hidden;
+			// The dial-help overlay only makes sense over an open panel — closing Tuning closes it too,
+			// so the explainer can't linger on screen with no dials behind it.
+			if ( !UiState.TuningOpen )
+				UiState.TuneHelpOpen = false;
+		}
+
+		// something else (or the engine) may reset cursor state every frame
+		if ( UiState.TuningOpen )
+			Mouse.Visibility = MouseVisibility.Visible;
+	}
+
+	void Adjust( Param p, int clicks )
+	{
+		float v = Math.Clamp( p.Get() + clicks * p.Step, p.Min, p.Max );
+		p.Set( v );
+		StateHasChanged();
+	}
+
+	// Click-to-jump + drag-to-scrub on the dial track. Mirrors the engine's own SliderControl mechanic
+	// (no native drag helper for a hand-rolled RenderFragment). `jump` is true on onmousedown (a bare
+	// click lands as jump-to-position) and false on onmousemove (scrub only while the track is actively
+	// pressed). Value = mouse LOCAL x over the track width, snapped to the param's Step, pushed through
+	// the SAME p.Set path as Adjust so Redline's ScaleShiftPoints, Grip's SetGrip etc. still apply.
+	// (KB gotcha g-ui-draggable-slider-tracks-click-jump-drag; verified drag pattern.)
+	void TrackScrub( Param p, Sandbox.UI.PanelEvent ev, bool jump )
+	{
+		if ( ev is not Sandbox.UI.MousePanelEvent e ) return;
+
+		var track = e.This;
+		if ( track is null ) return;
+
+		// onmousemove fires whether or not the button is held — only scrub while the track owns the press.
+		if ( !jump && !track.PseudoClass.HasFlag( Sandbox.UI.PseudoClass.Active ) ) return;
+
+		float w = track.Box.Rect.Width;
+		if ( w <= 0f ) return;
+
+		float frac = Math.Clamp( e.LocalPosition.x / w, 0f, 1f );
+		float v = p.Min + frac * (p.Max - p.Min);
+		if ( p.Step > 0f ) v = MathF.Round( v / p.Step ) * p.Step;   // snap to the param's step (values stay clean)
+		v = Math.Clamp( v, p.Min, p.Max );
+		p.Set( v );
+		StateHasChanged();
+	}
+
+	void ResetAll()
+	{
+		// Reset to the CURRENT car's pristine preset, not always the hatch — otherwise resetting while
+		// driving a coupe/kart/pickup wrote hatch physics onto it. Presets are `=> new()` so each access
+		// is a fresh untouched instance (StationCarRegistry.ResolveCar via the canonical id table).
+		var fresh = VehiclePilot.ResolveCar( CarSwitcher.CurrentId( Car ) );
+		var def = Car.Definition;
+
+		def.PeakTorque = fresh.PeakTorque;
+		def.LaunchBoost = fresh.LaunchBoost;
+		def.FinalDrive = fresh.FinalDrive;
+		def.EngineBrakeTorque = fresh.EngineBrakeTorque;
+		def.RedlineRpm = fresh.RedlineRpm;
+		// Redline dial now carries the shift points (ScaleShiftPoints); restore them too, and re-capture
+		// the pristine fractions so a subsequent Redline edit scales from the reset baseline.
+		def.ShiftUpRpm = fresh.ShiftUpRpm;
+		def.ShiftDownRpm = fresh.ShiftDownRpm;
+		if ( fresh.RedlineRpm > 0f )
+		{
+			_shiftUpFrac = fresh.ShiftUpRpm / fresh.RedlineRpm;
+			_shiftDownFrac = fresh.ShiftDownRpm / fresh.RedlineRpm;
+		}
+		def.SteerRateScale = fresh.SteerRateScale;
+		def.MaxSteerAngle = fresh.MaxSteerAngle;
+		def.HighSpeedSteerAngle = fresh.HighSpeedSteerAngle;
+		def.ReverseSpeedCap = fresh.ReverseSpeedCap;
+		def.SpinRecoveryAssist = fresh.SpinRecoveryAssist;
+		def.BrakeTorque = fresh.BrakeTorque;
+		def.BrakeAssist = fresh.BrakeAssist;
+		def.HandbrakeGripScale = fresh.HandbrakeGripScale;
+		def.HandbrakeTorque = fresh.HandbrakeTorque;
+		def.SpringRate = fresh.SpringRate;
+		def.DamperRate = fresh.DamperRate;
+		def.Mass = fresh.Mass;
+		def.LateralCurve = fresh.LateralCurve;
+		def.LongitudinalCurve = fresh.LongitudinalCurve;
+		_gripScale = 1f;
+		_baseLat = fresh.LateralCurve;
+		_baseLong = fresh.LongitudinalCurve;
+
+		ApplyChassis();
+		ApplyWheels();
+		SetGravity( 1.1f );
+
+		if ( _params is not null )
+			foreach ( var p in _params )
+				p.Baseline = p.Get();
+
+		StateHasChanged();
+	}
+
+	// push def values onto the live rigidbody + wheels (factory copies them at spawn)
+	void ApplyChassis()
+	{
+		var def = Car.Definition;
+		var body = Car.Components.Get<Rigidbody>();
+		if ( body.IsValid() )
+			body.MassOverride = def.Mass;
+
+		foreach ( var w in Car.Wheels )
+			w.StaticLoad = def.Mass * 9.81f / 4f;
+	}
+
+	void ApplyWheels()
+	{
+		var def = Car.Definition;
+		foreach ( var w in Car.Wheels )
+		{
+			w.SpringRate = def.SpringRate;
+			w.DamperRate = def.DamperRate;
+			w.LateralCurve = def.LateralCurve;
+			w.LongitudinalCurve = def.LongitudinalCurve;
+		}
+	}
+
+	static TireCurve Scaled( TireCurve c, float k ) =>
+		new( c.PeakSlip, c.PeakGrip * k, c.TailSlip, c.TailGrip * k );
+
+	void SetGrip( float k )
+	{
+		_gripScale = k;
+		var def = Car.Definition;
+		def.LateralCurve = Scaled( _baseLat, k );
+		def.LongitudinalCurve = Scaled( _baseLong, k );
+		ApplyWheels();
+	}
+
+	float GravityScale() => Scene.PhysicsWorld.Gravity.Length / (9.81f * Units.MetersToUnits);
+	void SetGravity( float k ) => Scene.PhysicsWorld.Gravity = Vector3.Down * 9.81f * k * Units.MetersToUnits;
+
+	// Preserve each shift point's original fraction of redline, and never let ShiftUpRpm reach the
+	// limiter (clamp to 95% of redline) or the car can't upshift out of the rev ceiling.
+	void ScaleShiftPoints( CarDefinition def, float redline )
+	{
+		def.ShiftUpRpm = MathF.Min( redline * _shiftUpFrac, redline * 0.95f );
+		def.ShiftDownRpm = redline * _shiftDownFrac;
+	}
+
+	List<Param> BuildParams()
+	{
+		var def = Car.Definition;
+		_baseLat = def.LateralCurve;
+		_baseLong = def.LongitudinalCurve;
+
+		// capture the pristine shift-point fractions for THIS car (def is untouched at build time)
+		if ( def.RedlineRpm > 0f )
+		{
+			_shiftUpFrac = def.ShiftUpRpm / def.RedlineRpm;
+			_shiftDownFrac = def.ShiftDownRpm / def.RedlineRpm;
+		}
+
+		var list = new List<Param>
+		{
+			// --- engine ---
+			new() { Group = "engine", Name = "Engine torque", Suffix = " Nm", Step = 20f, Min = 100f, Max = 900f,
+				Get = () => def.PeakTorque, Set = v => def.PeakTorque = v },
+			new() { Group = "engine", Name = "Final drive", Fmt = "F1", Step = 0.1f, Min = 2.5f, Max = 6.5f,
+				Get = () => def.FinalDrive, Set = v => def.FinalDrive = v },
+			new() { Group = "engine", Name = "Launch boost", Fmt = "F1", Suffix = "×", Step = 0.1f, Min = 1f, Max = 4f,
+				Get = () => def.LaunchBoost, Set = v => def.LaunchBoost = v },
+			new() { Group = "engine", Name = "Engine brake", Suffix = " Nm", Step = 5f, Min = 0f, Max = 60f,
+				Get = () => def.EngineBrakeTorque, Set = v => def.EngineBrakeTorque = v },
+			new() { Group = "engine", Name = "Redline", Suffix = " rpm", Step = 100f, Min = 5000f, Max = 9500f,
+				Get = () => def.RedlineRpm, Set = v => { def.RedlineRpm = v; ScaleShiftPoints( def, v ); } },
+
+			// --- tires / brakes ---
+			new() { Group = "tires", Name = "Grip", Fmt = "F2", Suffix = "×", Step = 0.05f, Min = 0.6f, Max = 2.2f,
+				Get = () => _gripScale, Set = SetGrip },
+			new() { Group = "tires", Name = "Drift grip (handbrake)", Fmt = "F2", Suffix = "×", Step = 0.05f, Min = 0.15f, Max = 1f,
+				Get = () => def.HandbrakeGripScale, Set = v => def.HandbrakeGripScale = v },
+			new() { Group = "tires", Name = "Brake torque", Suffix = " Nm", Step = 200f, Min = 1500f, Max = 8000f,
+				Get = () => def.BrakeTorque, Set = v => def.BrakeTorque = v },
+			new() { Group = "tires", Name = "Brake assist", Fmt = "F1", Suffix = " m/s²", Step = 0.5f, Min = 0f, Max = 12f,
+				Get = () => def.BrakeAssist, Set = v => def.BrakeAssist = v },
+			new() { Group = "tires", Name = "Handbrake torque", Suffix = " Nm", Step = 250f, Min = 1000f, Max = 9000f,
+				Get = () => def.HandbrakeTorque, Set = v => def.HandbrakeTorque = v },
+
+			// --- suspension ---
+			new() { Group = "susp", Name = "Spring rate", Suffix = " N/m", Step = 2000f, Min = 15000f, Max = 60000f,
+				Get = () => def.SpringRate, Set = v => { def.SpringRate = v; ApplyWheels(); } },
+			new() { Group = "susp", Name = "Damper rate", Step = 200f, Min = 800f, Max = 6000f,
+				Get = () => def.DamperRate, Set = v => { def.DamperRate = v; ApplyWheels(); } },
+			new() { Group = "susp", Name = "Mass", Suffix = " kg", Step = 50f, Min = 400f, Max = 2500f,
+				Get = () => def.Mass, Set = v => { def.Mass = v; ApplyChassis(); } },
+			new() { Group = "susp", Name = "Gravity", Fmt = "F2", Suffix = " g", Step = 0.05f, Min = 0.6f, Max = 2.2f,
+				Get = GravityScale, Set = SetGravity },
+
+			// --- steering / assists ---
+			new() { Group = "assists", Name = "Steer speed", Fmt = "F1", Suffix = "×", Step = 0.1f, Min = 0.5f, Max = 3f,
+				Get = () => def.SteerRateScale, Set = v => def.SteerRateScale = v },
+			new() { Group = "assists", Name = "Steer lock (low speed)", Suffix = "°", Step = 1f, Min = 20f, Max = 45f,
+				Get = () => def.MaxSteerAngle, Set = v => def.MaxSteerAngle = v },
+			new() { Group = "assists", Name = "Steer lock (high speed)", Suffix = "°", Step = 1f, Min = 6f, Max = 20f,
+				Get = () => def.HighSpeedSteerAngle, Set = v => def.HighSpeedSteerAngle = v },
+			new() { Group = "assists", Name = "Reverse speed cap", Fmt = "F1", Suffix = " m/s", Step = 0.5f, Min = 3f, Max = 15f,
+				Get = () => def.ReverseSpeedCap, Set = v => def.ReverseSpeedCap = v },
+			new() { Group = "assists", Name = "Spin recovery", Fmt = "F1", Suffix = " m/s²", Step = 0.5f, Min = 0f, Max = 12f,
+				Get = () => def.SpinRecoveryAssist, Set = v => def.SpinRecoveryAssist = v },
+		};
+
+		foreach ( var p in list )
+			p.Baseline = p.Get();
+
+		return list;
+	}
+
+	protected override int BuildHash()
+	{
+		if ( !UiState.TuningOpen )
+			return 0;
+
+		var h = new HashCode();
+		h.Add( _tab );
+		h.Add( DirtyCount );
+		h.Add( _presetsRev ); // re-render the presets list on save/delete even when the car is still
+		h.Add( TuneRenameState.Revision ); // ...and on a committed rename (the preset's Name changed in place)
+		if ( _params is not null )
+			foreach ( var p in _params )
+				h.Add( (int)(p.Get() * 100f) );
+		if ( Car.IsValid() )
+			foreach ( var w in Car.Wheels )
+			{
+				h.Add( (int)(w.Load * 0.1f) );
+				h.Add( (int)(w.SuspensionLength * 1000f) );
+			}
+		return h.ToHashCode();
+	}
+}
