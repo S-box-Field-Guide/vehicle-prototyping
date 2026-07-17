@@ -21,12 +21,12 @@
 			<span class="section">World</span>
 			<div class="worlds">
 				<div class="wbtn @(IsPlayground ? "" : "on")" onclick=@( () => Apply( "proto", TerrainOn ) )>
-					<span class="wname">Test Track</span>
-					<span class="wsub">proving grounds</span>
+					<span class="wname">Town</span>
+					<span class="wsub">streets &amp; stations</span>
 				</div>
 				<div class="wbtn @(IsPlayground ? "on" : "")" onclick=@( () => Apply( "playground", TerrainOn ) )>
-					<span class="wname">Playground</span>
-					<span class="wsub">free-roam sandbox</span>
+					<span class="wname">Stunt Track</span>
+					<span class="wsub">jump park — coming soon</span>
 				</div>
 			</div>
 
@@ -65,6 +65,11 @@
 
 	protected override void OnUpdate()
 	{
+		// Belt-and-braces: the panel is not even mounted while world switching is gated off, but guard
+		// the hotkey here too so M can never toggle the panel until the feature returns.
+		if ( !GameBootstrap.WorldSwitchEnabled )
+			return;
+
 		if ( Input.Pressed( "World" ) )
 		{
 			UiState.WorldOpen = !UiState.WorldOpen;

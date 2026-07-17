@@ -20,14 +20,13 @@ This is a developer starting point, not a finished game. It is meant to be forke
   (Casual / Sport / Sim). All in SI units, converted only at the engine boundary.
 - **Four cars, four feels** - a front-drive hatch, a rear-drive coupe, a light kart, and a heavier
   pickup, each tuned toward its own class targets and drivable out of the box.
-- **A proving-ground world** - an instrumented test track (skidpad, drag strip, brake zone,
-  slalom, ramps, banked curve, washboard, hill grades, J-turn pad) plus a looser playground world,
-  switchable live in-game.
+- **A drivable Town** - a street network with an instrumented proving section (skidpad, drag strip,
+  brake zone, slalom, ramps, banked curve, washboard, hill grades, J-turn pad) to test handling
+  against real numbers.
 - **A data-driven playtest harness** - a Python runner drives the live editor through a battery of
   scripted maneuvers, measures telemetry, and prints pass/fail against per-class metric bands, so
   "feels right" becomes a number you can check.
 
-![The playground world: village, roads, ramps and a banked bowl](docs/images/playground.png)
 - **A multi-part vehicle pipeline** - a Blender generator authors each vehicle from separate parts
   (chassis, wheels, doors, bumpers) with joints at their pivots, so wheels compress and steer from
   the real simulation - the foundation for parts interaction and, later, damage.
@@ -40,11 +39,11 @@ This is a developer starting point, not a finished game. It is meant to be forke
 2. Open `vehicle_prototyping.sbproj` in the s&box editor and let it compile.
 3. Press **Play** and drive with `W` `A` `S` `D`.
 
-Press `I` for controls, `Tab` (or `[` / `]`) to change car, `M` to change world, `T` for the
-live tuning panel, and `L` for the telemetry overlay.
+Press `I` for controls, `Tab` (or `[` / `]`) to change car, `T` for the live tuning panel, and `L`
+for the telemetry overlay.
 
-**Full walkthrough: [`docs/GETTING-STARTED.md`](docs/GETTING-STARTED.md)** - controls, car and
-world switching, the tuning panel, running the test battery, and a tour of the code.
+**Full walkthrough: [`docs/GETTING-STARTED.md`](docs/GETTING-STARTED.md)** - controls, changing
+cars, the tuning panel, running the test battery, and a tour of the code.
 
 ---
 
@@ -54,11 +53,11 @@ world switching, the tuning panel, running the test battery, and a tour of the c
 |---|---|---|---|---|
 | `W` / `S` | Throttle / brake | | `Tab` | Session menu (change car) |
 | `A` / `D` | Steer | | `[` / `]` | Cycle to previous / next car |
-| `Space` | Handbrake | | `M` | World & terrain panel |
-| `R` | Reset / unflip car | | `T` | Live tuning panel |
-| `G` | Auto / manual gearbox | | `L` | Telemetry overlay |
-| `E` / `Q` | Shift up / down (manual) | | `I` | Help overlay |
-| `Mouse` | Orbit camera · wheel zoom | | `H` | Hide / show HUD |
+| `Space` | Handbrake | | `T` | Live tuning panel |
+| `R` | Reset / unflip car | | `L` | Telemetry overlay |
+| `G` | Auto / manual gearbox | | `I` | Help overlay |
+| `E` / `Q` | Shift up / down (manual) | | `H` | Hide / show HUD |
+| `Mouse` | Orbit camera · wheel zoom | | | |
 
 Gamepad: left stick steers, triggers are throttle / brake, `A` is the handbrake, `R1` / `L1`
 shift in manual, `D-pad up` toggles the gearbox, `X` resets. Full table in
@@ -77,6 +76,15 @@ rather than hidden.
 **Explicit non-goals:** full soft-body (node-beam) simulation, traffic AI, and open-world
 streaming are out of scope. The multi-body track goes as far as multi-part vehicles with joints
 and detach-on-impact.
+
+---
+
+## Roadmap
+
+- **Stunt Track** - a dedicated jump-park world (kicker ladders, rhythm lines, big-air set-pieces).
+  It's in rework right now while we sort out the ramp/jump physics, so it's disabled this build.
+- **In-game world switching** - a live switch between the Town and the Stunt Track returns alongside
+  the Stunt Track in a future build.
 
 ---
 

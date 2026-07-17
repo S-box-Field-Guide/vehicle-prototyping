@@ -19,5 +19,5 @@ public static class VpBuild
 	/// <summary>Human note for the current stamp (date + gist). Updated alongside the bump. Keep the
 	/// --note gist SHORT — this renders verbatim in the Help overlay footer (design-locked panel);
 	/// the full story of each build lives in CHANGELOG.md.</summary>
-	public const string PublishStampNote = "2026-07-17 - stunt park rebuild + analog triggers (build 9)";
+	public const string PublishStampNote = "2026-07-17 - town polish, analog triggers, UI improvements (build 9)";
 }

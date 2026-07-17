@@ -5,35 +5,16 @@ Publish cadence: bump the publish stamp (`tools/bump_publish_stamp.py`) and appe
 the stamp is a monotonic tester-attribution counter (see `Code/Game/VpBuild.cs`).
 
 ## build 9 — 2026-07-17
-- REDESIGN Playground is now a pure STUNT PARK, distinct from the proving-grounds measurement scene.
-  Removed all the town content — the imported buildings, the city arterial + connector road network,
-  dashed lane paint, curbs, the start/finish gantry, and the old rounded-rectangle "loop track"
-  CIRCUIT — leaving just objects to jump off. Kept the flat ground core + rolling-hills terrain, the
-  banked bowl, and the sealing perimeter wall. The park is MAXED OUT with jumps of every size on the
-  flat core (both terrain modes): a KICKER LADDER of five distinct heights (0.6/1.2/2.0/3.0/4.5 m,
-  small→huge) side by side, colour-coded green→red with marker pylons off a long spawn runway; four
-  CHAINED rhythm lines (4×1.0, 3×0.6, 3×2.5, 3×1.2 m) spaced by the real launch arc so you can link
-  multiple jumps; SIDE-BY-SIDE OPPOSED gap pairs whose two lips face each other so you meet a launch
-  face from either direction; a BIG-AIR set-piece (a 6 m launch off its own long runway across a gap to
-  a matching landing ramp); coverage singles filling the open corners; a JUMP-ONTO-BOX (2.2 m launch →
-  air gap → elevated 3.2 m drivable box → curved down-ramp off the far edge); a BALL PIT of 12 dynamic
-  spheres (Rigidbody + SphereCollider, 45/20 kg) cars can punt around; and blockout extras — a tabletop,
-  a drivable step-stair climb with a roll-off, and a banked wall-ride strip. Jumps follow an ORIENTATION
-  LAW — in-line jumps face the same way (rhythm runs), side-by-side jumps face opposite — so no approach
-  ever meets only a wedge back. Spawn on the open west apron facing east down the ladder runway.
-  `Code/World/PlaygroundBuilder.cs`.
-- FIX curved kicker collision now follows the actual curved SHAPE at every size — a small kicker hit at
-  full speed launches the car instead of acting as a wall. The single thin collision-mesh shell was
-  replaced with a stack of solid convex TANGENT BOXES, one per arc segment pitched to the local slope,
-  so the wheels meet a genuine ~0° tangent at the base and a solid to ride on the whole way up (no
-  thin-shell penetration, no hull/AABB simplification). Applies to every kicker in the park and the
-  proving-grounds jump station. `Code/World/RampKicker.cs`.
-- REMOVE the loop-the-loop (it drove as just a circle, no real loop) — its footprint is now more jumps.
-- FIX Playground now spawns on the west apron at -150 m as authored, lined up down the kicker-ladder
-  runway. The spawn point (authored in metres like all layout geometry) was passed to the spawner in
-  metres without the metres→units conversion, landing the car near map centre; the whole spawn position
-  is now converted at the boundary. Proto's spawn is unchanged (its spawn point is the origin).
-  `Code/Game/GameBootstrap.cs`.
+- CHANGE World switching is disabled this build — you drive the **Town**, a street network with an
+  instrumented proving section (skidpad, drag strip, brake zone, slalom, ramps, banked curve,
+  washboard, hill grades, J-turn pad) for testing handling against real numbers. The **Stunt Track**
+  (a dedicated jump-park world) and the in-game world switch are in rework while the ramp/jump physics
+  get another pass, and return together in a future build. The `M` key and the World & Terrain panel
+  are removed from the controls for now.
+- FIX ramp / kicker collision now follows the curved ramp face at every size, so hitting a ramp at
+  speed launches the car cleanly instead of catching on a wall. Applies to the Town's proving-section
+  jump station. `Code/World/RampKicker.cs`.
+- POLISH Town scene, plus behind-the-scenes groundwork on the jump-park world being reworked.
 
 ## build 8 — 2026-07-17
 - NEW analog throttle & brake on the controller: the right and left triggers are now read as a true

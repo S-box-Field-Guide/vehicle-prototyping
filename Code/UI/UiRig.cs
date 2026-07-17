@@ -52,7 +52,10 @@ public static class UiRig
 		// Public-UX panels. WorldControls (M) reads the live world/terrain state and drives the
 		// bootstrap's real rebuild path; HelpOverlay (I) is static content that auto-shows once on a
 		// fresh clone. Neither needs a per-car Target, so Retarget leaves them alone.
-		hudGo.Components.Create<WorldControls>();
+		// World switching is feature-gated off for now (players stay on Town) — only mount the panel
+		// when the gate is on, so the M hotkey and panel are fully absent until the Stunt Track returns.
+		if ( GameBootstrap.WorldSwitchEnabled )
+			hudGo.Components.Create<WorldControls>();
 		hudGo.Components.Create<HelpOverlay>();
 	}
 

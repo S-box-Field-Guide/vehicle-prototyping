@@ -1,7 +1,7 @@
 # Getting Started
 
 A short walkthrough: clone the repo, open it in the s&box editor, press Play, and drive.
-Then how to switch cars and worlds, open the tuning panel, run the automated test battery,
+Then how to switch cars, open the tuning panel, run the automated test battery,
 and find your way around the code.
 
 ---
@@ -15,7 +15,7 @@ and find your way around the code.
 3. The startup scene is `Assets/scenes/vehicle_proto.scene` - it opens automatically. It is a
    near-empty scene on purpose: a single bootstrap component builds the whole world, spawns your
    car, and wires the HUD when you press Play.
-4. Press **Play**. You spawn in the hatch on the proving-ground test track.
+4. Press **Play**. You spawn in the hatch in the Town.
 5. **Drive** with `W` `A` `S` `D`. That is it - you are moving.
 
 On your first Play a **controls / help overlay** appears. Read it or dismiss it; press `I`
@@ -37,7 +37,6 @@ All bindings live in `ProjectSettings/Input.config` and can be rebound there.
 | `R` | Reset / respawn the car in place |
 | `T` | Tuning panel (live physics dials) |
 | `I` | Controls / help overlay (`F1`/`Esc` are host-captured) |
-| `M` | World & terrain panel (`F2` is host-captured) |
 | `L` | Telemetry overlay (`F1`-`F12` are host-captured — was `F4`) |
 | `H` | Hide / show the drive HUD |
 | `Tab` | Session menu (resume, change vehicle, etc.) |
@@ -85,20 +84,17 @@ The roster is defined in `Code/Game/CarSwitcher.cs` (`Roster`).
 
 ---
 
-## 4. Switching worlds and terrain
+## 4. The Town
 
-Press `M` for the **World & Terrain** panel. Two worlds:
+You drive the **Town** - a street network with an instrumented proving section: skidpad circle,
+drag strip, brake zone, slalom lane, ramp set, banked curve, washboard section, hill-grade ladder,
+and an open J-turn pad. This is the *measurement* world the test battery runs against (internal id
+`proto`).
 
-- **Proving grounds (`proto`)** - the instrumented test track: skidpad circle, drag strip, brake
-  zone, slalom lane, ramp set, banked curve, washboard section, hill-grade ladder, and an open
-  J-turn pad. This is the *measurement* world the test battery runs against.
-- **Playground** - a looser world (imported buildings, long roads, ramps, a banked bowl and a
-  loop) for free driving.
-
-The panel also has a **FLAT <-> CURVY** terrain toggle. Switching is a live in-place rebuild:
-the current world is torn down and the selected one is built fresh, and your car is preserved
-across the switch. (The measurement battery refuses to run on the playground world by design, so
-metrics always come from the `proto` track.)
+A second world, the **Stunt Track** (a dedicated jump-park), and an in-game switch between the two
+are in rework while the ramp/jump physics get another pass — both are disabled this build and return
+in a future one. (Internally the switch still exists behind the `GameBootstrap.WorldSwitchEnabled`
+gate, and the dev console command `vp_setworld playground` can still load it for development.)
 
 ---
 

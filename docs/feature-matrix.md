@@ -55,9 +55,9 @@ Evidence: `Code/World/` (`TestTrack`, `PlaygroundBuilder`, `PlaygroundTerrain`),
 
 | Feature | Designed | Implemented | Integrated | In band / tested | Notes |
 |---|:-:|:-:|:-:|:-:|---|
-| Test track (skidpad, drag strip, brake, slalom, ramps, banked, washboard, hills, J-turn pad) | G | G | G | G | Named spawn per station; the measurement world for the battery. `proving-grounds.md`. |
-| Playground world (buildings, roads, ramps, bowl, loop) | G | G | G | - | Free-driving world; not measured. |
-| Live world switch + FLAT/CURVY terrain toggle (M panel) | G | G | G | G | In-place rebuild; car preserved; battery refuses to measure the playground (fail-closed gate). |
+| Town (drivable scene: streets + instrumented proving section — skidpad, drag strip, brake, slalom, ramps, banked, washboard, hills, J-turn pad) | G | G | G | G | THE drivable world. Named spawn per proving station; the measurement world for the battery. `proving-grounds.md`. |
+| Stunt Track (jump-park world) | G | G | - | - | In rework (ramp/jump physics); disabled this build, returns in a future build. Internal id stays `playground`. |
+| Live world switch + FLAT/CURVY terrain toggle (M panel) | G | G | - | - | Feature-gated OFF this build (`GameBootstrap.WorldSwitchEnabled`); returns with the Stunt Track. Dev console (`vp_setworld`) still works. |
 | Crash wall / destruction | G | R | R | - | Full crash/destruction simulation is out of scope for this kit; a reference-only reserved plot remains. |
 
 ## 4. UI
@@ -69,7 +69,7 @@ Evidence: `Code/UI/` (Razor + scss).
 | Drive HUD (speed/gear cluster, km/h-mph unit setting, key hints) | G | G | G | Player-facing. Pedal bars + per-wheel grip chips live in the telemetry overlay (L), not here. |
 | Session menu (Tab - resume, change vehicle) | G | G | G | Roster cycle lives here. |
 | Controls / help overlay (I) | G | G | G | Auto-shows once on a fresh install; persists dismissal. Letter key — F1/Esc are host-captured. |
-| World & terrain panel (M) | G | G | G | Drives the live world switch. Letter key — F2 is host-captured. |
+| World & terrain panel (M) | G | G | - | Drives the live world switch. Feature-gated OFF this build (`GameBootstrap.WorldSwitchEnabled`); returns with the Stunt Track. |
 | Tuning panel (T - live physics dials) | G | G | G | Writes onto the running car; reset control. |
 | Telemetry overlay (L) | G | G | G | Live traces from the ring buffer. Letter key — F1-F12 are host-captured (was F4, dead in the published client). |
 | Engine audio (shared placeholder loop, RPM-pitched) | Y | G | G | One 3D positional loop per car, pitch from idle-to-redline RPM, volume swells with throttle. Placeholder shared tone, not a layered engine model; three candidate loops + `vp_engine_sound` / `vp_engine_volume` console dials. `Code/Vehicle/EngineAudio.cs`. |

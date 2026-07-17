@@ -7,6 +7,13 @@ namespace VehicleProto;
 /// </summary>
 public sealed class GameBootstrap : Component
 {
+	/// <summary>Feature gate for in-game world switching (the World &amp; Terrain panel + its M hotkey).
+	/// Disabled for now: players stay on the default Town scene and cannot switch. The dev console
+	/// commands (<c>vp_world</c>, <c>vp_setworld</c>) still work for internal use. Flip back to true to
+	/// restore the player-facing switch once the Stunt Track jump physics rework lands.
+	/// (static readonly, not const, so the gated call sites don't constant-fold into dead-code warnings.)</summary>
+	public static readonly bool WorldSwitchEnabled = false;
+
 	/// <summary>World selector (world-pass 2026-07-13). "proto" (DEFAULT) = the measurement scene:
 	/// CityBuilder + TestTrack with all 11 stations — the battery + vp_test.py depend on this, so it
 	/// MUST stay the default (vp_test never sets the ConVar). "playground" = the human-facing
@@ -76,7 +83,7 @@ public sealed class GameBootstrap : Component
 		perfGo.Name = "PerfProbe";
 		perfGo.Components.Create<PerfProbe>();
 
-		Log.Info( $"[vp] boot started. build {VpBuild.PublishStamp} ({VpBuild.PublishStampNote}). WASD drive, Space handbrake, R respawn, T tuning, I help, M world, H hide HUD. Pilot ready." );
+		Log.Info( $"[vp] boot started. build {VpBuild.PublishStamp} ({VpBuild.PublishStampNote}). WASD drive, Space handbrake, R respawn, T tuning, I help, H hide HUD. Pilot ready." );
 	}
 
 	/// <summary>Build the selected world and spawn <paramref name="def"/> at its spawn point, wiring
