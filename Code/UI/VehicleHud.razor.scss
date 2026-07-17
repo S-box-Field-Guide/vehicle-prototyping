@@ -171,14 +171,16 @@ VehicleHud {
 		}
 	}
 
+	// Bottom-right hotkey legend — a VERTICAL stack: one keybind row (keycap + label) per line,
+	// reading top-to-bottom in the corner. (Was a horizontal chip strip.)
 	.hints {
 		position: absolute;
 		right: 48px;
 		bottom: 48px;
-		flex-direction: row;
-		align-items: center;
-		gap: 18px;
-		padding: 14px 20px;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 7px;
+		padding: 14px 18px;
 		background-color: rgba( 15, 17, 21, 0.82 );
 		border: 1px solid rgba( 255, 255, 255, 0.10 );
 		border-radius: 12px;
@@ -187,7 +189,7 @@ VehicleHud {
 		.hint {
 			flex-direction: row;
 			align-items: center;
-			gap: 8px;
+			gap: 10px;
 
 			&.hide, &.restore {
 				pointer-events: all; // only the Hide/Show chip is clickable
@@ -199,8 +201,13 @@ VehicleHud {
 			}
 		}
 
-		// Keycaps need to read over bright road/sky — ghost #6E7480 was illegible.
+		// Keycaps need to read over bright road/sky — ghost #6E7480 was illegible. Fixed min-width +
+		// centered glyph so the labels line up down the left edge of the vertical stack.
 		.key {
+			min-width: 40px;
+			justify-content: center;
+			align-items: center;
+			text-align: center;
 			color: #F2F4F7;
 			font-weight: 600;
 			border: 1px solid rgba( 255, 255, 255, 0.28 );
