@@ -21,6 +21,16 @@ public sealed class VehicleController : Component, Component.ICollisionListener
 
 	[Property] public AssistLevel Assists { get; set; } = AssistLevel.Casual;
 
+	/// <summary>Optional assist level a spawn path wants this car to adopt on start, instead of the
+	/// definition default. Set by paths that carry the live session mode across a car swap
+	/// (<see cref="CarSwitcher.SwitchTo"/>). It exists because <see cref="OnStart"/> runs a frame or
+	/// two AFTER <c>Components.Create</c> — i.e. after the spawning code has already run — so a plain
+	/// post-spawn <c>Assists = x</c> is overwritten by the default-init in <see cref="OnStart"/>. When
+	/// non-null, OnStart adopts THIS value instead; null keeps the definition default. Harmless
+	/// regardless of the exact create/start ordering: if OnStart happened to run first, the spawn
+	/// path's direct <c>Assists</c> set still wins.</summary>
+	public AssistLevel? InitialAssists { get; set; }
+
 	public float Throttle { get; private set; }
 	public float Brake { get; private set; }
 	public float Steer { get; private set; } // -1..1
@@ -69,7 +79,10 @@ public sealed class VehicleController : Component, Component.ICollisionListener
 		_rigidbody = Components.Get<Rigidbody>();
 		Definition ??= CarDefinitions.Hatch;
 		Drivetrain = new Drivetrain( Definition );
-		Assists = Definition.DefaultAssists;
+		// Adopt a carried session mode if a spawn path staged one (car swap); otherwise the
+		// definition default. Because this runs a frame or two after the car is created, a spawn
+		// path can't rely on a plain post-spawn Assists set surviving — it stages InitialAssists.
+		Assists = InitialAssists ?? Definition.DefaultAssists;
 		_spawnPosition = WorldPosition;
 		_spawnRotation = WorldRotation;
 

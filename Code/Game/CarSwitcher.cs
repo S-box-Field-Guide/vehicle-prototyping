@@ -45,8 +45,9 @@ public static class CarSwitcher
 		// heading so the new car never inherits a tilt/roll. Also carry the ACTIVE drive mode (assist
 		// level) forward — the outgoing car IS the live session mode holder (the SessionMenu segbar
 		// writes straight onto Target.Assists), so switching keeps you in Sport/Sim/Casual instead of
-		// snapping back to the incoming def's DefaultAssists (spawn resets it in OnAwake). null = no
-		// outgoing car (initial spawn) → the new car keeps its own default.
+		// snapping back to the incoming def's DefaultAssists (the new car's OnStart resets it a frame
+		// or two after spawn — see InitialAssists below). null = no outgoing car (initial spawn) →
+		// the new car keeps its own default.
 		Vector3 posM = Vector3.Zero;
 		Rotation facing = Rotation.Identity;
 		AssistLevel? carryMode = null;
@@ -73,11 +74,16 @@ public static class CarSwitcher
 		var carGo = VehicleFactory.Spawn( scene, def, pos, facing );
 		var controller = carGo.Components.Get<VehicleController>();
 
-		// re-apply the carried drive mode via the same single assignment the segbar click uses
-		// (Assists is a plain live-read flag — setting it IS the whole apply path, no side effects to
-		// duplicate). Skipped when there was no outgoing car, so the initial spawn keeps its default.
+		// re-apply the carried drive mode. Stage it on InitialAssists so the new car's OnStart adopts
+		// it instead of the incoming def's DefaultAssists (OnStart runs a frame or two after this
+		// spawn, so a plain Assists set alone would be overwritten), and set Assists directly too so
+		// the mode is already correct for the frames before OnStart runs. Skipped when there was no
+		// outgoing car, so the initial spawn keeps its default.
 		if ( carryMode.HasValue && controller.IsValid() )
+		{
+			controller.InitialAssists = carryMode.Value;
 			controller.Assists = carryMode.Value;
+		}
 
 		// rewire every reference that pointed at the old (now-destroyed) car
 		if ( pilot is not null )
