@@ -168,6 +168,28 @@ SessionMenu {
 		}
 	}
 
+	// ---- master-volume slider (Sound row) ----
+	// Draggable track: 14px tall hit area so it's grabbable (per the slider-drag pattern). The track
+	// takes the mouse; the fill is pointer-events:none so LocalPosition stays track-relative, and it
+	// carries NO width transition (a transition lags the scrub behind the cursor).
+	.voltrack {
+		position: relative;
+		height: 14px;
+		border-radius: 99px;
+		background-color: rgba( 255, 255, 255, 0.12 );
+		pointer-events: all;
+		cursor: pointer;
+
+		.volfill {
+			position: absolute;
+			left: 0px;
+			height: 100%;
+			border-radius: 99px;
+			background: linear-gradient( to right, #3AC4DE, #4AD9F2 );
+			pointer-events: none;
+		}
+	}
+
 	// ---- vehicle roster (right column) ----
 	.rosterhead {
 		flex-direction: row;

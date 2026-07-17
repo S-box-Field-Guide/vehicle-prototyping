@@ -17,6 +17,10 @@ public class UserSettingsData
 {
 	public int Version { get; set; } = 1;
 	public SpeedUnit SpeedUnit { get; set; } = SpeedUnit.Kmh;
+
+	// Master audio volume as a 0–100 percent. 100 = full volume (engine default), so an existing
+	// player who never touched it keeps the current loudness byte-for-byte.
+	public int MasterVolume { get; set; } = 100;
 }
 
 /// <summary>
@@ -88,6 +92,33 @@ public static class UserSettings
 			Flush();
 		}
 	}
+
+	/// <summary>Master audio volume as a 0–100 percent. Setting persists immediately (no-op if the
+	/// clamped value is unchanged) AND pushes onto the engine master mixer live, so a drag is audible
+	/// as it moves. 100 = full volume; a never-touched install stays at full volume.</summary>
+	public static int MasterVolume
+	{
+		get => Data.MasterVolume;
+		set
+		{
+			int v = System.Math.Clamp( value, 0, 100 );
+			if ( Data.MasterVolume == v )
+			{
+				// Value unchanged but still (re)apply — covers the boot-time apply where the mixer
+				// hasn't yet been synced to the stored default.
+				ApplyMasterVolume();
+				return;
+			}
+			Data.MasterVolume = v;
+			Flush();
+			ApplyMasterVolume();
+		}
+	}
+
+	/// <summary>Push the stored master volume onto the engine master mixer (0–100% → the mixer's
+	/// 0–1 output scale). Call once at boot to apply the persisted setting, and on every change.</summary>
+	public static void ApplyMasterVolume()
+		=> Sandbox.Audio.Mixer.Master.Volume = Data.MasterVolume / 100f;
 
 	/// <summary>Convert an SI speed (m/s) to the player's chosen display unit. Formatting only —
 	/// callers pass the same m/s value they'd have shown as km/h; the internal number is untouched.</summary>

@@ -59,6 +59,10 @@ public sealed class GameBootstrap : Component
 		// belt-and-braces: OnEnabled already reset, but guarantee a clean bridge before spawns.
 		VehicleBridge.ResetSession();
 
+		// Apply the player's saved master audio volume before anything can play a sound, so the
+		// persisted level takes effect on startup (not only when the Session menu is opened).
+		UserSettings.ApplyMasterVolume();
+
 		// s&box default gravity is Source-style ~2.2 g which bottoms out real spring
 		// rates; ~1.1 g keeps the suspension math honest (lesson from anywheredrive)
 		Scene.PhysicsWorld.Gravity = Vector3.Down * 9.81f * 1.1f * m;

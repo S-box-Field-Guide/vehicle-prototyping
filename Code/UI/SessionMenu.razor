@@ -66,6 +66,20 @@
 							</div>
 						</div>
 
+						<div class="field">
+							<div class="fieldlabel">
+								<span class="lbl">Sound</span>
+								<span class="mono val">@Volume%</span>
+							</div>
+							@* Draggable master-volume track: click jumps, drag scrubs. The fill child is
+							   pointer-events:none so events always target the track (keeps LocalPosition
+							   track-relative). One shared handler branches jump (down=true, always act) vs
+							   scrub (down=false, act only while pressed) via the bool per binding. *@
+							<div class="voltrack" onmousedown=@( e => Slide( e, true ) ) onmousemove=@( e => Slide( e, false ) )>
+								<div class="volfill" style="width: @Volume%"></div>
+							</div>
+						</div>
+
 						<div class="spacer"></div>
 						<div class="rule"></div>
 						<div class="btn quit" onclick=@QuitToMenu>Quit</div>
@@ -120,6 +134,10 @@
 	};
 	SpeedUnit CurrentUnit => UserSettings.SpeedUnit;
 	string CurrentUnitLabel => UnitOptions.FirstOrDefault( u => u.Unit == CurrentUnit ).Label ?? "km/h";
+
+	// Master audio volume, 0–100%. Backed by the persisted store; the setter applies to the engine
+	// master mixer live, so dragging is audible immediately. Read for the fill width + the % readout.
+	int Volume => UserSettings.MasterVolume;
 
 	// Data-driven car picker: one tile per roster car, in cycle order. Each tile renders a live,
 	// slowly-rotating 3D model of the car via CarThumb (a ScenePanel that assembles the part kit from
@@ -236,6 +254,37 @@
 		StateHasChanged();
 	}
 
+	// Master-volume drag/click. Value = cursor's local x over the track width, clamped and snapped to
+	// an integer percent, then written to the persisted store (which applies it to the master mixer
+	// live and only rewrites the file when the percent actually changes). Snapping to whole percent
+	// keeps BuildHash churn bounded — the tree rebuilds once per percent-step, never per raw drag
+	// frame — and 0..100 with Min=0 avoids the near-Min scientific-notation style trap.
+	//   down=true  (onmousedown): always act — a bare click jumps to that position.
+	//   down=false (onmousemove): act only while the track is pressed (Active), i.e. an active scrub.
+	void Slide( Sandbox.UI.PanelEvent ev, bool down )
+	{
+		// The razor onmouse* binding hands us the base PanelEvent; the cursor position lives on the
+		// MousePanelEvent subtype.
+		if ( ev is not Sandbox.UI.MousePanelEvent e )
+			return;
+
+		if ( !down && !e.This.PseudoClass.HasFlag( Sandbox.UI.PseudoClass.Active ) )
+			return;
+
+		float w = e.This.Box.Rect.Width;
+		if ( w <= 0f )
+			return;
+
+		float frac = Math.Clamp( e.LocalPosition.x / w, 0f, 1f );
+		int pct = (int)MathF.Round( frac * 100f );
+
+		if ( pct == UserSettings.MasterVolume )
+			return;
+
+		UserSettings.MasterVolume = pct;
+		StateHasChanged();
+	}
+
 	// Quit to menu: leave the game to the s&box main menu. Game.Close() is the proven, whitelist-safe
 	// leave path; in the editor it ends play mode sanely,
 	// in a published client it returns to the menu. vp is single-player, so there's no live network
@@ -246,7 +295,10 @@
 	}
 
 	protected override int BuildHash() => System.HashCode.Combine(
-		UiState.SessionOpen, Target?.Definition?.Name, CurrentAssist, UserSettings.SpeedUnit );
+		UiState.SessionOpen, Target?.Definition?.Name, CurrentAssist, UserSettings.SpeedUnit,
+		// Integer master-volume percent: rebuilds the fill width + % readout once per percent-step
+		// while dragging (NOT the raw sub-pixel drag value, which would rebuild every frame).
+		UserSettings.MasterVolume );
 
 	/// <summary>Console parity for opening/closing the Tab session menu — same idiom as
 	/// <see cref="GameBootstrap.VpSetWorld"/>: the Tab keypress can't be injected in headless UI
