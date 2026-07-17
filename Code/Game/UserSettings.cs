@@ -18,9 +18,9 @@ public class UserSettingsData
 	public int Version { get; set; } = 1;
 	public SpeedUnit SpeedUnit { get; set; } = SpeedUnit.Kmh;
 
-	// Master audio volume as a 0–100 percent. 100 = full volume (engine default), so an existing
-	// player who never touched it keeps the current loudness byte-for-byte.
-	public int MasterVolume { get; set; } = 100;
+	// Master audio volume as a 0–100 percent. Defaults to 25 — a comfortable out-of-the-box level;
+	// the Session (Tab) menu slider adjusts and persists it.
+	public int MasterVolume { get; set; } = 25;
 }
 
 /// <summary>
@@ -93,9 +93,9 @@ public static class UserSettings
 		}
 	}
 
-	/// <summary>Master audio volume as a 0–100 percent. Setting persists immediately (no-op if the
-	/// clamped value is unchanged) AND pushes onto the engine master mixer live, so a drag is audible
-	/// as it moves. 100 = full volume; a never-touched install stays at full volume.</summary>
+	/// <summary>Master audio volume as a 0–100 percent (default 25). Setting persists immediately
+	/// (no-op if the clamped value is unchanged) AND pushes onto the engine master mixer live, so a
+	/// drag is audible as it moves.</summary>
 	public static int MasterVolume
 	{
 		get => Data.MasterVolume;
