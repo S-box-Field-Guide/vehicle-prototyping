@@ -159,10 +159,15 @@
 
 	protected override void OnUpdate()
 	{
+		// Tab on keyboard, Start (the menu button) on gamepad — both fire the "Session" action
+		// (Input.config binds tab + SwitchRightMenu). On the pad path the host may ALSO raise the
+		// engine Escape flag for the same press; consume it on toggle so the engine pause menu
+		// can't open on top of ours (a no-op when the flag isn't set, i.e. every keyboard Tab).
 		if ( Input.Pressed( "Session" ) )
 		{
 			UiState.SessionOpen = !UiState.SessionOpen;
 			Mouse.Visibility = UiState.SessionOpen ? MouseVisibility.Visible : MouseVisibility.Hidden;
+			Input.EscapePressed = false;
 		}
 
 		// [ and ] cycle the roster prev/next — an Input action, so it also works while driving with the
