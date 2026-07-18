@@ -185,10 +185,36 @@ public sealed class VehicleWheel : Component
 		IntegrateWheelSpin( dt, driveTorque, brakeTorque, fx );
 	}
 
+	// Cap-aware drive-torque rolloff onset (kart cap-camping fix 2026-07-18): drive torque begins
+	// fading toward zero once the wheel's own spin reaches this fraction of DriveOmegaCap; below it
+	// the rolloff is inert so below-cap behavior is byte-identical.
+	const float DriveRolloffOnset = 0.90f;
+
 	void IntegrateWheelSpin( float dt, float driveTorque, float brakeTorque, float tireForce )
 	{
-		// drive + tire reaction
 		float preOmega = AngularVelocity;
+		bool driving = driveTorque != 0f;
+		float driveDir = driving ? MathF.Sign( driveTorque ) : 0f;
+
+		// Cap-aware drive-torque rolloff (kart "stuck turning" fix 2026-07-18). The per-substep
+		// clamp below is a hard backstop, but with the clamp ALONE a driven wheel under sustained
+		// full torque CAMPS exactly at the cap; when forward speed then collapses in a corner the
+		// slip ratio blows far past the grip peak (live: 7+) and the longitudinal tail force eats the
+		// friction ellipse, killing rear lateral grip so the yaw holds against countersteer. Fade
+		// drive torque to zero as the wheel approaches the cap so it settles OFF the cap instead of
+		// camping on it. Smoothstep, not a hard corner, to avoid a torque-fade limit cycle. Inert
+		// below the onset (approach <= DriveRolloffOnset) so below-cap behavior is byte-identical.
+		if ( driving && DriveOmegaCap < float.MaxValue )
+		{
+			float approach = driveDir * preOmega / DriveOmegaCap;
+			if ( approach > DriveRolloffOnset )
+			{
+				float f = Math.Clamp( (1f - approach) / (1f - DriveRolloffOnset), 0f, 1f );
+				driveTorque *= f * f * (3f - 2f * f);
+			}
+		}
+
+		// drive + tire reaction
 		float torque = driveTorque - tireForce * Radius;
 		AngularVelocity += torque / Inertia * dt;
 
@@ -201,12 +227,12 @@ public sealed class VehicleWheel : Component
 		// "individual tires have different traction" left-right wobble). Clamp: DRIVE torque may
 		// never push omega past the cap within a substep. Signed by drive direction so reverse works;
 		// cap floors at the pre-integration omega so ground-driven overspeed (downhill coast) is
-		// never yanked down, and the ground reaction path is untouched.
-		if ( driveTorque != 0f && DriveOmegaCap < float.MaxValue )
+		// never yanked down, and the ground reaction path is untouched. Guarded on the ORIGINAL drive
+		// intent so a rolloff that faded torque to zero still cannot let the wheel blow past the cap.
+		if ( driving && DriveOmegaCap < float.MaxValue )
 		{
-			float dir = MathF.Sign( driveTorque );
-			float cap = MathF.Max( DriveOmegaCap, dir * preOmega );
-			AngularVelocity = dir > 0f
+			float cap = MathF.Max( DriveOmegaCap, driveDir * preOmega );
+			AngularVelocity = driveDir > 0f
 				? MathF.Min( AngularVelocity, cap )
 				: MathF.Max( AngularVelocity, -cap );
 		}
