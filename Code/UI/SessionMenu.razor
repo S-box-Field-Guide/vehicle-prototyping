@@ -41,7 +41,10 @@
 						<div class="field">
 							<div class="fieldlabel">
 								<span class="lbl">Drive mode</span>
-								<span class="mono val">@CurrentAssist.ToString().ToLower()</span>
+								<div class="labelright">
+									<span class="mono keycap">@DriveModeCap</span>
+									<span class="mono val">@CurrentAssist.ToString().ToLower()</span>
+								</div>
 							</div>
 							<div class="segbar">
 								@foreach ( var a in Levels )
@@ -132,6 +135,9 @@
 	static string ResumeCap => UsingPad ? "START" : "Tab";
 	static string RespawnCap => UsingPad ? "X" : "R";
 	static string CycleCap => UsingPad ? "D-PAD L/R" : "[ ]";
+	// Drive-mode cycle bind (DriveMode action: b / D-pad up) — surfaced next to the drive-mode
+	// selector so players learn they can also cycle it while driving without opening this menu.
+	static string DriveModeCap => UsingPad ? "D-PAD UP" : "B";
 
 	static readonly AssistLevel[] Levels = { AssistLevel.Casual, AssistLevel.Sport, AssistLevel.Sim };
 	AssistLevel CurrentAssist => Target?.Assists ?? AssistLevel.Casual;

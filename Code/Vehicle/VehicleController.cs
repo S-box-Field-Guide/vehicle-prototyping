@@ -202,6 +202,13 @@ public sealed class VehicleController : Component, Component.ICollisionListener
 		if ( Input.Pressed( "Reload" ) )
 			Respawn();
 
+		// Drive-mode (assist level) cycle — Casual -> Sport -> Sim -> Casual. A plain property set,
+		// so (like Reload) it reads Input.Pressed straight in OnUpdate; no fixed-step edge-latch needed.
+		// Same seam SessionMenu's drive-mode selector uses (Assists set directly), so it survives car
+		// switches via CarSwitcher's carry and never gets clobbered after OnStart.
+		if ( Input.Pressed( "DriveMode" ) )
+			CycleDriveMode();
+
 		// Sequential-shift edges are latched HERE (per-frame) — Input.Pressed is frame-scoped and
 		// unreliable read from OnFixedUpdate, which may run zero or several times a frame. ReadInput
 		// (fixed step) consumes + clears these. A frame with no fixed tick still keeps the latch until
@@ -409,6 +416,19 @@ public sealed class VehicleController : Component, Component.ICollisionListener
 	{
 		Drivetrain.ManualMode = !Drivetrain.ManualMode;
 		Log.Info( $"[vp] shiftmode {(Drivetrain.ManualMode ? "MANUAL" : "AUTO")} gear {Drivetrain.Gear}" );
+	}
+
+	/// <summary>Cycle the drive mode (assist level) Casual -> Sport -> Sim -> Casual. The HUD's Assist
+	/// chip reads <see cref="Assists"/> and flashes on change, so the swap is visible on press.</summary>
+	void CycleDriveMode()
+	{
+		Assists = Assists switch
+		{
+			AssistLevel.Casual => AssistLevel.Sport,
+			AssistLevel.Sport => AssistLevel.Sim,
+			_ => AssistLevel.Casual,
+		};
+		Log.Info( $"[vp] drivemode {Assists.ToString().ToUpper()}" );
 	}
 
 	void TryShiftUp()
@@ -821,6 +841,6 @@ public struct DriveInputs
 	public bool ShiftDown;
 
 	/// <summary>Edge-triggered request to toggle the transmission mode AUTO↔MANUAL. Keyboard G /
-	/// gamepad DpadNorth. Same one-shot rising-edge semantics as <see cref="ShiftUp"/>.</summary>
+	/// gamepad D-pad down. Same one-shot rising-edge semantics as <see cref="ShiftUp"/>.</summary>
 	public bool ShiftModeToggle;
 }

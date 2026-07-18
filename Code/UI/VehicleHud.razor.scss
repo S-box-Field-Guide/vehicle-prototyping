@@ -42,6 +42,17 @@ VehicleHud {
 		.carname { font-weight: 600; color: #E8EAED; }
 		.tag { color: #F2F4F7; }
 		.assist { font-weight: 700; color: #4AD9F2; }
+
+		// Transient press-flash on a drive-mode change: bright cyan glow + a one-shot pop, held ~0.9s
+		// (VehicleHud.FlashDuration) then dropped. Base chip already carries a 1px border so the
+		// brighter border swaps in without resizing.
+		&.flash {
+			border: 1px solid rgba( 74, 217, 242, 0.90 );
+			background-color: rgba( 74, 217, 242, 0.20 );
+			box-shadow: 0 0 18px rgba( 74, 217, 242, 0.35 );
+			animation: vp-hud-pop 0.45s ease-out;
+			.assist { color: #FFFFFF; }
+		}
 	}
 
 	.cluster {
@@ -113,6 +124,13 @@ VehicleHud {
 				text-transform: uppercase;
 				color: #F2F4F7;
 				&.hot { color: #4AD9F2; }
+
+				// Transient pop when the gearbox toggles AUTO<->MANUAL (same timer/pattern as the
+				// assist chip): flash cyan + a one-shot scale pop so the D-pad-down / G press registers.
+				&.flash {
+					color: #4AD9F2;
+					animation: vp-hud-pop 0.45s ease-out;
+				}
 			}
 		}
 
@@ -223,4 +241,12 @@ VehicleHud {
 			&:hover { border: 1px solid rgba( 74, 217, 242, 0.45 ); }
 		}
 	}
+}
+
+// One-shot scale pop shared by the assist chip + gear caption press-flash. The .flash class also
+// carries a static bright highlight, so even if the animation no-ops the change stays visibly obvious.
+@keyframes vp-hud-pop {
+	0% { transform: scale( 1.0 ); }
+	35% { transform: scale( 1.14 ); }
+	100% { transform: scale( 1.0 ); }
 }

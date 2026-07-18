@@ -30,7 +30,7 @@
 				<div class="carname">@CarName</div>
 				<div class="mono tag">@CarClass</div>
 			</div>
-			<div class="chip">
+			<div class="chip @(AssistFlashing ? "flash" : "")">
 				<div class="lbl">Assist</div>
 				<div class="assist">@AssistText</div>
 			</div>
@@ -44,7 +44,7 @@
 				</div>
 				<div class="gearblock">
 					<div class="mono gearchip @GearState">@GearText</div>
-					<div class="gearlbl @(GearState == "shifting" ? "hot" : "")">@GearCaption</div>
+					<div class="@GearLblClass">@GearCaption</div>
 				</div>
 			</div>
 
@@ -67,10 +67,13 @@
 				{
 					<div class="hint"><span class="mono key pad">START</span><span class="cap">Session</span></div>
 					<div class="hint"><span class="mono key pad">D-PAD L/R</span><span class="cap">Switch car</span></div>
-					<div class="hint"><span class="mono key pad">D-PAD UP</span><span class="cap">Shift mode</span></div>
+					<div class="hint"><span class="mono key pad">D-PAD UP</span><span class="cap">Drive mode</span></div>
+					<div class="hint"><span class="mono key pad">D-PAD DOWN</span><span class="cap">Gearbox</span></div>
 				}
 				else
 				{
+					<div class="hint"><span class="mono key">B</span><span class="cap">Drive mode</span></div>
+					<div class="hint"><span class="mono key">G</span><span class="cap">Gearbox</span></div>
 					<div class="hint"><span class="mono key">L</span><span class="cap">Telemetry</span></div>
 					<div class="hint"><span class="mono key">T</span><span class="cap">Tuning</span></div>
 					<div class="hint"><span class="mono key">I</span><span class="cap">Help</span></div>
@@ -99,14 +102,33 @@
 	string CarClass => (Target?.Definition?.Layout ?? DriveLayout.FWD).ToString().ToLower();
 	string AssistText => (Target?.Assists ?? AssistLevel.Casual).ToString().ToUpper();
 
+	// Transmission mode (auto vs sequential-manual gearbox). Shown as the gear-chip caption so the
+	// D-pad-down / G toggle has a visible, always-on state — previously it only wrote a console line.
+	bool ManualMode => Target?.Drivetrain?.ManualMode ?? false;
+
+	// ── transient press-flash (drive-mode + gearbox toggles) ────────────────────────────────────
+	// No general toast system in this HUD, so a change on the existing chip/caption IS the feedback:
+	// when Assists or ManualMode changes we start a short timer; while it runs the chip/caption carries
+	// a bright .flash class (a one-shot pop). Both flash bools are folded into BuildHash so the panel
+	// re-renders the instant a flash starts AND when it ends (dropping the class).
+	const float FlashDuration = 0.9f;
+	RealTimeSince _assistFlash = 1000f;
+	RealTimeSince _gearboxFlash = 1000f;
+	AssistLevel _lastAssist;
+	bool _lastManual;
+	bool _flashSeeded;
+
+	bool AssistFlashing => _assistFlash < FlashDuration;
+	bool GearboxFlashing => _gearboxFlash < FlashDuration;
+
 	// Active input device. Input.UsingController is an engine-maintained bool that latches to the
 	// last-used device: it only flips when real input actually arrives from the other device, so it
 	// never flickers frame-to-frame — that latching IS the debounce (no manual hysteresis needed).
 	// A plain property read, allocation-free, safe to sample every frame. Folded into BuildHash so the
 	// legend rebuilds the instant the player switches between keyboard/mouse and a gamepad. When true
 	// the bottom-right legend shows the actions that have a real gamepad binding in Input.config
-	// (Session=SwitchRightMenu, CyclePrev/Next=d-pad left/right, ShiftMode=d-pad up); keyboard-only
-	// toggles drop off the pad view rather than showing an invented bind.
+	// (Session=SwitchRightMenu, CyclePrev/Next=d-pad left/right, DriveMode=d-pad up, ShiftMode=d-pad
+	// down); keyboard-only toggles drop off the pad view rather than showing an invented bind.
 	static bool UsingPad => Input.UsingController;
 
 	float RpmFraction => Target?.Drivetrain is null || Target.Definition is null
@@ -136,7 +158,22 @@
 		}
 	}
 
-	string GearCaption => GearState == "shifting" ? "shifting" : "gear";
+	// Caption under the gear number: the shift state while a shift is in flight, otherwise the
+	// transmission mode (AUTO / MANUAL) so the gearbox toggle reads at a glance.
+	string GearCaption => GearState == "shifting" ? "shifting" : (ManualMode ? "MANUAL" : "AUTO");
+
+	// Single computed class string (avoids interleaving multiple @() in the class attribute): base
+	// gearlbl, + hot while shifting, + flash for the transient pop on a gearbox toggle.
+	string GearLblClass
+	{
+		get
+		{
+			var c = "gearlbl";
+			if ( GearState == "shifting" ) c += " hot";
+			if ( GearboxFlashing ) c += " flash";
+			return c;
+		}
+	}
 
 	void ToggleHud()
 	{
@@ -148,6 +185,19 @@
 	{
 		if ( Input.Pressed( "HideHud" ) )
 			ToggleHud();
+
+		// Detect drive-mode / gearbox changes and arm the press-flash. Seed on the first frame so the
+		// initial state (or a car retarget) never counts as a change and self-flashes on spawn.
+		var assist = Target?.Assists ?? AssistLevel.Casual;
+		var manual = ManualMode;
+		if ( !_flashSeeded )
+		{
+			_lastAssist = assist;
+			_lastManual = manual;
+			_flashSeeded = true;
+		}
+		if ( assist != _lastAssist ) { _assistFlash = 0f; _lastAssist = assist; }
+		if ( manual != _lastManual ) { _gearboxFlash = 0f; _lastManual = manual; }
 
 		// Esc is host-routed to the pause menu unless we CONSUME it via EscapePressed.
 		// Close any cursor modal with Esc (same key that players expect); leave Esc alone
@@ -171,5 +221,7 @@
 			CarName, AssistText, UiState.TelemetryOpen ),
 		// UserSettings.SpeedUnit: re-render the unit label the instant the player flips km/h↔mph,
 		// even while stationary (both units read "0", so SpeedDisplay alone wouldn't change the hash).
-		System.HashCode.Combine( UiState.HudHidden, UserSettings.SpeedUnit, UsingPad ) );
+		// ManualMode drives the AUTO/MANUAL caption; the two flash bools re-render on flash start AND end.
+		System.HashCode.Combine( UiState.HudHidden, UserSettings.SpeedUnit, UsingPad,
+			ManualMode, AssistFlashing, GearboxFlashing ) );
 }
