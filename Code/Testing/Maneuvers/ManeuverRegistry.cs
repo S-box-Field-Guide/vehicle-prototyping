@@ -36,6 +36,9 @@ public static class ManeuverRegistry
 		// Same hotload caveat as the entries above — a live "unknown maneuver 'spinrecovery'" on a green
 		// compile means the static dict VALUE didn't migrate; bump a source mtime to rebuild.
 		["spinrecovery"] = new SpinRecoveryManeuver(),
+		// TEMPORARY (2026-07-18): kart high-torque yaw-wobble diagnostic. REMOVE with
+		// WobbleProbeManeuver.cs when the hunt lands (house temp-probe pattern).
+		["wobbleprobe"] = new WobbleProbeManeuver(),
 		["route"] = new RouteManeuver(),
 	};
 
