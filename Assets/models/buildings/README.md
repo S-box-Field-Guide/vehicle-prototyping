@@ -1,8 +1,8 @@
 # Village building set (`buildings/`)
 
-Ten flat-shaded, low-poly building models used as the residential / civic / industrial
+Nine flat-shaded, low-poly building models used as the residential / civic / industrial
 fill for the proving-grounds city: `barn`, `civic_hall`, `house_small`, `house_medium`,
-`house_large`, `inn`, `shop`, `tower`, `warehouse`, `workshop`.
+`house_large`, `inn`, `shop`, `warehouse`, `workshop`.
 
 ## Provenance
 
