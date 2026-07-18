@@ -756,3 +756,42 @@ other car/maneuver shares a changed code path. Confirmed live:
 
 No previously-green row regressed. Reds shown in the brake/launch runs (brake kart/pickup, launch
 hatch/coupe/kart wheelspin) are all pre-existing documented/feel-pending reds, unchanged.
+
+## Kart profile re-anchor after the omega-clamp physics fix (2026-07-18, owner call: re-anchor)
+
+Physics context: master 525c700 lands the per-substep drive-side wheel omega clamp (the
+high-PeakTorque wobble fix). Two kart rows interacted with it; owner chose RE-ANCHOR over clamp
+revision. Engine 26.07.15a, editor MCP 7274, measurements on the loaded fix build.
+
+### Kart jturn: re-anchored to measured (spec `specs/maneuvers/jturn.json` kart row)
+
+Post-clamp the kart rotation is twice as fast and bit-repeatable. Measured x4 (spec-exact params,
+Sport pin): jturnTimeS 2.12 / 2.16 / 2.12 / 2.16, yawOvershootDeg 44.43 / 43.77 / 44.43 / 43.77,
+catchable true x4. Legitimacy verified: the catch is clean and deterministic (1.5% spread, two
+one-tick-alias sub-attractors), max yaw accum ~224 deg only momentarily while the yaw rate is
+already collapsing; NOT divergent.
+- jturnTimeS band [1.0, 1.6] -> [1.9, 2.6]. The v1 band was aspirational and never met (baseline
+  4.32); the new band is a measured regression tripwire. Aspiration history stays in
+  docs/handling-targets.md.
+- yawOvershootDeg band <= 40 -> <= 50 (measured 43.8-44.4).
+- Live verdict vs new bands: kart PASS (2.119998 / 44.430023 / catchable). Leak check: hatch
+  2.2399979 PASS, coupe 3.499997 FAIL, pickup 2.9399974 FAIL, all BIT-IDENTICAL values and
+  unchanged verdicts vs the pre-edit battery (only the kart row was edited).
+
+### Kart slalom: pilot-profile spin-recovery straighten (code, `SlalomManeuver.cs`); bands PENDING measurement
+
+Post-clamp the slalom pilot's failure mode changed: a weave excursion ending in a spin-stop parks
+the pursuit at full lock + 0.7 throttle, which no longer breaks stiction without the old
+one-substep wheel-spin jolt (deterministic kart DNF 30.000496 s / yaw 304.99 x2 in warm ordering;
+pass-1 warm attractor 16.060177 bit-identical to the pre-fix anchor). Fix = driver-technique
+recovery clause in the profile: when nearly stopped AND steer demand exceeds a cap, straighten to
+the cap and launch at full throttle, then resume pursuit. GATED so normal launches (|steer| ~0.28
+at spawn) never engage: params `recoverBelowMs` (default 2.0) / `recoverSteerCapAbs` (default 0.3),
+inert for every existing spec row by construction; hatch/coupe/pickup slalom paths are
+byte-identical unless they enter the pathological state.
+- Slalom band values are UNCHANGED in this pass: current bands (elapsed <= 20, yaw <= 320,
+  maxSpeed [12.5,15.28]) are expected to bracket the recovered attractor (~16.06 s / <= 305 yaw);
+  re-anchor only if post-restart measurement lands outside. HOT COMPILE IS DEAD on this engine
+  build, so the recovery clause loads only via an owner editor restart boot-compiling the branch;
+  the kart-slalom repeatability proof + hatch-slalom leak spot-check are the next session's first
+  order of business.
