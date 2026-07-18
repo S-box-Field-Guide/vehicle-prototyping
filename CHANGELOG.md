@@ -6,6 +6,34 @@ monotonic tester-attribution counter; the display version (`VpBuild.Version`, sh
 in-game) is bumped by hand alongside it — minor per content publish, patch per hotfix — and is
 display-only (see `Code/Game/VpBuild.cs` for the full policy).
 
+## build 11 — 2026-07-17 (v0.3.0)
+- NEW d-pad up now cycles the DRIVE MODE (casual → sport → sim); the auto/manual gearbox toggle moved
+  to d-pad down. On keyboard the drive-mode cycle gets a new `B` key (gearbox stays on `G`). Both
+  toggles now give visible HUD feedback: the Assist chip flashes with the new mode, and the gear
+  chip's caption permanently reads AUTO or MANUAL (flashing on toggle) instead of the static word
+  "gear" — previously the gearbox toggle changed nothing on screen, which made it look dead.
+- NEW controller-aware hotkey legend: the bottom-right legend switches to gamepad labels (START,
+  D-PAD…) the moment you use a pad, and back to keyboard keys when you touch the keyboard. While the
+  gearbox is in MANUAL it also gains shift-up / shift-down rows at the bottom (`E` / `Q` on keyboard,
+  R1 / L1 on pad) so the shift binds are always in view; they drop off again in AUTO. The Help
+  overlay (I) and Session menu keycaps document the new binds too.
+- FIX drive mode no longer resets to the car's default when you switch cars or respawn — your chosen
+  casual/sport/sim setting survives switching and resetting.
+- FIX the high-speed "invisible wall" on town streets: streetlight poles stood close enough to the
+  lane edge that the widest car (the pickup) could clip them at speed. Poles moved back from the
+  road, with a longer lamp arm so the light still hangs over the lane.
+- FIX town crosswalks now sit on the approaches to each junction instead of across its center, and
+  the lane dashes are masked around them so markings no longer overlap.
+- FIX the park footpath stays inside the park at every block size (its length is now derived from
+  the block instead of fixed).
+- FIX the inn's awning attaches over its front door instead of a side wall.
+- FIX the town perimeter wall now seals fully at all four corners (each side was a few meters short,
+  leaving gaps you could slip through).
+- Also investigated from tester reports: reverse "keeps sliding" (coast-down is deliberately the same
+  strength in reverse as forward — press W to brake while reversing) and the kart pinning the rev
+  limiter instantly in Sport/Sim (that's wheelspin — the kart has no traction control in those modes
+  by design). Both behave as intended today; feel tweaks are under consideration.
+
 ## build 10 — 2026-07-17 (v0.2.0)
 - NEW master volume slider in the Session (Tab) menu: a Sound row under Units — click or drag the
   bar, the level applies live as you drag and persists across sessions. Default is 25% for a fresh
