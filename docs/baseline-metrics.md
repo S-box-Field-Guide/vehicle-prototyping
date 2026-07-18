@@ -756,3 +756,58 @@ other car/maneuver shares a changed code path. Confirmed live:
 
 No previously-green row regressed. Reds shown in the brake/launch runs (brake kart/pickup, launch
 hatch/coupe/kart wheelspin) are all pre-existing documented/feel-pending reds, unchanged.
+
+## Kart profile re-anchor after the omega-clamp physics fix (2026-07-18, owner call: re-anchor)
+
+Physics context: master 525c700 lands the per-substep drive-side wheel omega clamp (the
+high-PeakTorque wobble fix). Two kart rows interacted with it; owner chose RE-ANCHOR over clamp
+revision. Engine 26.07.15a, editor MCP 7274, measurements on the loaded fix build.
+
+### Kart jturn: re-anchored to measured (spec `specs/maneuvers/jturn.json` kart row)
+
+Post-clamp the kart rotation is twice as fast and bit-repeatable. Measured x4 (spec-exact params,
+Sport pin): jturnTimeS 2.12 / 2.16 / 2.12 / 2.16, yawOvershootDeg 44.43 / 43.77 / 44.43 / 43.77,
+catchable true x4. Legitimacy verified: the catch is clean and deterministic (1.5% spread, two
+one-tick-alias sub-attractors), max yaw accum ~224 deg only momentarily while the yaw rate is
+already collapsing; NOT divergent.
+- jturnTimeS band [1.0, 1.6] -> [1.9, 2.6]. The v1 band was aspirational and never met (baseline
+  4.32); the new band is a measured regression tripwire. Aspiration history stays in
+  docs/handling-targets.md.
+- yawOvershootDeg band <= 40 -> <= 50 (measured 43.8-44.4).
+- Live verdict vs new bands: kart PASS (2.119998 / 44.430023 / catchable). Leak check: hatch
+  2.2399979 PASS, coupe 3.499997 FAIL, pickup 2.9399974 FAIL, all BIT-IDENTICAL values and
+  unchanged verdicts vs the pre-edit battery (only the kart row was edited).
+
+### Kart slalom: pursuit-profile re-anchor (amp 0.8 / lookahead 9 / cruise 13.5) + spin-recovery clause (safety net)
+
+Post-clamp the slalom pilot's failure mode changed: a weave excursion ending in a spin-stop parks
+the pursuit at full lock + 0.7 throttle, which no longer breaks stiction without the old
+one-substep wheel-spin jolt (deterministic kart DNF 30.000496 s / yaw 304.99 x2 in warm ordering;
+pass-1 warm attractor 16.060177 bit-identical to the pre-fix anchor). Fix = driver-technique
+recovery clause in the profile: when nearly stopped AND steer demand exceeds a cap, straighten to
+the cap and launch at full throttle, then resume pursuit. GATED so normal launches (|steer| ~0.28
+at spawn) never engage: params `recoverBelowMs` (default 2.0) / `recoverSteerCapAbs` (default 0.3),
+inert for every existing spec row by construction; hatch/coupe/pickup slalom paths are
+byte-identical unless they enter the pathological state.
+- MEASURED OUTCOME (post-restart session, clause loaded): the clause alone did NOT close the
+  bistability. Battery x3 on the clause build: kart A,A,B (B = the deterministic DNF attractor
+  30.000496 s / yaw 304.99, now grinding a cone for 993 proximity strikes; cones have colliders,
+  so the capped-steer forward recovery cannot push past one). Yaw-damp re-tune falsified (gate 130
+  / ref 100 gave bit-identical DNFs 269.7 across sessions). ROOT: post-clamp the kart's
+  low-throttle creep lets bad session seeds enter a gate at 16.2 m/s, OVER the row's own
+  maxSpeed band ceiling 15.28; the spin follows from entering above sustainable gate speed.
+- Cruise 13.5 ALONE was then falsified in BATTERY context: single-run sessions completed 6/6
+  bit-identical (16.360184 / yaw 285.88), but the 4-car battery ordering still landed the ~285
+  deg/s fishtail on a cone (bit-identical DNF x2, 6 strikes). Outcomes are deterministic PER
+  CONTEXT; param nudges that only shape speed just move which context fails. The fishtail
+  EXCITATION had to go.
+- LANDED FIX (kart row params, no assert band moved): weaveAmpM 1.0 -> 0.8, lookaheadM
+  default 7 -> 9, cruiseSpeedMs 14.0 -> 13.5. The gentler pursuit removes the excitation
+  entirely: yaw peak collapses 285-305 -> ~35 deg/s (the kart weaves as cleanly as the stable
+  cars), and BOTH contexts are deterministic-PASS: battery x2 TOTAL PASS with kart bit-identical
+  13.580121 s / 0 strikes / maxSpeed 15.054-15.056 (in [12.5,15.28], note the deterministic
+  ~1.5% ceiling margin) / yaw 35.16-35.19; hatch/coupe/pickup rows unchanged. Single-run
+  sessions: see iteration log. CHARACTER NOTE: this row no longer exercises the twitchy-fishtail
+  signature (that lives in the jturn overshoot + free-drive feel); the yaw <= 320 ceiling stays
+  as an upper bound. The C# recovery clause stays as a gated safety net (inert unless a
+  spin-stop demands steer past the cap at near-standstill).

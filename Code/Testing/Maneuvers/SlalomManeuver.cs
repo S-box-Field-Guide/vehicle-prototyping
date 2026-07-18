@@ -63,6 +63,25 @@ public sealed class SlalomManeuver : ManeuverBase
 		float steer = Math.Clamp( angErr * gain, -1f, 1f );
 
 		float throttle = VehicleBridge.SpeedMs < cruise ? 0.7f : 0.15f;
+
+		// Spin-recovery straighten (re-anchor 2026-07-18): with the per-substep drive-omega clamp
+		// landed (the physics fix for the high-torque wobble), a full-lock + partial-throttle
+		// STANDSTILL no longer breaks parking stiction via the old one-substep wheel-spin jolt, so a
+		// weave excursion that ends in a spin-stop used to park the pursuit at full lock forever
+		// (deterministic kart DNF, 30.000496 s / yaw 304.99 x2). Real driver technique: when nearly
+		// stopped, straighten the wheel and launch, then resume pursuit. Deliberately GATED on the
+		// pathological state (near-stopped AND steer demand past the cap) so the three stable cars'
+		// normal launches (|steer| ~0.28 at spawn) never engage it and stay bit-identical; only a
+		// spin-stop or a heavily off-heading standstill triggers. Param-tunable, defaults inert for
+		// every existing spec row.
+		float recoverBelow = ctx.Param( "recoverBelowMs", 2.0f );
+		float recoverSteerCap = ctx.Param( "recoverSteerCapAbs", 0.3f );
+		if ( VehicleBridge.SpeedMs < recoverBelow && MathF.Abs( steer ) > recoverSteerCap )
+		{
+			steer = Math.Clamp( steer, -recoverSteerCap, recoverSteerCap );
+			throttle = 1f;
+		}
+
 		ctx.Drive( throttle, steer, false );
 		CountConeStrikes( ctx );
 

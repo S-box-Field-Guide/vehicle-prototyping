@@ -449,3 +449,20 @@ maneuver is local** — no pilot edit:
 An unknown maneuver name (spec present, no class/registry entry) reports `status:"error"`
 ("unknown maneuver 'foo'"), exactly as before — the `washboard`/`hillclimb`/`liftoff`/`figure8`
 specs sit in that state until their classes land.
+
+### 7.5 Slalom profile: spin-recovery straighten params (2026-07-18)
+
+`SlalomManeuver` gained a driver-technique recovery clause for the post-omega-clamp physics
+(master 525c700): when the car is nearly stopped AND the pursuit demands steer past a cap (the
+full-lock spin-stop state that can no longer break parking stiction via wheel-spin overshoot),
+the profile straightens steer to the cap and launches at full throttle, then resumes pursuit.
+Two optional spec params tune it; defaults are inert for normal launches by construction (the
+clause is gated on BOTH conditions, and a normal spawn launch commands only ~0.28 steer):
+
+| param | default | meaning |
+|---|---|---|
+| `recoverBelowMs` | 2.0 | speed (m/s) below which the recovery clause may engage |
+| `recoverSteerCapAbs` | 0.3 | steer magnitude cap during recovery; also the engage threshold |
+
+No shipped spec row sets them. Kart jturn bands were re-anchored the same day (see
+`docs/baseline-metrics.md`, "Kart profile re-anchor after the omega-clamp physics fix").
