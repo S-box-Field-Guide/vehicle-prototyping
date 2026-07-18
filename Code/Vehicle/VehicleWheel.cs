@@ -28,6 +28,13 @@ public sealed class VehicleWheel : Component
 	public float GripScale { get; set; } = 1f; // live multiplier, e.g. handbrake drift cuts rear grip
 	public float ParkBrakeScale { get; set; } = 1f; // anti-jitter stiction strength; controller fades it with throttle
 
+	/// <summary>Per-substep DRIVE-side angular-velocity cap (rad/s), set by the controller each
+	/// substep to the drivetrain's redline-equivalent wheel speed for the current gear (see
+	/// <see cref="Drivetrain.RedlineWheelSpeed"/>). Drive torque can never push the wheel PAST this
+	/// within a substep; the ground (tire reaction) still can, and a pre-existing overspeed is never
+	/// yanked down (no phantom braking). float.MaxValue = no cap (undriven wheels, neutral).</summary>
+	public float DriveOmegaCap { get; set; } = float.MaxValue;
+
 	// State
 	public float AngularVelocity { get; private set; } // rad/s, +forward
 	public float SteerAngle { get; set; } // degrees, set by controller
@@ -181,8 +188,28 @@ public sealed class VehicleWheel : Component
 	void IntegrateWheelSpin( float dt, float driveTorque, float brakeTorque, float tireForce )
 	{
 		// drive + tire reaction
+		float preOmega = AngularVelocity;
 		float torque = driveTorque - tireForce * Radius;
 		AngularVelocity += torque / Inertia * dt;
+
+		// Per-substep drive-side overshoot clamp (kart high-PeakTorque wobble hunt 2026-07-18).
+		// The rev limiter zeroes torque only on the substep AFTER wheel-implied rpm crosses redline,
+		// so one substep of unlimited drive torque on a light wheel overshoots redline-equivalent
+		// omega by up to 6-8x (measured live: kart at 900 N-m spikes to 289-339 rad/s vs the 44 rad/s
+		// gear-1 redline equivalent; even stock 52 N-m reaches 141). The spike is what lets an
+		// unloaded rear diverge violently from its loaded twin over any perturbation (the felt
+		// "individual tires have different traction" left-right wobble). Clamp: DRIVE torque may
+		// never push omega past the cap within a substep. Signed by drive direction so reverse works;
+		// cap floors at the pre-integration omega so ground-driven overspeed (downhill coast) is
+		// never yanked down, and the ground reaction path is untouched.
+		if ( driveTorque != 0f && DriveOmegaCap < float.MaxValue )
+		{
+			float dir = MathF.Sign( driveTorque );
+			float cap = MathF.Max( DriveOmegaCap, dir * preOmega );
+			AngularVelocity = dir > 0f
+				? MathF.Min( AngularVelocity, cap )
+				: MathF.Max( AngularVelocity, -cap );
+		}
 
 		// brakes can stop the wheel but never reverse it within a step
 		if ( brakeTorque > 0f )
