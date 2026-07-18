@@ -69,6 +69,14 @@
 					<div class="hint"><span class="mono key pad">D-PAD L/R</span><span class="cap">Switch car</span></div>
 					<div class="hint"><span class="mono key pad">D-PAD UP</span><span class="cap">Drive mode</span></div>
 					<div class="hint"><span class="mono key pad">D-PAD DOWN</span><span class="cap">Gearbox</span></div>
+					@* MANUAL-only shift rows: appear the frame the gearbox enters manual (ManualMode is in
+					   BuildHash), drop again in AUTO. Real Input.config binds: ShiftUp=SwitchRightBumper,
+					   ShiftDown=SwitchLeftBumper — R1/L1, matching the help overlay's footer. *@
+					@if ( ManualMode )
+					{
+						<div class="hint"><span class="mono key pad">R1</span><span class="cap">Shift up</span></div>
+						<div class="hint"><span class="mono key pad">L1</span><span class="cap">Shift down</span></div>
+					}
 				}
 				else
 				{
@@ -82,6 +90,13 @@
 						<span class="mono key">H</span>
 						<span class="cap">Hide UI</span>
 					</div>
+					@* MANUAL-only shift rows (bottom of the stack, mirroring the pad view). Real
+					   Input.config binds: ShiftUp=e, ShiftDown=q. *@
+					@if ( ManualMode )
+					{
+						<div class="hint"><span class="mono key">E</span><span class="cap">Shift up</span></div>
+						<div class="hint"><span class="mono key">Q</span><span class="cap">Shift down</span></div>
+					}
 				}
 			</div>
 		}
