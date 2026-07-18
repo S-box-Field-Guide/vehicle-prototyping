@@ -155,10 +155,17 @@ public sealed class VehicleController : Component, Component.ICollisionListener
 			float throttle = ApplyTractionControl( Throttle * driftCatch, driven );
 			float torquePerWheel = Drivetrain.Simulate( dt, throttle, avgDrivenSpeed, groundWheelSpeed, driven.Count ) * launchBoost;
 
+			// Drive-side omega cap, read fresh AFTER Simulate (a shift changes the ratio mid-loop):
+			// drive torque may never push a driven wheel past redline-equivalent within a substep
+			// (the limiter-one-substep-late overshoot defect; see VehicleWheel.IntegrateWheelSpin).
+			float omegaCap = Drivetrain.RedlineWheelSpeed;
+
 			foreach ( var wheel in Wheels )
 			{
 				float drive = wheel.IsDriven ? torquePerWheel : 0f;
 				float brake = BrakeTorqueFor( wheel );
+				if ( wheel.IsDriven )
+					wheel.DriveOmegaCap = omegaCap;
 				wheel.Substep( dt, drive, brake );
 			}
 		}

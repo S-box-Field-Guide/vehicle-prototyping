@@ -59,6 +59,16 @@ public class Drivetrain
 		_ => 0f
 	};
 
+	/// <summary>Redline-equivalent driven-wheel angular speed (rad/s) for the CURRENT gear ratio;
+	/// float.MaxValue in neutral (no drive coupling). Read fresh each substep by the controller
+	/// (the ratio changes on a shift) and handed to the wheels as the per-substep drive-side omega
+	/// cap: the rev limiter cuts torque only on the substep AFTER wheel-implied rpm crosses redline,
+	/// and a light wheel at high PeakTorque can blow 6x past redline-equivalent within that one
+	/// substep (measured: kart at 900 N-m hits 289-339 rad/s vs a 44 rad/s gear-1 redline
+	/// equivalent). The cap makes the limiter effectively per-substep on the drive side.</summary>
+	public float RedlineWheelSpeed
+		=> CurrentRatio == 0f ? float.MaxValue : _def.RedlineRpm * MathF.Tau / 60f / MathF.Abs( CurrentRatio );
+
 	/// <summary>
 	/// One substep. avgDrivenWheelSpeed and groundWheelSpeed in rad/s. Returns torque per driven
 	/// wheel (N·m). Clutch engagement is a continuous blend — a binary locked/slipping switch
