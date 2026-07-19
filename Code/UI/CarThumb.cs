@@ -121,10 +121,10 @@ public sealed class CarThumb : ScenePanel
 			return;
 
 		var def = StationCarRegistry.ResolveCar( CarId );
-		var kit = PartKitManifest.TryLoad( def?.PartKitManifest );
+		var kit = PartKitManifest.TryLoad( def?.BodyManifest );
 		if ( kit is null )
 		{
-			FallBackToPng( $"kit manifest '{def?.PartKitManifest}' did not resolve" );
+			FallBackToPng( $"kit manifest '{def?.BodyManifest}' did not resolve" );
 			return;
 		}
 
