@@ -33,6 +33,30 @@ public static class RampKicker
 {
 	const float M = Units.MetersToUnits;
 
+	/// <summary>
+	/// MINIMUM-RADIUS LAW (world pass 2026-07-19). The arc radius R = (L²+H²)/(2H) is what the
+	/// suspension feels: riding the face at speed v costs a sustained centripetal load v²/R on top of
+	/// gravity. The old builders always chose L = 5H, which pins R = 13H — a 0.6 m kicker got R = 7.8 m,
+	/// a ~4.7 g load at 20 m/s, so the springs bottomed, the chassis contact took over, and the kicker
+	/// read as a WALL (measured before the fix: hatch 123 G / kart 247 G longitudinal spikes, 0.3 s
+	/// "airtime", car stuck on the face; the proving-ground kickers that always drove fine have
+	/// R = 75–115 m). Radius must scale with the speed a kicker is meant to be hit at, and bigger
+	/// kickers are the faster features: R(H) = 14·H + 9 (floor 18 m) keeps every height at roughly
+	/// ≤ ~1.2 g of face load at its design speed while preserving a punchy 15–21° exit angle.
+	/// </summary>
+	public const float MinRadiusM = 18f;
+
+	/// <summary>Speed-safe ground run for a kicker of lip height <paramref name="heightM"/>: the length
+	/// that yields the design radius R(H) = max(<see cref="MinRadiusM"/>, 14·H + 9). Never shorter than
+	/// the legacy 5·H, so tall kickers (which already satisfied the law) keep their exact footprint.
+	/// From R = (L²+H²)/(2H):  L = √(H·(2R − H)).</summary>
+	public static float LengthFor( float heightM )
+	{
+		float r = MathF.Max( MinRadiusM, 14f * heightM + 9f );
+		float lawLen = MathF.Sqrt( heightM * (2f * r - heightM) );
+		return MathF.Max( 5f * heightM, lawLen );
+	}
+
 	/// <summary>Place a curved solid kicker under <paramref name="parent"/>. <paramref name="lengthM"/>
 	/// = ground run, <paramref name="widthM"/> = lateral width, <paramref name="heightM"/> = lip height.
 	/// Returns the placed GameObject.</summary>

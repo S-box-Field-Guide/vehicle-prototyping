@@ -8,22 +8,34 @@ public sealed class PlaygroundLayout
 }
 
 /// <summary>
-/// The PLAYGROUND world: a pure STUNT PARK (build 9 redesign, pass 2). No town, no buildings, no city
-/// road network — just a big flat playfield MAXED OUT with jumps of every size (small pops up to
-/// huge-air), chained rhythm lines, side-by-side opposed gap jumps, a big-air launch, a jump-onto-box,
-/// a ball pit, and a few blockout stunt extras, so it reads as a distinct map from the proving-grounds
-/// measurement scene. Kept from the old layout: the flat ground core + outer rolling-hills terrain
-/// (<see cref="PlaygroundTerrain"/>), the banked bowl, and the sealing perimeter wall.
+/// The PLAYGROUND world: a pure STUNT PARK (build 9 redesign; jump-physics rework pass 3, 2026-07-19).
+/// No town, no buildings, no city road network — just a big flat playfield MAXED OUT with jumps of
+/// every size (small pops up to huge-air), chained rhythm lines, double-sided mound jumps, a big-air
+/// launch, a jump-onto-box, a ball pit, and a few blockout stunt extras, so it reads as a distinct map
+/// from the proving-grounds measurement scene. Kept from the old layout: the flat ground core + outer
+/// rolling-hills terrain (<see cref="PlaygroundTerrain"/>), the banked bowl, and the perimeter wall.
 ///
 /// Every solid feature follows the standing DRIVABILITY LAW: entry tangent to grade (no wheel-catching
 /// lip), closed underside (no drive-under trap), collision that follows the actual curved shape (the
 /// <see cref="RampKicker"/> segmented tangent-box collider). Curved kickers come from RampKicker.
 ///
-/// ORIENTATION LAW (pass 2): jumps along one DRIVE LINE all face the SAME way (a rhythm run you link);
-/// jumps that sit SIDE BY SIDE (adjacent, not in-line) face OPPOSITE ways — an opposed gap pair whose
-/// two lips point at each other — so from any approach heading a player meets a launch FACE, never just
-/// a wedge back. Directional set-pieces (the height ladder, the big-air) are the deliberate exception:
-/// each has its own one-way runway. Deterministic: fixed layout + a fixed ball table, no RNG.
+/// JUMP-PHYSICS LAWS (pass 3 — why the pass-2 park did not work in practice):
+///  1. CURVATURE: kicker ground run comes from <see cref="RampKicker.LengthFor"/>, never a fixed
+///     length-to-height ratio. The old L = 5·H pinned the arc radius at 13·H, and small kickers
+///     bottomed the suspension into a chassis-contact WALL stop (hatch 123 G / kart 247 G measured).
+///  2. NO WALL EVER FACES A FLIGHT PATH: anything a flying or short-landing car can meet is a slope.
+///     The opposed gap pairs (vertical lips pointed INTO the gap = wall for any undershoot) became
+///     double-sided MOUNDS; the big-air landing kicker (3 m vertical face toward the flyer) became an
+///     asymmetric landing mound; the jump-onto-box front edge got a rounded roll-over nose.
+///  3. STEPS ARE NOT DRIVABLE: 0.5 m risers hang every car (the 0.12 m kerb already did — 2026-07-14
+///     telemetry), so the step-stairs carry a centre RIDE BOARD up the nose line; the exposed side
+///     strips stay honest stairs. The wall-ride's raw 48° grade edge got a half-angle apron.
+///
+/// ORIENTATION LAW (pass 2, amended): jumps along one DRIVE LINE all face the SAME way (a rhythm run
+/// you link); jumps that sit SIDE BY SIDE are double-sided mounds, so from any approach heading a
+/// player meets a launch face, never a wedge back or a wall. Directional set-pieces (the height
+/// ladder, the big-air) are the deliberate exception: each has its own one-way runway. Deterministic:
+/// fixed layout + a fixed ball table, no RNG.
 /// </summary>
 public static class PlaygroundBuilder
 {
@@ -70,8 +82,8 @@ public static class PlaygroundBuilder
 
 		BuildKickerLadder( new Vector2( -60f, 0f ) );   // the FIVE showcase heights, side by side (one-way)
 		BuildRhythmLines();                             // chained same-direction kicker lines you rhythm
-		BuildBigAir( new Vector2( 95f, -130f ) );       // huge 6 m launch + landing ramp down the runway
-		BuildOpposedPairs();                            // side-by-side opposed gap jumps (bidirectional)
+		BuildBigAir( new Vector2( 95f, -130f ) );       // huge 6 m launch + landing mound down the runway
+		BuildDoubleMounds();                            // double-sided mound jumps (bidirectional)
 		BuildScatterSingles();                          // more coverage singles across the open field
 		BuildJumpOntoBox( new Vector2( 40f, -25f ) );   // launch → land on an elevated box → ramp down
 		BuildBallPit( new Vector2( 110f, 85f ) );
@@ -131,7 +143,7 @@ public static class PlaygroundBuilder
 		{
 			float h = LadderHeights[i];
 			var at = new Vector2( baseAtM.x, baseAtM.y + y0 + i * laneGap );
-			Kicker( at, 0f, lenM: 5f * h, widthM: 8f, heightM: h, HeightColor( h ) );
+			Kicker( at, 0f, lenM: RampKicker.LengthFor( h ), widthM: 8f, heightM: h, HeightColor( h ) );
 			// marker pylon off to the +Y side of the lane (out of the drive path)
 			MarkerPost( new Vector2( at.x, at.y + 5.5f ), h );
 		}
@@ -140,19 +152,21 @@ public static class PlaygroundBuilder
 	// ---------------------------------------------------------------- chained rhythm lines
 
 	/// <summary>Several CHAINED lines: kickers in a row all facing +X (the ORIENTATION LAW's same-way
-	/// drive line) at jumpable spacing so a car can rhythm multiple jumps. Spacing derived from the
-	/// launch arc under the 1.1 g gravity: low kickers land ~14 m past the lip, mid ~19 m, the big
-	/// ones farther — bases sit lip + air + a little flat before the next base.</summary>
+	/// drive line) at jumpable spacing so a car can rhythm multiple jumps. Spacing re-derived for the
+	/// pass-3 lengths/exit angles under the 1.1 g gravity: the flight at each line's design speed must
+	/// come down on the FLAT between kickers, before the next face — the base-to-base gap is
+	/// launch-length + flight + a little flat (overspeed lands low on the next curved face, which is
+	/// rollable; it must never reach the face's upper half).</summary>
 	static void BuildRhythmLines()
 	{
-		// mid line: four 1.0 m kickers, ~28 m base-to-base (arc lands ~19 m past a 5 m-long ramp lip)
-		ChainLine( new Vector2( -10f, 55f ), 1.0f, count: 4, spacingM: 28f, widthM: 7f );
-		// fast-low line: three 0.6 m kickers, tight ~22 m spacing — quick pop-pop-pop
-		ChainLine( new Vector2( -20f, 95f ), 0.6f, count: 3, spacingM: 22f, widthM: 7f );
-		// BIG line (scaled ~2×): three 2.5 m kickers, ~46 m spacing so you must carry real speed to link
-		ChainLine( new Vector2( -25f, 135f ), 2.5f, count: 3, spacingM: 46f, widthM: 9f );
-		// south rhythm: three 1.2 m kickers for southern-field coverage, ~30 m spacing
-		ChainLine( new Vector2( -30f, -45f ), 1.2f, count: 3, spacingM: 30f, widthM: 7f );
+		// mid line: four 1.0 m kickers, ~30 m base-to-base (≈20 m flight at the 18-20 m/s design speed)
+		ChainLine( new Vector2( -10f, 55f ), 1.0f, count: 4, spacingM: 30f, widthM: 7f );
+		// fast-low line: three 0.6 m kickers, tight ~25 m spacing — quick pop-pop-pop
+		ChainLine( new Vector2( -20f, 95f ), 0.6f, count: 3, spacingM: 25f, widthM: 7f );
+		// BIG line (scaled ~2×): three 2.5 m kickers, ~56 m spacing so you must carry real speed to link
+		ChainLine( new Vector2( -25f, 135f ), 2.5f, count: 3, spacingM: 56f, widthM: 9f );
+		// south rhythm: three 1.2 m kickers for southern-field coverage, ~34 m spacing
+		ChainLine( new Vector2( -30f, -45f ), 1.2f, count: 3, spacingM: 34f, widthM: 7f );
 	}
 
 	static void ChainLine( Vector2 firstBaseM, float heightM, int count, float spacingM, float widthM )
@@ -160,7 +174,7 @@ public static class PlaygroundBuilder
 		var col = HeightColor( heightM );
 		for ( int i = 0; i < count; i++ )
 			Kicker( new Vector2( firstBaseM.x + i * spacingM, firstBaseM.y ), 0f,
-				lenM: 5f * heightM, widthM: widthM, heightM: heightM, col );
+				lenM: RampKicker.LengthFor( heightM ), widthM: widthM, heightM: heightM, col );
 	}
 
 	// ---------------------------------------------------------------- scattered singles
@@ -181,86 +195,121 @@ public static class PlaygroundBuilder
 			(  165f,   10f,   0f, 1.2f ),   // E edge, faces the wall
 		};
 		foreach ( var s in singles )
-			Kicker( new Vector2( s.x, s.y ), s.yaw, lenM: 5f * s.h, widthM: 7f, heightM: s.h, HeightColor( s.h ) );
+			Kicker( new Vector2( s.x, s.y ), s.yaw, lenM: RampKicker.LengthFor( s.h ), widthM: 7f, heightM: s.h, HeightColor( s.h ) );
 	}
 
 	// ---------------------------------------------------------------- big air (scaled-up set-piece)
 
-	/// <summary>The BIG-AIR launch: a huge 6 m kicker at the end of its own long runway, then a matching
-	/// DOWN landing ramp across a gap so a fast car sends it and rolls out clean. A directional
-	/// set-piece (one-way, like the ladder) — approached only down the runway, so a same-way launch face
-	/// is correct here. The scaled-up 3× jump of the park.</summary>
+	/// <summary>The BIG-AIR launch: a huge 6 m kicker at the end of its own long runway, a short
+	/// clear-air gap, then an asymmetric LANDING MOUND. Pass-3 rework: the old landing piece was a
+	/// lone yaw-180 kicker whose 3 m VERTICAL lip face pointed straight at the incoming flyer — any car
+	/// under ~21 m/s hit a wall mid-air. The mound has no exposed vertical face anywhere: an up-slope
+	/// (the rollable catch for shorts — a slow car lands on or rolls up a tangent-based curve), a crest,
+	/// and a LONG shallow down-slope so the fast band (~24-30 m/s) touches down on falling ground and
+	/// rolls out. A directional set-piece (one-way, like the ladder) with its own runway.</summary>
 	static void BuildBigAir( Vector2 baseAtM )
 	{
-		const float launchH = 6f, landH = 3f;
-		float launchLen = 5f * launchH;                 // = 30 m base (long, gentle tangent)
-		float lipX = baseAtM.x + launchLen;             // launch edge
-		float gap = 34f;                                // clear-air gap over the flat
-		float landLipX = lipX + gap;                    // landing ramp's high lip
-		float landLen = 5f * landH;
+		const float launchH = 6f, moundH = 4.5f, gapM = 11f, downLenM = 35f, w = 12f;
+		float launchLen = RampKicker.LengthFor( launchH );      // ≈ 33 m run, R ≈ 93 m
+		float lipX = baseAtM.x + launchLen;                     // launch edge
+		float upLen = RampKicker.LengthFor( moundH );           // ≈ 25 m catch slope
+		float upBaseX = lipX + gapM;                            // mound starts after the clear-air gap
+		float crestX = upBaseX + upLen;
 
 		// launch (car flies off this, +X)
-		Kicker( baseAtM, 0f, launchLen, 10f, launchH, HeightColor( launchH ) );
-		// landing DOWN-ramp: yaw-180 kicker, high lip at landLipX facing the incoming car, descending +X
-		Kicker( new Vector2( landLipX + landLen, baseAtM.y ), 180f, landLen, 10f, landH, HeightColor( landH ) );
+		Kicker( baseAtM, 0f, launchLen, w, launchH, HeightColor( launchH ) );
+		// landing mound: up-face and down-face lips COINCIDE at the crest (no exposed vertical faces).
+		// The down side runs longer than the curvature law asks (R ≈ 138 m) so ~30 m/s overshoots still
+		// meet falling ground instead of flat.
+		Kicker( new Vector2( upBaseX, baseAtM.y ), 0f, upLen, w, moundH, HeightColor( moundH ) );
+		Kicker( new Vector2( crestX + downLenM, baseAtM.y ), 180f, downLenM, w, moundH, HeightColor( moundH ) );
 	}
 
-	// ---------------------------------------------------------------- opposed gap pairs (bidirectional)
+	// ---------------------------------------------------------------- double-sided mounds (bidirectional)
 
-	/// <summary>The ORIENTATION LAW's side-by-side case: pairs of kickers that sit near each other with
-	/// their lips pointed AT each other across a gap, one launching +X and one launching −X. From either
-	/// heading you meet a launch face — a proper double-sided jump, never a wedge back. Spread across the
-	/// open mid-field for coverage from every direction.</summary>
-	static void BuildOpposedPairs()
+	/// <summary>The ORIENTATION LAW's side-by-side case, pass-3 form: a DOUBLE-SIDED MOUND — a +X kicker
+	/// and a −X kicker whose lips COINCIDE at a shared crest. From either heading you meet a launch face,
+	/// clear the crest, and the far side is a falling lander. The pass-2 "opposed gap pair" (same two
+	/// kickers pulled apart, lips pointing into the gap) put each lip's vertical back face IN the other
+	/// jump's flight path: at design speed a car cleared its own lip but arrived at the far lip below
+	/// crest height — a wall hit. Zero gap removes the wall by construction.</summary>
+	static void BuildDoubleMounds()
 	{
-		// (centreX, centreY, gapM, heightM)
-		var pairs = new (float cx, float cy, float gap, float h)[]
+		// (crestX, crestY, heightM) — spread across the open mid-field for coverage from every direction
+		var mounds = new (float cx, float cy, float h)[]
 		{
-			(   10f,  20f, 20f, 1.0f ),
-			(   25f, -105f, 24f, 1.5f ),
-			(  -50f,  60f, 20f, 1.2f ),
-			(  120f,  40f, 26f, 2.0f ),
+			(   20f, -15f, 1.0f ),
+			(   25f, -105f, 1.5f ),
+			(  -50f,  60f, 1.2f ),
+			(  120f,  40f, 2.0f ),
 		};
-		foreach ( var p in pairs )
-			OpposedGapPair( new Vector2( p.cx, p.cy ), p.gap, p.h );
+		foreach ( var p in mounds )
+			DoubleMound( new Vector2( p.cx, p.cy ), p.h );
 	}
 
-	/// <summary>Two kickers of equal height facing each other across a gap centred on
-	/// <paramref name="centreM"/>: a +X kicker on the west side and a −X (yaw-180) kicker on the east
-	/// side, both lips pointing into the gap.</summary>
-	static void OpposedGapPair( Vector2 centreM, float gapM, float heightM )
+	/// <summary>Two equal kickers back-to-back: the +X face's lip and the −X face's lip land on the same
+	/// crest line at <paramref name="crestM"/>, so the mound's only surfaces are the two tangent-based
+	/// curved faces — no vertical face anywhere.</summary>
+	static void DoubleMound( Vector2 crestM, float heightM )
 	{
-		float len = 5f * heightM;
+		float len = RampKicker.LengthFor( heightM );
 		var col = HeightColor( heightM );
-		// west kicker: launches +X, high lip at centre − gap/2
-		Kicker( new Vector2( centreM.x - gapM * 0.5f - len, centreM.y ), 0f, len, 7f, heightM, col );
-		// east kicker: launches −X (yaw 180), high lip at centre + gap/2 (base = lip + len further east)
-		Kicker( new Vector2( centreM.x + gapM * 0.5f + len, centreM.y ), 180f, len, 7f, heightM, col );
+		// west face: launches +X, lip at the crest
+		Kicker( new Vector2( crestM.x - len, crestM.y ), 0f, len, 7f, heightM, col );
+		// east face: launches −X (yaw 180), lip at the crest (base = crest + len further east)
+		Kicker( new Vector2( crestM.x + len, crestM.y ), 180f, len, 7f, heightM, col );
 	}
 
 	// ---------------------------------------------------------------- jump onto a box
 
 	/// <summary>A 2.2 m launch kicker, then an AIR GAP, then an elevated drivable box whose top sits a
 	/// bit below the jump apex (landable at speed, missable when slow), then a curved kicker DOWN off
-	/// the far edge so you are never stranded. Launch arc at ~20 m/s apexes ~4.9 m ≈ 13 m past the lip;
-	/// the box top at 3.2 m is under that apex, so a fast car drops onto it and a slow car lands short
-	/// on the flat.</summary>
+	/// the far edge so you are never stranded. Design window ≈ 16-22 m/s lands on the deck; faster
+	/// overshoots onto the down-kicker's falling face (rollable). Pass-3 fix for the short-lander: the
+	/// box's front-top edge carries a ROUNDED ROLL-OVER NOSE (quarter-round chords, motocross tabletop
+	/// knuckle), so a car that arrives just below deck height deflects up onto the deck instead of
+	/// slamming a vertical face. Deep shorts land flat before the box at low speed.</summary>
 	static void BuildJumpOntoBox( Vector2 baseAtM )
 	{
-		const float launchH = 2.2f, boxTop = 3.2f, boxDepth = 15f, boxWidth = 12f, downLen = 11f;
-		float launchLen = 5f * launchH;                         // = 11 m
+		const float launchH = 2.2f, boxTop = 3.2f, boxDepth = 15f, boxWidth = 12f, noseR = 2.2f;
+		float launchLen = RampKicker.LengthFor( launchH );      // ≈ 13 m, R ≈ 40 m
+		float downLen = RampKicker.LengthFor( boxTop );         // ≈ 18 m falling lander off the back
 		float lipX = baseAtM.x + launchLen;                     // where the launch kicker throws you
 		float boxFrontX = lipX + 12f;                           // 12 m air gap over the flat
-		float boxCx = boxFrontX + boxDepth * 0.5f;
 		float boxBackX = boxFrontX + boxDepth;
 
 		// the launch kicker (car flies off this, unconnected to the box)
 		Kicker( baseAtM, 0f, launchLen, boxWidth, launchH, HeightColor( launchH ) );
 
-		// the box: a solid closed block resting on grade, drivable flat top at boxTop
-		Block( new Vector3( boxCx, baseAtM.y, boxTop * 0.5f ) * M,
-			new Vector3( boxDepth, boxWidth, boxTop ), BoxGrey, name: "JumpBox" );
+		// the box, recomposed so the rounded nose REPLACES the front-top corner (a square corner would
+		// poke through any added rounding): a full-depth lower slab up to boxTop − noseR, an upper box
+		// set back noseR from the front, and two chord panels tracing the quarter-round between them.
+		Block( new Vector3( boxFrontX + boxDepth * 0.5f, baseAtM.y, (boxTop - noseR) * 0.5f ) * M,
+			new Vector3( boxDepth, boxWidth, boxTop - noseR ), BoxGrey, name: "JumpBox" );
+		Block( new Vector3( boxFrontX + noseR + (boxDepth - noseR) * 0.5f, baseAtM.y, boxTop - noseR * 0.5f ) * M,
+			new Vector3( boxDepth - noseR, boxWidth, noseR ), BoxGrey, name: "JumpBox Top" );
 		_boxes++;
+
+		// roll-over nose: chords of the quarter circle from the face tangent point (boxFrontX,
+		// boxTop − noseR) up to the deck tangent point (boxFrontX + noseR, boxTop), two 45° steps.
+		for ( int i = 0; i < 2; i++ )
+		{
+			float a0 = i * MathF.PI * 0.25f;                    // 0°, 45° from the vertical-face tangent
+			float a1 = (i + 1) * MathF.PI * 0.25f;
+			var p0 = new Vector2( boxFrontX + noseR * (1f - MathF.Cos( a0 )), boxTop - noseR + noseR * MathF.Sin( a0 ) );
+			var p1 = new Vector2( boxFrontX + noseR * (1f - MathF.Cos( a1 )), boxTop - noseR + noseR * MathF.Sin( a1 ) );
+			float dx = p1.x - p0.x, dz = p1.y - p0.y;
+			float chord = MathF.Sqrt( dx * dx + dz * dz );
+			float pitchDeg = MathF.Atan2( dz, dx ).RadianToDegree();
+			// outward normal (points away from the box interior): (-dz, dx) / chord
+			float nX = -dz / chord, nZ = dx / chord;
+			const float thick = 0.5f;
+			// centre sits half a thickness INSIDE the chord so the panel's top face lies exactly on it
+			var panel = Panel(
+				new Vector3( (p0.x + p1.x) * 0.5f - nX * thick * 0.5f, baseAtM.y, (p0.y + p1.y) * 0.5f - nZ * thick * 0.5f ),
+				new Vector3( chord, boxWidth, thick ), Rotation.FromPitch( -pitchDeg ), BoxGrey, "JumpBox Nose" );
+			panel.Tags.Add( "road" );
+		}
 
 		// down-ramp off the far edge: a yaw-180 kicker whose lip (height boxTop) lands exactly on the
 		// box's back-top edge and descends +X back to grade — seamless roll-off, sealed underside.
@@ -335,12 +384,15 @@ public static class PlaygroundBuilder
 		Kicker( new Vector2( centreM.x + deckHalf + kickLen, centreM.y ), 180f, kickLen, w, deckTop, RampGrey );
 	}
 
-	/// <summary>A drivable staircase: shallow 0.5 m steps a car climbs at speed up to a high deck, then
-	/// a curved kicker DOWN the far side. Steps are solid boxes resting on grade (no underside gap).</summary>
+	/// <summary>A staircase with a centre RIDE BOARD: the 0.5 m steps themselves are NOT climbable at
+	/// any speed (a raycast wheel treats a riser as a wall — the 0.12 m kerb already hung every car,
+	/// 2026-07-14 telemetry), so a 5 m-wide board runs up the stair NOSE LINE like plywood over a
+	/// skate stair set: a plain ~6.3° wedge a car drives at full speed. The stairs stay exposed either
+	/// side of the board so the feature still reads as stairs. Curved kicker DOWN the far side.</summary>
 	static void BuildStepStairs( Vector2 baseAtM )
 	{
 		const int steps = 5;
-		const float rise = 0.5f, depth = 4.5f, w = 9f;
+		const float rise = 0.5f, depth = 4.5f, w = 9f, boardW = 5f, boardThick = 0.4f;
 		for ( int i = 0; i < steps; i++ )
 		{
 			float top = (i + 1) * rise;
@@ -351,12 +403,35 @@ public static class PlaygroundBuilder
 		}
 		float deckTopH = steps * rise;                       // = 2.5 m
 		float deckBackX = baseAtM.x + steps * depth;
+
+		// the ride board: top surface through every step nose (front-top edge), i.e. the line from
+		// (base, rise) to (base + (steps−1)·depth, steps·rise), extended down to grade at its foot
+		// (the line hits z=0 one tread-depth BEFORE the first step). Slope = rise/depth ≈ 6.3°.
+		float footX = baseAtM.x - depth;                     // where the nose line meets grade
+		float topX = baseAtM.x + (steps - 1) * depth;        // last nose (deck front edge)
+		float runX = topX - footX, runZ = deckTopH;
+		float slopeLen = MathF.Sqrt( runX * runX + runZ * runZ );
+		float pitchDeg = MathF.Atan2( runZ, runX ).RadianToDegree();
+		float nX = -runZ / slopeLen, nZ = runX / slopeLen;   // outward (up-slope) surface normal
+		var board = Panel(
+			new Vector3( (footX + topX) * 0.5f - nX * boardThick * 0.5f, baseAtM.y, runZ * 0.5f - nZ * boardThick * 0.5f ),
+			new Vector3( slopeLen, boardW, boardThick ), Rotation.FromPitch( -pitchDeg ), RunwayGrey, "StairBoard" );
+		board.Tags.Add( "road" );
+		// flat board segment across the top deck (from the last nose to the back edge) so the ride line
+		// continues over the top step at deck height
+		Panel( new Vector3( (topX + deckBackX) * 0.5f, baseAtM.y, deckTopH - boardThick * 0.5f ),
+			new Vector3( deckBackX - topX, boardW, boardThick ), Rotation.Identity, RunwayGrey, "StairBoard Deck" )
+			.Tags.Add( "road" );
+
 		// roll-off the back: yaw-180 kicker landing on the top step's back edge, descending +X to grade
 		Kicker( new Vector2( deckBackX + 10f, baseAtM.y ), 180f, 10f, w, deckTopH, BoxGrey );
 	}
 
 	/// <summary>A banked wall-ride strip: a long slab rolled steeply so a car can carry along its face
-	/// (like a straightened bowl segment). Its lower edge meets grade tangent-ish; purely a play toy.</summary>
+	/// (like a straightened bowl segment). Pass-3 fix: the raw lower edge was a flat→48° grade break a
+	/// car hit like a kerbed wall; a half-angle APRON strip (~24°) now runs the full length along the
+	/// low edge, splitting the transition into two gentle breaks. The apron's low edge is buried below
+	/// grade and its high edge tucks under the wall face, so neither edge presents a lip.</summary>
 	static void BuildWallRide( Vector2 centreM )
 	{
 		const float lenM = 34f, faceM = 7f, thickM = 0.5f, rollDeg = 48f;
@@ -375,6 +450,26 @@ public static class PlaygroundBuilder
 		collider.Scale = new Vector3( 50f, 50f, 50f );
 		collider.Static = true;
 		_boxes++;
+
+		// entry apron: the wall face rises toward −Y and its lower edge (z = 0) sits at
+		// y = centre + cos(roll)·face/2. The apron plane runs from a buried low edge out on the flat
+		// (+Y) up to a high edge tucked just UNDER the wall face, at roughly half the wall's angle.
+		float lowEdgeY = centreM.y + MathF.Cos( rollDeg.DegreeToRadian() ) * faceM * 0.5f;
+		const float apronThick = 0.4f;
+		var apronLow = new Vector2( lowEdgeY + 1.6f, -0.1f );   // (y, z) buried at grade, out on the flat
+		var apronHigh = new Vector2( lowEdgeY - 0.95f, 0.95f ); // (y, z) ~10 cm under the 48° face there
+		float dy = apronHigh.x - apronLow.x, dz = apronHigh.y - apronLow.y;
+		float apronW = MathF.Sqrt( dy * dy + dz * dz );         // ≈ 22° apron angle (≈ half of 48°)
+		float apronRollDeg = MathF.Atan2( dz, -dy ).RadianToDegree();
+		// upward surface normal in the (y,z) plane: perpendicular to the width direction (dy is
+		// negative — the width vector points toward −Y as it rises)
+		float nY = dz / apronW, nZ = -dy / apronW;
+		var apron = Panel(
+			new Vector3( centreM.x, (apronLow.x + apronHigh.x) * 0.5f - nY * apronThick * 0.5f,
+				(apronLow.y + apronHigh.y) * 0.5f - nZ * apronThick * 0.5f ),
+			new Vector3( apronW, lenM, apronThick ),
+			Rotation.FromYaw( 90f ) * Rotation.FromRoll( -apronRollDeg ), BowlGrey.Darken( 0.12f ), "WallRide Apron" );
+		apron.Tags.Add( "road" );
 	}
 
 	// ---------------------------------------------------------------- banked bowl (kept)
@@ -481,6 +576,16 @@ public static class PlaygroundBuilder
 	{
 		RampKicker.Build( _scene, _root, new Vector3( baseAtM.x, baseAtM.y, 0f ), yawDeg, lenM, widthM, heightM, color );
 		_ramps++;
+	}
+
+	/// <summary>A rotated solid block, position given in METRES (unlike <see cref="Block"/>, whose
+	/// callers pre-multiply). Used for the pitched/rolled ride surfaces (stair board, roll-over nose,
+	/// wall-ride apron); always collides — these are surfaces cars drive on.</summary>
+	static GameObject Panel( Vector3 centreMeters, Vector3 sizeMeters, Rotation rotation, Color color, string name )
+	{
+		var go = Block( centreMeters * M, sizeMeters, color, collide: true, name: name );
+		go.WorldRotation = rotation;
+		return go;
 	}
 
 	static GameObject Block( Vector3 position, Vector3 sizeMeters, Color color, bool collide = true, string name = "Block" )
