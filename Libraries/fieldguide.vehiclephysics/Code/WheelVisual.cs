@@ -1,4 +1,4 @@
-namespace VehicleProto;
+namespace FieldGuide.VehiclePhysics;
 
 /// <summary>
 /// Spins and vertically tracks the wheel's visual mesh from VehicleWheel state.

@@ -1,0 +1,38 @@
+{
+  "kit": "fieldguide.vehiclephysics",
+  "description": "Upstream-sync map for the Vehicle Physics Kit. Drives tools/sync_from_upstream.py. Each entry maps a kit Code/ file to the upstream file it was ported from, with a sync mode. See docs/sync-workflow.md.",
+  "upstream": {
+    "repo": "vehicle_prototyping",
+    "path": "../vehicle_prototyping",
+    "codeSubdir": "Code/Vehicle"
+  },
+  "transforms": {
+    "namespace": {
+      "oldNamespace": "VehicleProto",
+      "newNamespace": "FieldGuide.VehiclePhysics",
+      "note": "Upstream uses a flat file-scoped namespace VehicleProto. The port rewrites every word-boundary occurrence of the old namespace token to the new one. This is the only automatic transform applied to mechanical files."
+    }
+  },
+  "modes": {
+    "mechanical": "Differs from upstream only by the namespace rewrite (plus incidental doc-comment cleanups). Safe to auto-port: the tool copies the upstream file, rewrites the namespace, and writes it into the kit.",
+    "seamed": "Carries a hand-made extraction seam (a rename, a delegate/interface swap, a lifted-out block, or severed game references). Never auto-ported. On drift the tool prints the upstream diff and the operator hand-merges the kit file."
+  },
+  "files": [
+    { "kit": "Code/Units.cs", "upstream": "Code/Vehicle/Units.cs", "mode": "mechanical" },
+    { "kit": "Code/TireCurve.cs", "upstream": "Code/Vehicle/TireCurve.cs", "mode": "mechanical" },
+    { "kit": "Code/Drivetrain.cs", "upstream": "Code/Vehicle/Drivetrain.cs", "mode": "mechanical" },
+    { "kit": "Code/VehicleWheel.cs", "upstream": "Code/Vehicle/VehicleWheel.cs", "mode": "mechanical" },
+    { "kit": "Code/WheelVisual.cs", "upstream": "Code/Vehicle/WheelVisual.cs", "mode": "mechanical" },
+    { "kit": "Code/EngineAudio.cs", "upstream": "Code/Vehicle/EngineAudio.cs", "mode": "mechanical" },
+    { "kit": "Code/SkidAudio.cs", "upstream": "Code/Vehicle/SkidAudio.cs", "mode": "mechanical" },
+    { "kit": "Code/CarDefinition.cs", "upstream": "Code/Vehicle/CarDefinition.cs", "mode": "seamed", "seam": "PartKitManifest field renamed BodyManifest (PartKit is a severed game token); demo roster reduced to blockout defs" },
+    { "kit": "Code/VehicleController.cs", "upstream": "Code/Vehicle/VehicleController.cs", "mode": "seamed", "seam": "DriveInputs struct + device sampling lifted out into DriveInputs.cs; InputOverride seam added; game-type crefs reworded" },
+    { "kit": "Code/DriveInputs.cs", "upstream": "Code/Vehicle/VehicleController.cs", "mode": "seamed", "seam": "extracted from upstream VehicleController.cs (DriveInputs struct + SampleDeviceInputs + gamepad helpers); no standalone upstream file" },
+    { "kit": "Code/VehicleFactory.cs", "upstream": "Code/Vehicle/VehicleFactory.cs", "mode": "seamed", "seam": "Parts/ + Testing/VehiclePilot + GameBootstrap severed to CustomBodyBuilder delegate; seat-height + default-driver-seat inlined" },
+    { "kit": "Code/VehicleCamera.cs", "upstream": "Code/Vehicle/VehicleCamera.cs", "mode": "seamed", "seam": "UiState.AnyCursorModalOpen read replaced by the CursorModalOpen Func<bool> seam" }
+  ],
+  "notMapped": {
+    "note": "Kit files with no upstream source; the sync tool ignores them.",
+    "files": ["Code/Assembly.cs", "Code/Demo/**"]
+  }
+}

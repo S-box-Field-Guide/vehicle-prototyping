@@ -1,4 +1,4 @@
-namespace VehicleProto;
+namespace FieldGuide.VehiclePhysics;
 
 /// <summary>
 /// One wheel: shapecast ground detection + spring/damper suspension (skeleton pattern from

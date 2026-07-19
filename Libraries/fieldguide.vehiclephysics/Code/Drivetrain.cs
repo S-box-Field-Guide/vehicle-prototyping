@@ -1,7 +1,7 @@
-namespace VehicleProto;
+namespace FieldGuide.VehiclePhysics;
 
 /// <summary>
-/// Engine + clutch + gearbox + diff state machine (spec §5.2.2). Plain class owned by
+/// Engine + clutch + gearbox + diff state machine. Plain class owned by
 /// VehicleController, simulated per substep. RPM is its own integrated state coupled to
 /// the wheels through an auto-clutch, so revving at standstill and shift flare exist.
 /// </summary>
@@ -171,7 +171,7 @@ public class Drivetrain
 	public void EngageReverse() { Gear = -1; _shiftTimer = 0f; _gearProven = true; }
 	public void EngageForward() { if ( Gear <= 0 ) { Gear = 1; _shiftTimer = 0f; _gearProven = true; } }
 
-	// ── sequential MANUAL shift (feature 2026-07-15) ──
+	// ── sequential MANUAL shift ──
 	// Gated on IsShifting only (the 0.15 s torque-cut window), NOT on _shiftLockout — the 0.8 s
 	// lockout is the auto box's anti-hunt guard and would make a hand-shifted sequential box feel
 	// sluggish; the player decides when to shift. Both timers are still set so the shift flare /

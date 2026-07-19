@@ -1,12 +1,22 @@
-namespace VehicleProto;
+namespace FieldGuide.VehiclePhysics;
 
 /// <summary>
-/// Chase camera (spec 5.2.4): spring-arm follow behind the car's flattened heading,
-/// FOV widens with speed. Mouse orbits around the car; after a few seconds without
-/// mouse input it eases back to the chase position. Mouse wheel zooms distance.
+/// Chase camera: spring-arm follow behind the car's flattened heading, FOV widens with speed.
+/// Mouse orbits around the car; after a few seconds without mouse input it eases back to the chase
+/// position. Mouse wheel zooms distance.
 /// </summary>
 public sealed class VehicleCamera : Component
 {
+	/// <summary>
+	/// Seam for "a UI cursor modal is currently open" (spec 3.1). Drive mode needs a locked cursor
+	/// or AnalogLook stays at zero, so this camera hides the cursor every frame — UNLESS a consumer's
+	/// UI has a modal up that owns the cursor. Plug that check in here; null (default) means the kit
+	/// never yields the cursor (single-window driving with no UI modals). Null-safe: unset reads false.
+	/// </summary>
+	public static Func<bool> CursorModalOpen { get; set; }
+
+	static bool AnyCursorModalOpen => CursorModalOpen?.Invoke() ?? false;
+
 	public VehicleController Target { get; set; }
 
 	[Property] public float Distance { get; set; } = 6.5f; // m
@@ -27,7 +37,7 @@ public sealed class VehicleCamera : Component
 		_camera = Components.Get<CameraComponent>();
 		// Drive mode needs a locked cursor or AnalogLook stays at zero. UI modals unlock
 		// it; we re-lock every frame when none are open (panels only set Visible while up).
-		if ( !UiState.AnyCursorModalOpen )
+		if ( !AnyCursorModalOpen )
 			Mouse.Visibility = MouseVisibility.Hidden;
 	}
 
@@ -36,7 +46,7 @@ public sealed class VehicleCamera : Component
 		if ( Target is null || !Target.IsValid() )
 			return;
 
-		bool uiOwnsCursor = UiState.AnyCursorModalOpen;
+		bool uiOwnsCursor = AnyCursorModalOpen;
 		if ( !uiOwnsCursor )
 		{
 			// Re-assert every frame — panel dismiss paths miss edge cases, and the engine

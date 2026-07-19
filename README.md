@@ -7,6 +7,21 @@ playtest harness ready to build on.
 
 This is a developer starting point, not a finished game. It is meant to be forked.
 
+## Built on the Vehicle Physics Kit
+
+Vehicle Prototyping is the living demonstration of the **Vehicle Physics Kit**, a drop-in s&box
+library for raycast-wheel vehicle physics. The entire vehicle stack (contact-normal suspension,
+slip-curve tires, the drivetrain with auto-shift, the Casual/Sport/Sim assists, the spring-arm chase
+camera, and the engine and skid audio) lives in the kit and is vendored into this repo under
+`Libraries/fieldguide.vehiclephysics/`, exactly the way any consumer gets it from the in-editor
+Library Manager. The game is a consumer of that library: it spawns cars through the kit's factory,
+wires the kit's seams, and adds only the game layer (the part-kit body pipeline, the telemetry
+harness, the UI, and the worlds) on top.
+
+Want just the physics for your own driving game? Install the Vehicle Physics Kit from the
+in-editor Library Manager (search "fieldguide"), or see it at
+<https://sbox.game/fieldguide/vehiclephysics/>.
+
 ![The four-car roster](docs/images/roster.png)
 
 ---

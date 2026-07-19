@@ -1,7 +1,7 @@
-namespace VehicleProto;
+namespace FieldGuide.VehiclePhysics;
 
 /// <summary>
-/// Parametric peaked tire curve (Pacejka-shaped, authored by peak/tail points per spec §5.2.1).
+/// Parametric peaked tire curve (Pacejka-shaped, authored by peak/tail points).
 /// Rises smoothly to a grip peak, then falls off to a sliding asymptote.
 /// Input is |slip| — slip ratio (unitless) for longitudinal, slip angle (radians) for lateral.
 /// Output is a grip coefficient multiplied by tire load to get force.

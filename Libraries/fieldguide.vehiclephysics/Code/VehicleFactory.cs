@@ -1,19 +1,30 @@
-namespace VehicleProto;
+namespace FieldGuide.VehiclePhysics;
 
 /// <summary>
 /// Builds a drivable blockout car from a CarDefinition at runtime: box body, sphere wheels
-/// (spec 5.3 - 30-minute blockouts genuinely fit the art style). No prefab assets needed;
-/// swap to real models later without touching physics.
+/// (30-minute blockouts that genuinely fit the art style). No prefab assets needed; swap to real
+/// models later without touching physics via the <see cref="CustomBodyBuilder"/> seam.
 /// </summary>
 public static class VehicleFactory
 {
+	/// <summary>
+	/// Optional custom body builder seam (spec 3.1). When set, it is called with
+	/// (scene, carRoot, def) to build a custom VISUAL body under the car root; return true if it built
+	/// successfully. Null (default) or a false return uses the primitive blockout body path. Physics,
+	/// raycast wheels, wheel visuals, the citizen driver, and audio are always factory-built regardless
+	/// of the body path — the seam swaps only the visual body, so a consumer (for example a part-kit
+	/// assembler) can drop real models in without touching physics. The builder may read
+	/// <see cref="CarDefinition.BodyManifest"/> to decide what to assemble.
+	/// </summary>
+	public static Func<Scene, GameObject, CarDefinition, bool> CustomBodyBuilder { get; set; }
+
+	// Default citizen driver seat point in the car-root frame (metres), used by the blockout kart body
+	// and by a custom body that opts into the shared driver. A custom builder may seat its own driver.
+	static readonly Vector3 DefaultDriverLocalM = new( 0.05f, 0f, 0.06f );
+
 	public static GameObject Spawn( Scene scene, CarDefinition def, Vector3 position, Rotation rotation )
 	{
 		float m = Units.MetersToUnits;
-
-		// Phase-0 (measurement-only): time the full kit-assembly spawn when armed (GameBootstrap.PerfBoot).
-		// Inert by default; covers every spawn path (initial, vp_spawn, car switch) so each logs one line.
-		var spawnSw = GameBootstrap.PerfBoot ? System.Diagnostics.Stopwatch.StartNew() : null;
 
 		var root = scene.CreateObject();
 		root.Name = def.Name;
@@ -35,64 +46,46 @@ public static class VehicleFactory
 		collider.Scale = new Vector3( def.BodySize.x, def.BodySize.y, colliderHeight ) * m;
 		collider.Center = Vector3.Up * (colliderBottom + colliderHeight * 0.5f) * m;
 
-		// Part-kit path (Stage A): body assembled from separate part GameObjects; wheel
-		// meshes mount per-wheel below. Falls back to the primitive blockout path on any kit
-		// failure so a broken manifest never bricks a spawn. Physics above is NEAR-identical
-		// on every path: same rigidbody, root collider, raycast wheels, and mass/CoM are
-		// pinned by the overrides — but the kit path's per-part compound colliders shift the
-		// derived INERTIA TENSOR (not overridden): a small real delta (≤1.6% hatch slalom
-		// A/B) that only matters at a maneuver's stability limit. Root cause: compound
-		// child colliders shift the derived inertia tensor, not the mass.
-		PartKitManifest kit = null;
-		Dictionary<string, Model> wheelModels = null;
-		bool kitBody = !string.IsNullOrEmpty( def.PartKitManifest )
-			&& PartKitAssembler.TryBuildBody( scene, root, def, out kit, out wheelModels );
+		// Custom body seam: a consumer can plug in a body builder. Null (default) or a false return
+		// falls back to the primitive blockout path so a failed custom build never bricks a spawn.
+		// Physics above is identical on every path (same rigidbody, root collider, mass/CoM overrides).
+		bool customBody = CustomBodyBuilder is not null && CustomBodyBuilder( scene, root, def );
 
-		// Honest failure (2026-07-15): a car whose part kit did NOT assemble falls
-		// back to a primitive engine blockout — box/kart body + sphere wheels — NOT a fused stand-in
-		// model, and says so loudly. A broken kit must never null-ref or load a removed asset; the
-		// blockout keeps the car drivable so the failure is visible, not fatal.
-		if ( !kitBody )
+		if ( !customBody )
 		{
-			if ( !string.IsNullOrEmpty( def.PartKitManifest ) )
-				Log.Error( $"[vp] part kit '{def.PartKitManifest}' failed to assemble for '{def.Name}' "
-					+ "— spawning primitive blockout (no fused fallback)" );
-
 			if ( def.Style == BodyStyle.Kart )
-				BuildKartBody( scene, root, def );
+				BuildKartBody( scene, root, def ); // adds its own driver when HasDriver
 			else
 				BuildBoxBody( scene, root, def );
 		}
-
-		// Kit-path driver (de-Kenney kart, directive 2026-07-13): ALWAYS the engine
-		// citizen through the same AddDriver seam the blockout path uses — never a
-		// modeled figure. The manifest may carry the sit point (driver_seat_author_m);
-		// DriverLocalM converts it to the root frame via the live seat height.
-		if ( kitBody && def.HasDriver )
-			AddDriver( scene, root, def, kit.DriverLocalM( VehiclePilot.SeatHeightM( def ) ) );
+		else if ( def.HasDriver )
+		{
+			// A custom body that wants the shared engine citizen driver gets the default seat pose;
+			// a builder that seats its own driver can leave HasDriver false.
+			AddDriver( scene, root, def, DefaultDriverLocalM );
+		}
 
 		var controller = root.Components.Create<VehicleController>();
 		controller.Definition = def;
 
-		// Shared placeholder engine audio on every car path (kit, blockout): one positional
-		// looping tone pitched by live RPM and swelled by throttle. Reads the drivetrain off the controller
-		// created above; tuned live via the vp_engine_sound / vp_engine_volume console dials.
+		// Shared placeholder engine audio on every car: one positional looping tone pitched by live RPM
+		// and swelled by throttle. Reads the drivetrain off the controller; tuned live via the
+		// vp_engine_sound / vp_engine_volume console dials.
 		root.Components.Create<EngineAudio>();
 
-		// Skid / traction-loss audio: a positional loop driven by the worst wheel slip (handbrake, power-
-		// slide, or lockup). Reads the controller's wheels; muted below a slip threshold; vp_skid_volume dial.
+		// Skid / traction-loss audio: a positional loop driven by the worst wheel slip (handbrake,
+		// power-slide, or lockup). Reads the controller's wheels; muted below a slip threshold.
 		root.Components.Create<SkidAudio>();
 
-		// Static wheel load from the LIVE scene gravity (audit 2026-07-12 #3): the scene runs
-		// ~1.1 g explicitly, so mass·9.81/4 under-referenced the true static load by ~10% and
-		// biased the tire load-sensitivity curve. Read gravity the same way SeatHeightM does.
+		// Static wheel load from the LIVE scene gravity: the demo scene runs ~1.1 g explicitly, so
+		// mass·9.81/4 would under-reference the true static load and bias the load-sensitivity curve.
+		// Read gravity the same way SeatHeightM does.
 		float gravity = scene.PhysicsWorld is { } pw
 			? pw.Gravity.Length * Units.UnitsToMeters
 			: 9.81f;
 		float staticLoad = def.Mass * gravity / 4f;
 
 		// wheels: FL, FR, RL, RR at (+-wheelbase/2, +-track/2, -rideHeight)
-		int wheelOffenders = 0; // kit wheels that fell back to a blockout visual (target 0)
 		for ( int i = 0; i < 4; i++ )
 		{
 			bool front = i < 2;
@@ -129,59 +122,27 @@ public static class VehicleFactory
 
 			controller.Wheels.Add( wheel );
 
-			if ( kitBody )
-			{
-				// wheel models were preloaded in the SAME transaction as the body (audit 2026-07-13 HIGH),
-				// so a missing wheel .vmdl already aborted the kit pre-commit → we never reach here with one.
-				// MountWheelVisual returns false only on the belt-and-braces post-commit failure, where it
-				// drops a VISIBLE blockout wheel instead of an invisible one; count it as an audit offender.
-				if ( !PartKitAssembler.MountWheelVisual( scene, wheelGo, wheel, kit, def, front, left, wheelModels ) )
-					wheelOffenders++;
-			}
-			else
-				BuildBlockoutWheelVisual( scene, wheelGo, wheel, def );
+			BuildBlockoutWheelVisual( scene, wheelGo, wheel, def );
 		}
-
-		if ( kitBody )
-			Log.Info( $"[vp] AUDIT partkit_wheels offenders={wheelOffenders} target 0" );
-
-		// Spawn-identity invariant (target 0): the manifest actually assembled must be the one the
-		// definition asked for — the loaded kit's own name must match the kit folder named in
-		// def.PartKitManifest. A mismatch means a body was built for a DIFFERENT car than its
-		// definition/HUD identity (the class of defect where the on-screen readout and the body
-		// disagree). It should be impossible, so surface it loudly as an offender rather than
-		// shipping a silent lie.
-		if ( kitBody )
-		{
-			string wantKit = KitIdFromPath( def.PartKitManifest );
-			bool idMatch = string.Equals( wantKit, kit.kit, System.StringComparison.OrdinalIgnoreCase );
-			Log.Info( $"[vp] AUDIT spawn_identity offenders={( idMatch ? 0 : 1 )} target 0 "
-				+ $"(def='{def.Name}' wants='{wantKit}' built='{kit.kit}')" );
-		}
-
-		if ( spawnSw is not null )
-			Log.Info( $"[vp] PERF KIT car={def.Name} kit={( kitBody ? 1 : 0 )} ms={spawnSw.Elapsed.TotalMilliseconds:0.0}" );
 
 		return root;
 	}
 
-	/// <summary>The kit id a manifest path names — the folder under models/vehicles/
-	/// ("models/vehicles/hatch_kit/manifest.json" -> "hatch_kit"). Used by the spawn-identity audit
-	/// to confirm the assembled manifest is the one the definition requested.</summary>
-	static string KitIdFromPath( string manifestPath )
+	/// <summary>Suspension-equilibrium spawn height above the ground (SI m) so the car settles level
+	/// instead of dropping or flinging on spawn. Springs already carry the weight at rest, so this is
+	/// NOT surface+radius. Reads live scene gravity. Callers add this to their ground spawn point.</summary>
+	public static float SeatHeightM( CarDefinition def )
 	{
-		if ( string.IsNullOrEmpty( manifestPath ) )
-			return "";
-		var parts = manifestPath.Replace( '\\', '/' ).Split( '/' );
-		// .../<kit_id>/manifest.json → the segment before the file name
-		return parts.Length >= 2 ? parts[^2] : "";
+		float gravity = Game.ActiveScene?.PhysicsWorld is { } pw
+			? pw.Gravity.Length * Units.UnitsToMeters
+			: 9.81f;
+		float staticCompression = def.Mass * gravity / 4f / def.SpringRate;
+		return def.SuspensionTravel + def.WheelRadius - staticCompression + def.RideHeight;
 	}
 
 	/// <summary>Build the VISIBLE blockout wheel (squashed dev sphere) under <paramref name="wheelGo"/>.
-	/// The shared fallback for both the blockout body path (a kit that failed to assemble) and the
-	/// part-kit belt-and-braces path (audit 2026-07-13 HIGH): a kit wheel whose model fails to load
-	/// POST-commit gets this rather than an invisible wheel — a missable "one invisible wheel" defect
-	/// becomes an obvious grey blockout + an audit offender.</summary>
+	/// The shared wheel visual for the blockout body path; a custom body builder that wants modeled
+	/// wheels can replace these under each wheel GameObject after spawn.</summary>
 	public static void BuildBlockoutWheelVisual( Scene scene, GameObject wheelGo, VehicleWheel wheel, CarDefinition def )
 	{
 		float m = Units.MetersToUnits;
@@ -247,7 +208,7 @@ public static class VehicleFactory
 	}
 
 	static void AddDriver( Scene scene, GameObject root, CarDefinition def )
-		=> AddDriver( scene, root, def, PartKitManifest.DefaultDriverLocalM );
+		=> AddDriver( scene, root, def, DefaultDriverLocalM );
 
 	static void AddDriver( Scene scene, GameObject root, CarDefinition def, Vector3 localMeters )
 	{
@@ -257,16 +218,13 @@ public static class VehicleFactory
 		driverGo.Name = "Driver";
 		driverGo.SetParent( root, false );
 		// citizen root is at the feet; seated pose sits on an invisible chair behind the origin.
-		// Kit vehicles may pin the sit point via manifest driver_seat_author_m (kart bucket seat).
 		driverGo.LocalPosition = localMeters * m;
 
 		var renderer = driverGo.Components.Create<SkinnedModelRenderer>();
 		renderer.Model = Model.Load( "models/citizen/citizen.vmdl" );
 
-		// dress the citizen — it spawned bare-body before (feel feedback 2026-07-13). A simple
-		// default outfit via the engine clothing system. Whitelist-safe (ResourceLibrary.Get<Clothing>
-		// + ClothingContainer.Apply); each item is null-checked so a missing asset degrades to a bare
-		// driver rather than bricking the spawn.
+		// dress the citizen — a simple default outfit via the engine clothing system. Each item is
+		// null-checked so a missing asset degrades to a bare driver rather than bricking the spawn.
 		DressDriver( renderer );
 
 		// citizen animgraph: sit is an enum (0 none, 1-3 chair poses, 4-5 ground). Per-car (def) so a
@@ -276,10 +234,9 @@ public static class VehicleFactory
 		renderer.Set( "sit_offset_height", def.DriverSitOffsetHeight );
 	}
 
-	/// <summary>A plain default outfit for the seated citizen driver: a single-piece jumpsuit + shoes
-	/// (jumpsuit reads as a driver's suit and covers torso+legs in one item). Loaded from the shipped
-	/// citizen_clothes resources via the engine clothing system; any item that fails to resolve is
-	/// skipped so a bare driver is the worst case, never a broken spawn.</summary>
+	/// <summary>A plain default outfit for the seated citizen driver: a single-piece jumpsuit + shoes.
+	/// Loaded from the shipped citizen_clothes resources via the engine clothing system; any item that
+	/// fails to resolve is skipped so a bare driver is the worst case, never a broken spawn.</summary>
 	static readonly string[] DriverOutfit =
 	{
 		"models/citizen_clothes/shirt/Jumpsuit/blue_jumpsuit.clothing",

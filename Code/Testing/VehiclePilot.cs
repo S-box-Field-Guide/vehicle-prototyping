@@ -138,7 +138,7 @@ public sealed class VehiclePilot : Component
 		float seatZM = SeatHeightM( def );
 		var pos = new Vector3( posM.x, posM.y, posM.z ) * m + Vector3.Up * seatZM * m;
 
-		var carGo = VehicleFactory.Spawn( Scene, def, pos, facing );
+		var carGo = PartKitFactory.Spawn( Scene, def, pos, facing );
 		ActiveCar = carGo.Components.Get<VehicleController>();
 		_rb = carGo.Components.Get<Rigidbody>();
 		VehicleBridge.SpawnedCar = carId;

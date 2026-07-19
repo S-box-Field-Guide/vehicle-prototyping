@@ -1,4 +1,4 @@
-namespace VehicleProto;
+namespace FieldGuide.VehiclePhysics;
 
 /// <summary>
 /// Engine audio: a positional engine loop that follows the car, pitched by live RPM and swelled by

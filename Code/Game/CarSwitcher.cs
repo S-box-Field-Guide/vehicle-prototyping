@@ -71,7 +71,7 @@ public static class CarSwitcher
 		if ( current.IsValid() )
 			current.GameObject.Destroy();
 
-		var carGo = VehicleFactory.Spawn( scene, def, pos, facing );
+		var carGo = PartKitFactory.Spawn( scene, def, pos, facing );
 		var controller = carGo.Components.Get<VehicleController>();
 
 		// re-apply the carried drive mode. Stage it on InitialAssists so the new car's OnStart adopts

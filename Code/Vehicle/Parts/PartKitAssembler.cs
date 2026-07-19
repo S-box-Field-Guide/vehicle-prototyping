@@ -35,7 +35,7 @@ public static class PartKitAssembler
 		out PartKitManifest kit, out Dictionary<string, Model> wheelModels )
 	{
 		wheelModels = new Dictionary<string, Model>();
-		kit = PartKitManifest.TryLoad( def.PartKitManifest );
+		kit = PartKitManifest.TryLoad( def.BodyManifest );
 		if ( kit is null )
 			return false;
 

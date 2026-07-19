@@ -1,0 +1,151 @@
+{
+  "__guid": "b7c1d2e3-1a2b-4c3d-8e4f-5a6b7c8d9e01",
+  "GameObjects": [
+    {
+      "__guid": "a1b2c3d4-1111-4a2b-8c3d-e5f6a7b8c901",
+      "Flags": 0,
+      "Name": "Sun",
+      "Rotation": "-0.0729315,0.4822396,0.1305433,0.8631827",
+      "Tags": "light_directional,light",
+      "Enabled": true,
+      "Components": [
+        {
+          "__type": "Sandbox.DirectionalLight",
+          "__guid": "b2c3d4e5-2222-4b3c-9d4e-f6a7b8c90112",
+          "FogMode": "Enabled",
+          "FogStrength": 1,
+          "LightColor": "1,0.97,0.88,1",
+          "Shadows": true,
+          "SkyColor": "0.36,0.44,0.52,1"
+        }
+      ]
+    },
+    {
+      "__guid": "c3d4e5f6-3333-4c4d-8e5f-a7b8c9011223",
+      "Flags": 0,
+      "Name": "2D Skybox",
+      "Tags": "skybox",
+      "Enabled": true,
+      "Components": [
+        {
+          "__type": "Sandbox.SkyBox2D",
+          "__guid": "d4e5f6a7-4444-4d5e-9f6a-b8c901122334",
+          "SkyMaterial": "materials/skybox/skybox_day_01.vmat",
+          "Tint": "1,1,1,1"
+        },
+        {
+          "__type": "Sandbox.EnvmapProbe",
+          "__guid": "e5f6a7b8-5555-4e6f-8a7b-c90112233445",
+          "Texture": "textures/cubemaps/default2.vtex",
+          "Bounds": {
+            "Mins": "-20000,-20000,-20000",
+            "Maxs": "20000,20000,20000"
+          },
+          "DelayBetweenUpdates": 0.1,
+          "Feathering": 0.02,
+          "FrameInterval": 5,
+          "MaxDistance": 20000,
+          "Projection": "Sphere",
+          "RenderDynamically": false,
+          "TintColor": "1,1,1,1",
+          "UpdateStrategy": "OnEnabled",
+          "ZFar": 4096,
+          "ZNear": 16
+        }
+      ]
+    },
+    {
+      "__guid": "f6a7b8c9-6666-4f7a-9b8c-011223344556",
+      "Flags": 0,
+      "Name": "Camera",
+      "Position": "-400,0,250",
+      "Rotation": "0,0.2079117,0,0.9781476",
+      "Enabled": true,
+      "Components": [
+        {
+          "__type": "Sandbox.CameraComponent",
+          "__guid": "a7b8c901-7777-4a8b-8c9d-122334455667",
+          "BackgroundColor": "0.55,0.75,0.88,1",
+          "ClearFlags": "All",
+          "FieldOfView": 70,
+          "IsMainCamera": true,
+          "Orthographic": false,
+          "OrthographicHeight": 1204,
+          "Priority": 1,
+          "RenderExcludeTags": "",
+          "RenderTags": "",
+          "TargetEye": "None",
+          "Viewport": "0,0,1,1",
+          "ZFar": 30000,
+          "ZNear": 10
+        },
+        {
+          "__type": "FieldGuide.VehiclePhysics.VehicleCamera",
+          "__guid": "b8c90112-7788-4b9c-9dae-233445566778"
+        }
+      ]
+    },
+    {
+      "__guid": "c9011223-8888-4cad-8ebf-344556677889",
+      "Flags": 0,
+      "Name": "Ground Collider",
+      "Position": "0,0,0",
+      "Enabled": true,
+      "Components": [
+        {
+          "__type": "Sandbox.BoxCollider",
+          "__guid": "d0112233-9999-4dbe-9fc0-455667788990",
+          "Center": "0,0,-50",
+          "Scale": "8000,8000,100",
+          "Static": true
+        }
+      ]
+    },
+    {
+      "__guid": "e1223344-aaaa-4ecf-8ad1-566778899001",
+      "Flags": 0,
+      "Name": "Ground Visual",
+      "Position": "0,0,-50",
+      "Scale": "160,160,2",
+      "Enabled": true,
+      "Components": [
+        {
+          "__type": "Sandbox.ModelRenderer",
+          "__guid": "f2334455-bbbb-4fda-9be2-677889900112",
+          "Model": "models/dev/box.vmdl",
+          "Tint": "0.32,0.33,0.35,1"
+        }
+      ]
+    },
+    {
+      "__guid": "03445566-cccc-4a0b-8cf3-788990011223",
+      "Flags": 0,
+      "Name": "Demo",
+      "Enabled": true,
+      "Components": [
+        {
+          "__type": "FieldGuide.VehiclePhysics.DemoBootstrap",
+          "__guid": "14556677-dddd-4b1c-9d04-899001122334",
+          "SpacingMeters": 5
+        }
+      ]
+    }
+  ],
+  "SceneProperties": {
+    "FixedUpdateFrequency": 50,
+    "MaxFixedUpdates": 5,
+    "NetworkFrequency": 60,
+    "NetworkInterpolation": true,
+    "ThreadedAnimation": true,
+    "TimeScale": 1,
+    "UseFixedUpdate": true,
+    "NavMesh": {
+      "Enabled": false
+    }
+  },
+  "Title": "vehiclephysics_demo",
+  "Description": "Vehicle Physics Kit demo: one blockout car per roster entry on a flat pad.",
+  "ResourceVersion": 1,
+  "__references": [],
+  "__version": 1
+}

@@ -1,4 +1,4 @@
-namespace VehicleProto;
+namespace FieldGuide.VehiclePhysics;
 
 /// <summary>
 /// Placeholder skid / traction-loss audio: one shared looping tyre-screech per car, driven by the
