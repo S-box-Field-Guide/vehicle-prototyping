@@ -25,7 +25,12 @@ public sealed class WheelVisual : Component
 		_spinDegrees += Wheel.AngularVelocity.RadianToDegree() * Time.Delta;
 		_spinDegrees %= 360f;
 
-		LocalRotation = _baseRotation * Rotation.FromPitch( -_spinDegrees );
+		// Spin about the model-local +Y axle. FromPitch uses the Source pitch sign (positive pitch
+		// tilts the local +X forward vector DOWN), so a POSITIVE angle here rolls the top of the wheel
+		// toward the car's +X travel direction, the correct rolling sense for forward motion. The old
+		// negated angle rolled the tread backwards while driving forward (community report: "wheels
+		// rotate the wrong way"). AngularVelocity is +forward, so the pitch angle is used as-is.
+		LocalRotation = _baseRotation * Rotation.FromPitch( _spinDegrees );
 		LocalPosition = Vector3.Down * Wheel.SuspensionLength * Units.MetersToUnits;
 	}
 }

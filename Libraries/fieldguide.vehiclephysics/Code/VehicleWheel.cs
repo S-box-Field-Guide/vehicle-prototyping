@@ -165,6 +165,7 @@ public sealed class VehicleWheel : Component
 		// (spec 5.2.1.6) — uncapped, it overshoots and becomes a self-sustaining oscillator
 		var planarVel = forward * vLong + side * vLat;
 		float planarSpeed = planarVel.Length;
+		float parkOmegaBlend = 0f;
 		if ( planarSpeed < 1.5f && MathF.Abs( AngularVelocity * Radius ) < 1.5f && planarSpeed > 0.001f )
 		{
 			// ParkBrakeScale: throttle dissolves the stiction — steered fronts were
@@ -178,11 +179,25 @@ public sealed class VehicleWheel : Component
 			var park = -planarVel / planarSpeed * parkMag;
 			fx = fx * (1f - blend) + Vector3.Dot( park, forward ) * blend;
 			fy = fy * (1f - blend) + Vector3.Dot( park, side ) * blend;
+			parkOmegaBlend = blend;
 		}
 
 		_accumulatedForce += forward * fx + side * fy;
 
 		IntegrateWheelSpin( dt, driveTorque, brakeTorque, fx );
+
+		// Park the wheel's SPIN, not just the chassis. The parking blend above brakes the chassis, but
+		// its reaction torque (-fx*Radius, fed into IntegrateWheelSpin) spins this wheel up and, with
+		// nothing anchoring omega at rest, it settles at a nonzero spin that keeps pushing the car: a
+		// permanent slow creep with the tyre visibly rotating and the slip ratio pinging the skid
+		// threshold (community report: "unless you've perfectly stopped, it infinitely skids and rotates
+		// the wheels in place"). Pull omega toward the ground-rolling speed vLong/Radius (= 0 at a true
+		// standstill) by the SAME blend, so a parked, unbraked wheel settles to zero spin and zero slip.
+		// Offline sim: a 0.2 m/s creep that never stopped and skidded 50-100% of frames now settles to
+		// under 1 mm/s with zero skid, while cruise (over 1.5 m/s, blend inert) is byte-identical. Fades
+		// out with throttle (blend carries ParkBrakeScale) so standstill launches are unaffected.
+		if ( parkOmegaBlend > 0f )
+			AngularVelocity = MathX.Lerp( AngularVelocity, vLong / Radius, parkOmegaBlend );
 	}
 
 	// Cap-aware drive-torque rolloff onset (kart cap-camping fix 2026-07-18): drive torque begins
