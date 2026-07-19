@@ -202,6 +202,13 @@ authoritative registry is authored in C#): `dragstrip`, `brakezone`, `skidpad`,
 builds it, but the `crash` maneuver that consumed it is out of scope for this kit, so no
 spec here spawns there.
 
+**Coordinate spawn (world pass 2026-07-19):** `vp_spawn`/`vp_drive` also accept a station of
+the form `at:x,y[,yawDeg]` — raw world METRES, yaw about +Z with 0 = +X — for worlds with no
+station registry (the playground stunt park's ramp verification drives use it). It resolves
+before the TestTrack lookup, so it works while `TestTrack.Stations` is empty. It is
+deliberately NOT part of `ResolvableStationIds()`: the measurement-world census never lists
+it, so no battery spec can anchor a measurement to a magic coordinate.
+
 **Fail-closed measurement world (2026-07-13):** the live runner refuses to
 drive unless `vp_status.world == "proto"` (a persisted `vp_world playground` leaves the proto
 TestTrack unbuilt), and every `vp_spawn` reply's `stationResolved` is checked — a `false`

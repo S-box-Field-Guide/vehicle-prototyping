@@ -56,6 +56,7 @@ Evidence: `Code/World/` (`TestTrack`, `PlaygroundBuilder`, `PlaygroundTerrain`),
 | Feature | Designed | Implemented | Integrated | In band / tested | Notes |
 |---|:-:|:-:|:-:|:-:|---|
 | Town (drivable scene: streets + instrumented proving section — skidpad, drag strip, brake, slalom, ramps, banked, washboard, hills, J-turn pad) | G | G | G | G | THE drivable world. Named spawn per proving station; the measurement world for the battery. `proving-grounds.md`. |
+| Outskirts belt (city gates, highway ring, proving-grounds connector, landmarks, outer perimeter) | G | G | G | - | World pass 2026-07-19: the town wall gained a gate per side and the belt beyond joins city and proving grounds into one drivable space (~5x footprint). Track cliff edges preserved behind sunken run-off basins (battery end conditions untouched). `Code/World/Outskirts.cs`. |
 | Stunt Track (jump-park world) | G | G | - | - | In rework (ramp/jump physics); disabled this build, returns in a future build. Internal id stays `playground`. |
 | Live world switch + FLAT/CURVY terrain toggle (M panel) | G | G | - | - | Feature-gated OFF this build (`GameBootstrap.WorldSwitchEnabled`); returns with the Stunt Track. Dev console (`vp_setworld`) still works. |
 | Crash wall / destruction | G | R | R | - | Full crash/destruction simulation is out of scope for this kit; a reference-only reserved plot remains. |
