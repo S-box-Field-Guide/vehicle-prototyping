@@ -3,26 +3,6 @@
 All notable changes to this kit. Versions are display versions (minor per content publish, patch
 for a hotfix; manual bumps only).
 
-## Unreleased
-
-Community-reported fixes from Vehicle Prototyping v0.4.0 players.
-
-### Fixed
-- Wheels now roll the right way. The visible tyre spin was mirrored, so a car driving forward
-  showed its wheels turning backwards. The spin direction is corrected; forward travel rolls the
-  tread forward.
-- A near-stopped car no longer skids and spins its wheels in place forever. Unless you came to a
-  perfect halt, the tyres used to keep rotating and the car kept creeping, with the skid sound
-  droning on. A parked, unbraked car now settles to a real stop: the wheels stop turning and the
-  skid goes silent. Launching from a standstill is unchanged (the effect only acts when you are off
-  the throttle and nearly stopped).
-
-### Notes
-- Perceived-speed feedback ("20 km/h feels like a jog") was investigated: the kit's speed math is
-  correct (world scale and the m/s the physics reports both check out), so the difference is chase
-  camera presentation, not a wrong speed. No feel change was made unilaterally; camera field-of-view
-  and distance are tuning dials if a stronger sense of speed is wanted.
-
 ## v0.3.0 - 2026-07-19
 
 Demo becomes a physics lab: live tuning and a much bigger pad.
@@ -50,6 +30,24 @@ Demo becomes a physics lab: live tuning and a much bigger pad.
 - No physics changes. The tuning lab writes only through public paths (mutating `CarDefinition`, which
   the drivetrain and brakes read live, and pushing values onto `VehicleWheel`); the physics files are
   byte-for-byte unchanged.
+
+### Fixed (community-reported, from Vehicle Prototyping players)
+- Wheels now roll the right way. The visible tyre spin was mirrored, so a car driving forward
+  showed its wheels turning backwards. The spin direction is corrected; forward travel rolls the
+  tread forward.
+- A near-stopped car no longer skids and spins its wheels in place forever. Unless you came to a
+  perfect halt, the tyres used to keep rotating and the car kept creeping, with the skid sound
+  droning on. A parked, unbraked car now settles to a real stop: the wheels stop turning and the
+  skid goes silent. Launching from a standstill is unchanged (the effect only acts when you are off
+  the throttle and nearly stopped).
+- The camera's cursor-yield seam (`CursorModalOpen`) now survives hotload: a stored delegate
+  orphaned by an assembly swap is dropped and re-wired at session start instead of throwing.
+
+### Notes
+- Perceived-speed feedback ("20 km/h feels like a jog") was investigated: the kit's speed math is
+  correct (world scale and the m/s the physics reports both check out), so the difference is chase
+  camera presentation, not a wrong speed. No feel change was made unilaterally; camera field-of-view
+  and distance are tuning dials if a stronger sense of speed is wanted.
 
 ## v0.2.1 - 2026-07-19
 
