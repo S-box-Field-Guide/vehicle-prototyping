@@ -159,19 +159,26 @@ public static class PlaygroundBuilder
 	/// rollable; it must never reach the face's upper half).</summary>
 	static void BuildRhythmLines()
 	{
-		// mid line: four 1.0 m kickers, ~30 m base-to-base (≈20 m flight at the 18-20 m/s design speed)
-		ChainLine( new Vector2( -10f, 55f ), 1.0f, count: 4, spacingM: 30f, widthM: 7f );
+		// mid line: four 1.0 m kickers, 36 m base-to-base. Was 30: at the ~21.4 m/s the test's
+		// full-throttle commit produces, the flight off kicker 1 spans ~25-27 m past the lip, which
+		// came down at kicker 2's base or low face (the south line measured the failure at 79 G; this
+		// line had the same thin margin on paper). 36 m puts that landing on flat with 3+ m to spare;
+		// slower rhythm speeds land earlier and link as before.
+		ChainLine( new Vector2( -10f, 55f ), 1.0f, count: 4, spacingM: 36f, widthM: 7f );
 		// fast-low line: three 0.6 m kickers, tight ~25 m spacing — quick pop-pop-pop
 		ChainLine( new Vector2( -20f, 95f ), 0.6f, count: 3, spacingM: 25f, widthM: 7f );
 		// BIG line (scaled ~2×): three 2.5 m kickers, ~56 m spacing so you must carry real speed to link
 		ChainLine( new Vector2( -25f, 135f ), 2.5f, count: 3, spacingM: 56f, widthM: 9f );
-		// south rhythm: three 1.2 m kickers for southern-field coverage, ~34 m spacing. y=-38, not -45:
-		// at -45 the 7 m-wide kickers (edges y -48.5..-41.5) laterally overlapped the ladder's 0.6 m lane
-		// landing corridor (lane at y=-48, kickers 8 m wide, so edges -52..-44) — a car landing off the
-		// 0.6 lane plowed into the first south kicker's side (measured 76 G spike + stuck). At -38 the
-		// line edge sits 2.5 m clear of the lane edge and 3.5 m clear of the jump-onto-box corridor (y
-		// -31..-19).
-		ChainLine( new Vector2( -30f, -38f ), 1.2f, count: 3, spacingM: 34f, widthM: 7f );
+		// south rhythm: three 1.2 m kickers for southern-field coverage, 40 m spacing. Was 34: at the
+		// ~21.4 m/s the test's full-throttle commit produces, the flight off kicker 1 spans ~25-27 m
+		// past the lip and came down on kicker 2's base or low face (measured 79 G near-stop into its
+		// face). 40 m puts that landing on flat with 3+ m to spare; slower rhythm speeds land earlier
+		// and link as before. y=-38, not -45: at -45 the 7 m-wide kickers (edges y -48.5..-41.5)
+		// laterally overlapped the ladder's 0.6 m lane landing corridor (lane at y=-48, kickers 8 m
+		// wide, so edges -52..-44) — a car landing off the 0.6 lane plowed into the first south
+		// kicker's side (measured 76 G spike + stuck). At -38 the line edge sits 2.5 m clear of the
+		// lane edge and 3.5 m clear of the jump-onto-box corridor (y -31..-19).
+		ChainLine( new Vector2( -30f, -38f ), 1.2f, count: 3, spacingM: 40f, widthM: 7f );
 	}
 
 	static void ChainLine( Vector2 firstBaseM, float heightM, int count, float spacingM, float widthM )
@@ -440,49 +447,43 @@ public static class PlaygroundBuilder
 		Kicker( new Vector2( deckBackX + 10f, baseAtM.y ), 180f, 10f, w, deckTopH, BoxGrey );
 	}
 
-	/// <summary>A banked wall-ride strip: a long slab rolled steeply so a car can carry along its face
-	/// (like a straightened bowl segment). Pass-3 fix: the raw lower edge was a flat→48° grade break a
-	/// car hit like a kerbed wall; a half-angle APRON strip (~24°) now runs the full length along the
-	/// low edge, splitting the transition into two gentle breaks. The apron's low edge is buried below
-	/// grade and its high edge tucks under the wall face, so neither edge presents a lip.</summary>
+	/// <summary>A curved QUARTER-PIPE wall-ride bank: the <see cref="RampKicker"/> tangent-arc profile
+	/// rotated to climb −Y, so the face rises from a grade-tangent base line at y = centre+11.2 to a
+	/// 5 m top edge at y = centre, rideable along X for the full 34 m. Round-2 fix: the old slab +
+	/// half-angle apron still met the ground in planar CREASES (flat, 22°, 48°), and a crease arrests
+	/// a car at ANY approach angle (measured: hatch 128 G dead stop on a 4° glancing line; a wide car
+	/// straddles the crease, one axle per plane, and wedges). The run length is hand-picked BELOW the
+	/// curvature law, and that is correct here: LengthFor(5) would give a ~27.7 m gentle bank (~20°
+	/// exit, not a wall-ride), while L=11.2 at H=5 gives R ≈ 15 m and a ~48° exit, the wall-ride
+	/// character. The law protects HEAD-ON climbs; a wall-ride is ridden ALONG the face, so the wheel
+	/// path's climb component is a fraction of ride speed and the effective face load stays low. Cars
+	/// that do drive straight at it now meet a smooth tangent curve, not a crease. A back-side WEDGE
+	/// covers the 5 m vertical back face so southern approaches meet a slope.</summary>
 	static void BuildWallRide( Vector2 centreM )
 	{
-		const float lenM = 34f, faceM = 7f, thickM = 0.5f, rollDeg = 48f;
-		var go = Child( "WallRide" );
-		// lift so the rolled slab's lower edge sits near grade
-		go.WorldPosition = new Vector3( centreM.x, centreM.y, MathF.Sin( rollDeg.DegreeToRadian() ) * faceM * 0.5f ) * M;
-		go.WorldRotation = Rotation.FromYaw( 90f ) * Rotation.FromRoll( -rollDeg );
-		go.LocalScale = new Vector3( faceM, lenM, thickM ) * M / 50f;
+		// yaw −90 points the kicker's climb axis (local +X) toward −Y: base tangent line at
+		// y = centre+11.2, lip at y = centre. The width axis (local Y, centred by construction per
+		// RampKicker's LOCAL FRAME doc) maps to world X, so no x offset: the 34 m ride length spans
+		// x [centre−17, centre+17] as-is. RampKicker carries its own colliders and "road" tag.
+		RampKicker.Build( _scene, _root, new Vector3( centreM.x, centreM.y + 11.2f, 0f ), -90f, 11.2f, 34f, 5f, BowlGrey );
+		_ramps++;
 
-		var renderer = go.Components.Create<ModelRenderer>();
-		renderer.MaterialOverride = Material.Load( "materials/default.vmat" );
-		renderer.Model = Model.Load( "models/dev/box.vmdl" );
-		renderer.Tint = BowlGrey;
-
-		var collider = go.Components.Create<BoxCollider>();
-		collider.Scale = new Vector3( 50f, 50f, 50f );
-		collider.Static = true;
-		_boxes++;
-
-		// entry apron: the wall face rises toward −Y and its lower edge (z = 0) sits at
-		// y = centre + cos(roll)·face/2. The apron plane runs from a buried low edge out on the flat
-		// (+Y) up to a high edge tucked just UNDER the wall face, at roughly half the wall's angle.
-		float lowEdgeY = centreM.y + MathF.Cos( rollDeg.DegreeToRadian() ) * faceM * 0.5f;
-		const float apronThick = 0.4f;
-		var apronLow = new Vector2( lowEdgeY + 1.6f, -0.1f );   // (y, z) buried at grade, out on the flat
-		var apronHigh = new Vector2( lowEdgeY - 0.95f, 0.95f ); // (y, z) ~10 cm under the 48° face there
-		float dy = apronHigh.x - apronLow.x, dz = apronHigh.y - apronLow.y;
-		float apronW = MathF.Sqrt( dy * dy + dz * dz );         // ≈ 22° apron angle (≈ half of 48°)
-		float apronRollDeg = MathF.Atan2( dz, -dy ).RadianToDegree();
-		// upward surface normal in the (y,z) plane: perpendicular to the width direction (dy is
-		// negative — the width vector points toward −Y as it rises)
-		float nY = dz / apronW, nZ = -dy / apronW;
-		var apron = Panel(
-			new Vector3( centreM.x, (apronLow.x + apronHigh.x) * 0.5f - nY * apronThick * 0.5f,
-				(apronLow.y + apronHigh.y) * 0.5f - nZ * apronThick * 0.5f ),
-			new Vector3( apronW, lenM, apronThick ),
-			Rotation.FromYaw( 90f ) * Rotation.FromRoll( -apronRollDeg ), BowlGrey.Darken( 0.12f ), "WallRide Apron" );
-		apron.Tags.Add( "road" );
+		// back wedge: a pitched panel from the top edge line (y = centre, z = 5) descending south to
+		// grade at y = centre − 12.5, full 34 m along X, so approaches from the south meet a ~21.8°
+		// slope instead of the 5 m vertical back face.
+		const float wedgeRise = 5f, wedgeRun = 12.5f, wedgeThick = 0.5f;
+		float wedgeA = MathF.Atan2( wedgeRise, wedgeRun );                     // ≈ 21.8°
+		float wedgeW = MathF.Sqrt( wedgeRun * wedgeRun + wedgeRise * wedgeRise );  // ≈ 13.46 m slope width
+		// the surface rises toward +Y (toward the wall's top edge), so the up-normal leans −Y
+		float nY = -MathF.Sin( wedgeA ), nZ = MathF.Cos( wedgeA );
+		// centre sits half a thickness inside the surface midpoint (centre.x, centre.y − 6.25, 2.5);
+		// roll sign flips vs the old apron because this surface rises toward +Y, not −Y
+		var wedge = Panel(
+			new Vector3( centreM.x, centreM.y - wedgeRun * 0.5f - nY * wedgeThick * 0.5f,
+				wedgeRise * 0.5f - nZ * wedgeThick * 0.5f ),
+			new Vector3( wedgeW, 34f, wedgeThick ),
+			Rotation.FromYaw( 90f ) * Rotation.FromRoll( wedgeA.RadianToDegree() ), BowlGrey.Darken( 0.12f ), "WallRide Back" );
+		wedge.Tags.Add( "road" );
 	}
 
 	// ---------------------------------------------------------------- banked bowl (kept)
