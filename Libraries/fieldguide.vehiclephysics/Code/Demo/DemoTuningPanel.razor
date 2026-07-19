@@ -349,8 +349,10 @@
 
 	protected override void OnEnabled()
 	{
-		// Play->Stop->Play hygiene: the static open flag must not survive a session.
-		IsOpen = false;
+		// Open by default every session so the lab is discoverable without the keybind;
+		// T (the Tune action) closes and reopens it. Static flag, so reset it here rather
+		// than letting the previous session's state leak through.
+		IsOpen = true;
 	}
 
 	protected override void OnUpdate()

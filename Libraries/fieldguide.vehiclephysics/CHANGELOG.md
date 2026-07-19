@@ -28,7 +28,8 @@ Community-reported fixes from Vehicle Prototyping v0.4.0 players.
 Demo becomes a physics lab: live tuning and a much bigger pad.
 
 ### Added
-- Demo: a live tuning lab (`DemoTuningPanel`), toggled by the new `Tune` action (T). It binds to the
+- Demo: a live tuning lab (`DemoTuningPanel`), OPEN BY DEFAULT and toggled by the new `Tune` action
+  (T). It binds to the
   car the chase camera follows and applies changes to the running car. Sliders for grip and drive
   torque (multipliers), suspension stiffness, damping, and travel, and brake force; cycles for assists
   (Casual, Sport, Sim) and tires (Stock, Street, Sport, Offroad); and a reset-to-stock button. The

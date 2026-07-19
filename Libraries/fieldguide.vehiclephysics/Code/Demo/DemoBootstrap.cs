@@ -81,8 +81,10 @@ public sealed class DemoBootstrap : Component
 		if ( _active is null )
 			return;
 
-		// Play->Stop->Play hygiene: the panel's static open flag must not survive a session.
-		DemoTuningPanel.IsOpen = false;
+		// The lab starts OPEN so players discover it without knowing the keybind (owner call,
+		// 2026-07-19); T still toggles it. Reset here each session so a mid-session close does
+		// not leak into the next Play.
+		DemoTuningPanel.IsOpen = true;
 
 		_hud = Scene.CreateObject();
 		_hud.Name = "Tuning HUD";

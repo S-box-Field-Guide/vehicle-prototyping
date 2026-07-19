@@ -85,7 +85,7 @@ input actions only register after an editor restart.
 | `ShiftMode` | G | D-pad down | toggle AUTO / MANUAL gearbox |
 | `DriveMode` | B | D-pad up | cycle assists (Casual, Sport, Sim) |
 | `Reload` | R | X | respawn the car |
-| `Tune` | T | (none) | open the demo live tuning lab (demo scene only) |
+| `Tune` | T | (none) | close/reopen the demo live tuning lab (demo scene only; starts open) |
 
 Gamepad throttle/brake also read the physical trigger axes directly
 (`Input.GetAnalog(InputAnalog.RightTrigger|LeftTrigger)`), so the analog pedals work whether or not
@@ -95,7 +95,7 @@ device; keyboard emits exact ±1.
 ## Live tuning (demo)
 
 The demo scene ships a small tuning lab so you can feel the physics change under you in the first
-minute. Press `Tune` (T) while driving to open it; press again to close. It binds to the car the
+minute. It is open when the demo starts; press `Tune` (T) to close it and again to reopen. It binds to the car the
 chase camera is following and writes changes onto that running car:
 
 - Sliders: grip (multiplier), drive torque (multiplier), suspension stiffness, suspension damping,
