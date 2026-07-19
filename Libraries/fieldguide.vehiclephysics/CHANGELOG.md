@@ -28,14 +28,18 @@ Community-reported fixes from Vehicle Prototyping v0.4.0 players.
 Demo becomes a physics lab: live tuning and a much bigger pad.
 
 ### Added
-- Demo: a live tuning lab (`DemoTuningPanel`), OPEN BY DEFAULT and toggled by the new `Tune` action
-  (T). It binds to the
+- Demo: a live tuning lab (`DemoTuningPanel`). A small `T tuning` chip sits top-left from the moment
+  you spawn; the `Tune` action (T) expands it into the lab and collapses it back. It binds to the
   car the chase camera follows and applies changes to the running car. Sliders for grip and drive
   torque (multipliers), suspension stiffness, damping, and travel, and brake force; cycles for assists
   (Casual, Sport, Sim) and tires (Stock, Street, Sport, Offroad); and a reset-to-stock button. The
   panel is demo-layer only (built by `DemoBootstrap`, present just in the demo scene) and consumes the
   `VehicleCamera.CursorModalOpen` seam so the camera yields the cursor while it is open.
 - `Tune` input action (keyboard T) in the host `ProjectSettings/Input.config`.
+- Demo: switch between the four roster cars with `[` and `]` (`CyclePrev`/`CycleNext`, d-pad
+  left/right on gamepad), mirroring Vehicle Prototyping's bindings. The camera, the player's
+  input, and the tuning lab all follow the switch; parked cars hold the handbrake. A key legend
+  chip sits top-right.
 
 ### Changed
 - Demo pad grown from about 200 m to about 1 km across (ground collider and visual both scaled up, top

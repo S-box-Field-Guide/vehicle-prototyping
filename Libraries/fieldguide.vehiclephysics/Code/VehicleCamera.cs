@@ -15,7 +15,25 @@ public sealed class VehicleCamera : Component
 	/// </summary>
 	public static Func<bool> CursorModalOpen { get; set; }
 
-	static bool AnyCursorModalOpen => CursorModalOpen?.Invoke() ?? false;
+	static bool AnyCursorModalOpen
+	{
+		get
+		{
+			try
+			{
+				return CursorModalOpen?.Invoke() ?? false;
+			}
+			catch ( NotImplementedException )
+			{
+				// Hotload survivor: this static can hold a lambda authored by a REPLACED assembly
+				// (s&box hotload copies static state but cannot substitute an orphaned lambda, so
+				// invoking it throws). Drop the stale delegate and fall back to "no modal"; whoever
+				// owns the seam (the demo bootstrap, or a consumer) re-wires it at session start.
+				CursorModalOpen = null;
+				return false;
+			}
+		}
+	}
 
 	public VehicleController Target { get; set; }
 

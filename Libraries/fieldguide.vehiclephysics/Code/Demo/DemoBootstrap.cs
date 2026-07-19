@@ -20,6 +20,8 @@ public sealed class DemoBootstrap : Component
 	readonly List<VehicleController> _cars = new();
 	readonly List<Vector3> _spawns = new();
 	VehicleController _active;
+	VehicleCamera _camera;
+	DemoTuningPanel _panel;
 	GameObject _hud;
 
 	protected override void OnStart()
@@ -65,11 +67,33 @@ public sealed class DemoBootstrap : Component
 			_active.InputOverride = null;
 
 		// Point the scene's chase camera at the active car so the demo frames it on load.
-		var cam = Scene.GetAllComponents<VehicleCamera>().FirstOrDefault();
-		if ( cam is not null )
-			cam.Target = _active;
+		_camera = Scene.GetAllComponents<VehicleCamera>().FirstOrDefault();
+		if ( _camera is not null )
+			_camera.Target = _active;
 
 		MountTuningLab();
+	}
+
+	protected override void OnUpdate()
+	{
+		if ( _cars.Count < 2 )
+			return;
+
+		// Bracket cycling, mirroring Vehicle Prototyping's bindings ( [ / ] , d-pad left/right ).
+		// OnFixedUpdate's per-tick override pass handles the rest: the old car parks (handbrake),
+		// the new one starts listening to the player.
+		int step = Input.Pressed( "CycleNext" ) ? 1 : Input.Pressed( "CyclePrev" ) ? -1 : 0;
+		if ( step == 0 )
+			return;
+
+		int i = _cars.IndexOf( _active );
+		i = ((i + step) % _cars.Count + _cars.Count) % _cars.Count;
+		_active = _cars[i];
+
+		if ( _camera is not null )
+			_camera.Target = _active;
+		if ( _panel is not null )
+			_panel.Car = _active; // rebinds the lab and re-snapshots stock values for the new car
 	}
 
 	/// <summary>Stand up the demo-layer live tuning lab: a ScreenPanel-hosted <see cref="DemoTuningPanel"/>
@@ -81,17 +105,17 @@ public sealed class DemoBootstrap : Component
 		if ( _active is null )
 			return;
 
-		// The lab starts OPEN so players discover it without knowing the keybind (owner call,
-		// 2026-07-19); T still toggles it. Reset here each session so a mid-session close does
-		// not leak into the next Play.
-		DemoTuningPanel.IsOpen = true;
+		// Start collapsed to the chip legend: an open lab on spawn captured the cursor before
+		// players ever drove (owner call, 2026-07-19). The chip keeps T discoverable; reset the
+		// static flag here each session.
+		DemoTuningPanel.IsOpen = false;
 
 		_hud = Scene.CreateObject();
 		_hud.Name = "Tuning HUD";
 		_hud.Components.GetOrCreate<ScreenPanel>();
 
-		var panel = _hud.Components.Create<DemoTuningPanel>();
-		panel.Car = _active;
+		_panel = _hud.Components.Create<DemoTuningPanel>();
+		_panel.Car = _active;
 
 		// Dogfood the kit's cursor-yield seam: while the lab is open the chase camera must release the
 		// cursor so the player can click dials. This is exactly what the seam is for; wiring it here

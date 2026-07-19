@@ -10,6 +10,30 @@ DemoTuningPanel {
 
 	.mono { font-family: "Roboto Mono", monospace; }
 
+	// Top-right key legend (car switching). Mirrors the chip's card language at the opposite corner.
+	.legend {
+		position: absolute;
+		right: 40px;
+		top: 40px;
+		flex-direction: row;
+		align-items: center;
+		gap: 8px;
+		padding: 10px 14px;
+		background-color: rgba( 15, 17, 21, 0.92 );
+		border: 1px solid rgba( 255, 255, 255, 0.08 );
+		border-radius: 16px;
+		box-shadow: 0 20px 60px rgba( 0, 0, 0, 0.6 );
+
+		.title { font-weight: 600; color: #F2F4F7; }
+		.kbd {
+			color: #F2F4F7;
+			border: 1px solid rgba( 255, 255, 255, 0.12 );
+			border-radius: 5px;
+			padding: 3px 8px;
+			background-color: rgba( 255, 255, 255, 0.05 );
+		}
+	}
+
 	.panel {
 		position: absolute;
 		left: 40px;
@@ -40,6 +64,21 @@ DemoTuningPanel {
 		}
 
 		.hint { color: #F2F4F7; }
+
+		// Collapsed legend chip: same anchor as the expanded card (left/top 40px via .panel), sized
+		// to its content so it reads as the card's top-left corner waiting to grow.
+		&.chip {
+			width: auto;
+			padding: 10px 14px;
+			gap: 0;
+
+			.head {
+				gap: 8px;
+				justify-content: flex-start;
+
+				.title { font-weight: 600; color: #F2F4F7; }
+			}
+		}
 
 		.dials {
 			flex-direction: column;

@@ -9,6 +9,26 @@
    minute. Replace it with your own UI; it lives only in the demo scene. *@
 
 <root>
+	@if ( Car.IsValid() )
+	{
+		@* Key legend, top-right: how to hop between the demo cars. Always visible; the tuning
+		   chip/panel top-left covers the T binding. *@
+		<div class="legend">
+			<div class="mono kbd">[ ]</div>
+			<div class="title">switch car</div>
+		</div>
+	}
+	@if ( !IsOpen && Car.IsValid() )
+	{
+		@* Collapsed legend chip: sits exactly where the expanded panel's top-left corner lands, so
+		   pressing T reads as the chip expanding into the lab. Mouse-look stays with the camera. *@
+		<div class="panel chip" onclick=@ToggleOpen>
+			<div class="head">
+				<div class="mono kbd">@ToggleKeyLabel</div>
+				<div class="title">tuning</div>
+			</div>
+		</div>
+	}
 	@if ( IsOpen && Car.IsValid() )
 	{
 		<div class="panel">
@@ -349,10 +369,17 @@
 
 	protected override void OnEnabled()
 	{
-		// Open by default every session so the lab is discoverable without the keybind;
-		// T (the Tune action) closes and reopens it. Static flag, so reset it here rather
-		// than letting the previous session's state leak through.
-		IsOpen = true;
+		// Start COLLAPSED: the chip legend keeps the keybind discoverable while mouse-look stays
+		// with the camera (an open lab on spawn captured the cursor before players ever drove,
+		// owner call 2026-07-19). Static flag, so reset it here each session.
+		IsOpen = false;
+	}
+
+	void ToggleOpen()
+	{
+		IsOpen = !IsOpen;
+		Mouse.Visibility = IsOpen ? MouseVisibility.Visible : MouseVisibility.Hidden;
+		StateHasChanged();
 	}
 
 	protected override void OnUpdate()
@@ -371,8 +398,10 @@
 
 	protected override int BuildHash()
 	{
+		// Closed still renders the chip legend, and the chip waits on the car binding, so the
+		// hash must move when the car arrives or the first build would stick on the empty tree.
 		if ( !IsOpen )
-			return 0;
+			return Car.IsValid() ? 1 : 0;
 
 		var h = new HashCode();
 		h.Add( _gripScale );
