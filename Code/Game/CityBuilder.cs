@@ -221,33 +221,65 @@ public static class CityBuilder
 	// must NOT be drivable-off). 8 m tall, 2 m thick, static colliders — well beyond any
 	// jump the cars can make, so no vehicle leaves the map at any speed it reaches. Sits
 	// just outside the outermost ring road; deterministic (crash-wall collider precedent).
+	// WORLD PASS (2026-07-19): each side now carries a GATE — a gap centred on the main avenue
+	// (the two avenues run through the origin, so the gap sits at the middle of every side) —
+	// opening the city to the Outskirts belt (ring road, proving-grounds connector). The world
+	// stays sealed one layer out by the Outskirts outer perimeter. Gate posts flank each gap so
+	// the openings read from a distance.
 	const float WallHeight = 8f;   // m
 	const float WallThick = 2f;    // m
+	const float GateWidth = 12f;   // m opening centred on each avenue
+
+	/// <summary>The city wall line's distance from origin (also the Outskirts belt's inner
+	/// boundary — the belt builder reads this so the two stay in lockstep).</summary>
+	public const float WallEdge = -Origin + RoadWidth * 0.5f + 2f;
 
 	static void BuildPerimeterWall()
 	{
-		float edge = -Origin + RoadWidth * 0.5f + 2f; // just outside the outermost road
+		float edge = WallEdge;
 		var wall = new Color( 0.52f, 0.52f, 0.55f );
 		var cap = new Color( 0.40f, 0.40f, 0.44f );    // contrasting coping so the wall reads
-		// Each wall runs the FULL outer span (2·edge) so the four walls OVERLAP at the corners,
-		// leaving no open corner notch for a car to slip through. (Was Total + 2·thick, which fell
-		// short because the walls sit at ±edge, ~7 m outside ±Total/2 — the corners were left open.)
-		float len = 2f * edge + WallThick;
+		var post = new Color( 0.62f, 0.55f, 0.30f );   // gate posts, warm so the exits read
 
-		foreach ( var (pos, size, capPos, capSize, nm) in new[]
+		// Each side is TWO segments leaving a GateWidth gap at the avenue (side centre). Segments
+		// run from the gap edge to half a wall-thickness beyond ±edge, so the four sides still
+		// OVERLAP at the corners — no open corner notch (the full-span lesson, kept).
+		float cornerReach = edge + WallThick;                   // segment outer end (overlaps corner)
+		float segLen = cornerReach - GateWidth * 0.5f;          // one segment's length
+		float segMid = GateWidth * 0.5f + segLen * 0.5f;        // its centre along the wall axis
+
+		foreach ( var (axisX, sign, nm) in new[]
 		{
-			( new Vector3( 0f, edge, WallHeight * 0.5f ), new Vector3( len, WallThick, WallHeight ),
-			  new Vector3( 0f, edge, WallHeight + 0.15f ), new Vector3( len, WallThick + 0.5f, 0.3f ), "Perimeter Wall N" ),
-			( new Vector3( 0f, -edge, WallHeight * 0.5f ), new Vector3( len, WallThick, WallHeight ),
-			  new Vector3( 0f, -edge, WallHeight + 0.15f ), new Vector3( len, WallThick + 0.5f, 0.3f ), "Perimeter Wall S" ),
-			( new Vector3( edge, 0f, WallHeight * 0.5f ), new Vector3( WallThick, len, WallHeight ),
-			  new Vector3( edge, 0f, WallHeight + 0.15f ), new Vector3( WallThick + 0.5f, len, 0.3f ), "Perimeter Wall E" ),
-			( new Vector3( -edge, 0f, WallHeight * 0.5f ), new Vector3( WallThick, len, WallHeight ),
-			  new Vector3( -edge, 0f, WallHeight + 0.15f ), new Vector3( WallThick + 0.5f, len, 0.3f ), "Perimeter Wall W" ),
+			( true, 1f, "Perimeter Wall N" ),    // wall along X at y = +edge
+			( true, -1f, "Perimeter Wall S" ),
+			( false, 1f, "Perimeter Wall E" ),   // wall along Y at x = +edge
+			( false, -1f, "Perimeter Wall W" ),
 		} )
 		{
-			Block( pos * M, size, wall, collide: true, name: nm );
-			Block( capPos * M, capSize, cap, collide: false, name: nm + " Cap" );
+			foreach ( float segSign in new[] { 1f, -1f } )
+			{
+				var pos = axisX
+					? new Vector3( segSign * segMid, sign * edge, WallHeight * 0.5f )
+					: new Vector3( sign * edge, segSign * segMid, WallHeight * 0.5f );
+				var size = axisX
+					? new Vector3( segLen, WallThick, WallHeight )
+					: new Vector3( WallThick, segLen, WallHeight );
+				var capSize = axisX
+					? new Vector3( segLen, WallThick + 0.5f, 0.3f )
+					: new Vector3( WallThick + 0.5f, segLen, 0.3f );
+				Block( pos * M, size, wall, collide: true, name: nm );
+				Block( pos.WithZ( WallHeight + 0.15f ) * M, capSize, cap, collide: false, name: nm + " Cap" );
+			}
+
+			// gate posts at the two gap edges, just proud of the wall line
+			foreach ( float postSign in new[] { 1f, -1f } )
+			{
+				float along = postSign * (GateWidth * 0.5f + 0.6f);
+				var postPos = axisX
+					? new Vector3( along, sign * edge, 4.75f )
+					: new Vector3( sign * edge, along, 4.75f );
+				Block( postPos * M, new Vector3( 1.2f, 1.2f, 9.5f ), post, collide: true, name: nm + " Gate Post" );
+			}
 		}
 	}
 

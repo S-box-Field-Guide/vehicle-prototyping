@@ -37,10 +37,11 @@ public sealed class GameBootstrap : Component
 	[ConVar( "vp_perf_boot" )]
 	public static bool PerfBoot { get; set; } = false;
 
-	/// <summary>Root GameObject names the three world builders create (CityBuilder="City",
-	/// TestTrack="Proving Grounds", PlaygroundBuilder="Playground"). A live world switch tears these
-	/// down by name before rebuilding — the builders are static and simply create fresh roots.</summary>
-	static readonly string[] WorldRootNames = { "City", "Proving Grounds", "Playground" };
+	/// <summary>Root GameObject names the world builders create (CityBuilder="City",
+	/// TestTrack="Proving Grounds", Outskirts="Outskirts", PlaygroundBuilder="Playground"). A live
+	/// world switch tears these down by name before rebuilding — the builders are static and simply
+	/// create fresh roots.</summary>
+	static readonly string[] WorldRootNames = { "City", "Proving Grounds", "Outskirts", "Playground" };
 
 	// Kept so a live world switch (WorldControls panel) can rewire in place instead of remounting.
 	VehiclePilot _pilot;
@@ -122,6 +123,9 @@ public sealed class GameBootstrap : Component
 			var city = CityBuilder.Build( Scene );
 			// proving-grounds test track, ~600 m east of the city (docs/proving-grounds.md)
 			TestTrack.Build( Scene, new Vector3( 600f, 0f, 0f ) );
+			// outskirts belt (world pass 2026-07-19): ring road + city gates + the connector that
+			// makes the proving grounds drivable-to; seals the combined world with its own perimeter
+			Outskirts.Build( Scene );
 			spawnPosM = city.SpawnPosition;
 			spawnFacing = city.SpawnFacing;
 		}

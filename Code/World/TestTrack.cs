@@ -94,7 +94,12 @@ public static class TestTrack
 	{
 		// station footprints span local X[35,815] Y[-170,220] (see docs/proving-grounds.md
 		// ASCII map) — center + span chosen with generous margin, the same "oversized ground
-		// BoxCollider" idiom
+		// BoxCollider" idiom.
+		// COUPLING (world pass 2026-07-19): Outskirts wraps this slab's north/south/east CLIFF
+		// edges with sunken run-off aprons and stands the outer world perimeter at their rim —
+		// its TrackWest/East/South/North datums mirror this centre+span. Move this ground, move
+		// those. The cliff edges themselves are load-bearing: TopSpeedManeuver ends on the
+		// contact-loss of running off the east edge.
 		var center = new Vector3( 400f, 20f, 0f );
 		const float spanXMeters = 1000f;
 		const float spanYMeters = 600f;
