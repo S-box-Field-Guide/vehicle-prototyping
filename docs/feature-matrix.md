@@ -57,8 +57,8 @@ Evidence: `Code/World/` (`TestTrack`, `PlaygroundBuilder`, `PlaygroundTerrain`),
 |---|:-:|:-:|:-:|:-:|---|
 | Town (drivable scene: streets + instrumented proving section — skidpad, drag strip, brake, slalom, ramps, banked, washboard, hills, J-turn pad) | G | G | G | G | THE drivable world. Named spawn per proving station; the measurement world for the battery. `proving-grounds.md`. |
 | Outskirts belt (city gates, highway ring, proving-grounds connector, landmarks, outer perimeter) | G | G | G | - | World pass 2026-07-19: the town wall gained a gate per side and the belt beyond joins city and proving grounds into one drivable space (~5x footprint). Track cliff edges preserved behind sunken run-off basins (battery end conditions untouched). `Code/World/Outskirts.cs`. |
-| Stunt Track (jump-park world) | G | G | - | - | In rework (ramp/jump physics); disabled this build, returns in a future build. Internal id stays `playground`. |
-| Live world switch + FLAT/CURVY terrain toggle (M panel) | G | G | - | - | Feature-gated OFF this build (`GameBootstrap.WorldSwitchEnabled`); returns with the Stunt Track. Dev console (`vp_setworld`) still works. |
+| Stunt Track (jump-park world) | G | G | G | G | Jump physics reworked + live-verified 2026-07-19 (kicker curvature law, no walls in flight paths, ride board over the stairs, quarter-pipe wall-ride, bowl mouth). Known issue: the kart pitches over off tall jumps (kit-level launch-pitch carry, tracked for the kit); it flies the low features fine. Internal id stays `playground`. |
+| Live world switch + FLAT/CURVY terrain toggle (M panel) | G | G | G | - | RE-ENABLED with the Stunt Track rework (`GameBootstrap.WorldSwitchEnabled`). Dev console (`vp_setworld`) works too. |
 | Crash wall / destruction | G | R | R | - | Full crash/destruction simulation is out of scope for this kit; a reference-only reserved plot remains. |
 
 ## 4. UI

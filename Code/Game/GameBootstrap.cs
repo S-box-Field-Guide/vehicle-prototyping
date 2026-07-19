@@ -8,11 +8,11 @@ namespace VehicleProto;
 public sealed class GameBootstrap : Component
 {
 	/// <summary>Feature gate for in-game world switching (the World &amp; Terrain panel + its M hotkey).
-	/// Disabled for now: players stay on the default Town scene and cannot switch. The dev console
-	/// commands (<c>vp_world</c>, <c>vp_setworld</c>) still work for internal use. Flip back to true to
-	/// restore the player-facing switch once the Stunt Track jump physics rework lands.
+	/// RE-ENABLED (world pass 2026-07-19): the Stunt Track jump physics rework landed and verified
+	/// live (curvature law + no walls in flight paths; three telemetry rounds, hatch green on every
+	/// feature). The dev console commands (<c>vp_world</c>, <c>vp_setworld</c>) remain for automation.
 	/// (static readonly, not const, so the gated call sites don't constant-fold into dead-code warnings.)</summary>
-	public static readonly bool WorldSwitchEnabled = false;
+	public static readonly bool WorldSwitchEnabled = true;
 
 	/// <summary>World selector (world-pass 2026-07-13). "proto" (DEFAULT) = the measurement scene:
 	/// CityBuilder + TestTrack with all 11 stations — the battery + vp_test.py depend on this, so it
