@@ -1,6 +1,6 @@
 # Vehicle Physics Kit
 
-Version 0.2.0 · MIT · namespace `FieldGuide.VehiclePhysics`
+Version 0.2.1 · MIT · namespace `FieldGuide.VehiclePhysics`
 
 A raycast-wheel arcade-sim vehicle stack for s&box: contact-normal suspension, slip-curve tires
 with a friction ellipse, a full drivetrain with auto-clutch and auto/sequential shifting, per-car

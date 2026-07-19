@@ -3,6 +3,17 @@
 All notable changes to this kit. Versions are display versions (minor per content publish, patch
 for a hotfix; manual bumps only).
 
+## v0.2.1 - 2026-07-19
+
+Hotfix from first-tester feedback (a parked demo car could move on its own).
+
+### Fixed
+- Demo: parked (non-active) cars now hold the handbrake and are input-overridden from the
+  moment they spawn, not from the first bootstrap tick. This closes a one-tick window where a
+  car could sample a live input device before the override landed (a resting gamepad trigger
+  past deadzone reads as brake and latches reverse), and stops free-rolling parked cars from
+  walking off their spawn marks.
+
 ## v0.2.0 - 2026-07-19
 
 First published release (s&box Library Manager, org `fieldguide`).

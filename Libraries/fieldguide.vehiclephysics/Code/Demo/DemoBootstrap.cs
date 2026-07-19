@@ -14,6 +14,9 @@ public sealed class DemoBootstrap : Component
 	/// <summary>Cars falling below this world height (metres) are placed back on their spawn spot.</summary>
 	[Property] public float VoidResetHeightM { get; set; } = -20f;
 
+	/// <summary>Held by every non-active car: neutral pedals, handbrake on. A parked car should be parked.</summary>
+	static DriveInputs ParkedInputs => new() { Handbrake = true };
+
 	readonly List<VehicleController> _cars = new();
 	readonly List<Vector3> _spawns = new();
 	VehicleController _active;
@@ -48,12 +51,17 @@ public sealed class DemoBootstrap : Component
 			var controller = go.Components.Get<VehicleController>();
 			if ( controller is not null )
 			{
+				// Park it IMMEDIATELY, before its first physics tick can sample a live device
+				// (a resting gamepad trigger past deadzone reads as brake and latches reverse).
+				controller.InputOverride = ParkedInputs;
 				_cars.Add( controller );
 				_spawns.Add( pos );
 			}
 		}
 
 		_active = _cars.FirstOrDefault();
+		if ( _active is not null )
+			_active.InputOverride = null;
 
 		// Point the scene's chase camera at the active car so the demo frames it on load.
 		var cam = Scene.GetAllComponents<VehicleCamera>().FirstOrDefault();
@@ -71,10 +79,11 @@ public sealed class DemoBootstrap : Component
 			if ( car is null || !car.IsValid() )
 				continue;
 
-			// Only the camera's car listens to the player; parked cars hold neutral inputs.
+			// Only the camera's car listens to the player; parked cars hold the handbrake.
 			// (With no override every controller samples the same keyboard, so one W press
-			// would launch the whole row at once.)
-			car.InputOverride = car == _active ? null : default( DriveInputs );
+			// would launch the whole row at once; without the handbrake a parked car is
+			// free-rolling and a device blip or spawn settle can walk it off its mark.)
+			car.InputOverride = car == _active ? null : ParkedInputs;
 
 			// Void watchdog: driving off the pad edge otherwise means falling forever.
 			if ( car.GameObject.WorldPosition.z < VoidResetHeightM * m )
