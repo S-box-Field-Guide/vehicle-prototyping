@@ -18,8 +18,9 @@ Library Manager. The game is a consumer of that library: it spawns cars through 
 wires the kit's seams, and adds only the game layer (the part-kit body pipeline, the telemetry
 harness, the UI, and the worlds) on top.
 
-Want just the physics for your own driving game? The kit lives at
-<https://github.com/S-box-Field-Guide/libraries>.
+Want just the physics for your own driving game? Install the Vehicle Physics Kit from the
+in-editor Library Manager (search "fieldguide"), or see it at
+<https://sbox.game/fieldguide/vehiclephysics/>.
 
 ![The four-car roster](docs/images/roster.png)
 
