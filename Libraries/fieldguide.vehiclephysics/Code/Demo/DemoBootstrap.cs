@@ -20,6 +20,7 @@ public sealed class DemoBootstrap : Component
 	readonly List<VehicleController> _cars = new();
 	readonly List<Vector3> _spawns = new();
 	VehicleController _active;
+	GameObject _hud;
 
 	protected override void OnStart()
 	{
@@ -67,6 +68,33 @@ public sealed class DemoBootstrap : Component
 		var cam = Scene.GetAllComponents<VehicleCamera>().FirstOrDefault();
 		if ( cam is not null )
 			cam.Target = _active;
+
+		MountTuningLab();
+	}
+
+	/// <summary>Stand up the demo-layer live tuning lab: a ScreenPanel-hosted <see cref="DemoTuningPanel"/>
+	/// bound to the active car, and the camera's cursor-yield seam pointed at its open state. This exists
+	/// only in the demo scene; consumers that spawn their own cars never get it. It doubles as a working
+	/// example of the <see cref="VehicleCamera.CursorModalOpen"/> seam being consumed from the demo side.</summary>
+	void MountTuningLab()
+	{
+		if ( _active is null )
+			return;
+
+		// Play->Stop->Play hygiene: the panel's static open flag must not survive a session.
+		DemoTuningPanel.IsOpen = false;
+
+		_hud = Scene.CreateObject();
+		_hud.Name = "Tuning HUD";
+		_hud.Components.GetOrCreate<ScreenPanel>();
+
+		var panel = _hud.Components.Create<DemoTuningPanel>();
+		panel.Car = _active;
+
+		// Dogfood the kit's cursor-yield seam: while the lab is open the chase camera must release the
+		// cursor so the player can click dials. This is exactly what the seam is for; wiring it here
+		// proves it to consumers.
+		VehicleCamera.CursorModalOpen = () => DemoTuningPanel.IsOpen;
 	}
 
 	protected override void OnFixedUpdate()

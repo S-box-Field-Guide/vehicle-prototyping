@@ -3,6 +3,29 @@
 All notable changes to this kit. Versions are display versions (minor per content publish, patch
 for a hotfix; manual bumps only).
 
+## v0.3.0 - 2026-07-19
+
+Demo becomes a physics lab: live tuning and a much bigger pad.
+
+### Added
+- Demo: a live tuning lab (`DemoTuningPanel`), toggled by the new `Tune` action (T). It binds to the
+  car the chase camera follows and applies changes to the running car. Sliders for grip and drive
+  torque (multipliers), suspension stiffness, damping, and travel, and brake force; cycles for assists
+  (Casual, Sport, Sim) and tires (Stock, Street, Sport, Offroad); and a reset-to-stock button. The
+  panel is demo-layer only (built by `DemoBootstrap`, present just in the demo scene) and consumes the
+  `VehicleCamera.CursorModalOpen` seam so the camera yields the cursor while it is open.
+- `Tune` input action (keyboard T) in the host `ProjectSettings/Input.config`.
+
+### Changed
+- Demo pad grown from about 200 m to about 1 km across (ground collider and visual both scaled up, top
+  surface still at z=0) so testers stop reaching the edge in seconds. The void watchdog still catches a
+  car driven off the new, farther edge.
+
+### Notes
+- No physics changes. The tuning lab writes only through public paths (mutating `CarDefinition`, which
+  the drivetrain and brakes read live, and pushing values onto `VehicleWheel`); the physics files are
+  byte-for-byte unchanged.
+
 ## v0.2.1 - 2026-07-19
 
 Hotfix from first-tester feedback (a parked demo car could move on its own).

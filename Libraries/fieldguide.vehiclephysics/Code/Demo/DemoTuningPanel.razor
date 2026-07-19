@@ -1,0 +1,390 @@
+@namespace FieldGuide.VehiclePhysics
+@inherits PanelComponent
+
+@* Kit-native live tuning lab (demo layer). Toggled by the Tune action, bound to the car the chase
+   camera is following. Writes tuning changes straight onto the running car through the same paths a
+   consumer would use: it mutates the active CarDefinition (read live by the drivetrain and the brake
+   model) and pushes suspension/tire values onto the live wheels. This is a demo-scale lab, not the
+   full game panel: it exposes the highest-feel dials so the demo reads as a physics lab in the first
+   minute. Replace it with your own UI; it lives only in the demo scene. *@
+
+<root>
+	@if ( IsOpen && Car.IsValid() )
+	{
+		<div class="panel">
+			<div class="head">
+				<div class="title">Tuning lab · @CarName</div>
+				<div class="mono kbd">@ToggleKeyLabel</div>
+			</div>
+
+			<div class="hint">Tuning the car you are driving. Changes apply live.</div>
+
+			<div class="dials">
+				@foreach ( var d in SliderDials )
+				{
+					var dd = d;
+					<div class="dial">
+						<div class="drow">
+							<div class="dname">@d.Name</div>
+							<div class="mono dval">@d.Display()</div>
+						</div>
+						<div class="dctl">
+							<div class="mono step" onclick=@( () => Step( dd, -1 ) )>-</div>
+							<div class="track"
+								onmousedown=@( e => Scrub( dd, e, true ) )
+								onmousemove=@( e => Scrub( dd, e, false ) )>
+								<div class="fill" style="width: @WidthPct( dd )%"></div>
+							</div>
+							<div class="mono step" onclick=@( () => Step( dd, +1 ) )>+</div>
+						</div>
+					</div>
+				}
+
+				<div class="dial">
+					<div class="drow">
+						<div class="dname">Assists</div>
+						<div class="mono cycle" onclick=@CycleAssists>@AssistLabel</div>
+					</div>
+				</div>
+
+				<div class="dial">
+					<div class="drow">
+						<div class="dname">Tires</div>
+						<div class="mono cycle" onclick=@CycleTires>@TireLabel</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="foot">
+				<div class="btn" onclick=@ResetToStock>Reset to stock</div>
+			</div>
+		</div>
+	}
+</root>
+
+@code {
+	/// <summary>The car this panel tunes: the one the chase camera follows. Set by DemoBootstrap. On
+	/// change the panel snapshots the car's pristine (authored) values so Reset-to-stock can restore
+	/// them and the grip/torque multipliers rebase to the new car.</summary>
+	VehicleController _car;
+	public VehicleController Car
+	{
+		get => _car;
+		set
+		{
+			if ( ReferenceEquals( _car, value ) )
+				return;
+			_car = value;
+			Snapshot();
+		}
+	}
+
+	/// <summary>Open state. Static so the kit's chase camera can read it through the
+	/// <see cref="VehicleCamera.CursorModalOpen"/> seam (DemoBootstrap wires that) without holding a
+	/// reference to this panel. The demo runs exactly one panel, so a single flag is enough.</summary>
+	public static bool IsOpen;
+
+	// Toggle input action. Documented in the README input table; the host ProjectSettings/Input.config
+	// ships it. Never Escape or an F-key.
+	const string ToggleAction = "Tune";
+	string ToggleKeyLabel => "T";
+
+	string CarName => Car?.Definition?.Name ?? "Car";
+
+	// Live multipliers over the pristine base. Grip scales the (preset-selected) tire curves; torque
+	// scales the authored peak engine torque.
+	float _gripScale = 1f;
+	float _torqueScale = 1f;
+	int _tirePreset; // 0 Stock, 1 Street, 2 Sport, 3 Offroad
+
+	// Pristine snapshot, captured value-by-value when the car is bound (its definition is untouched at
+	// that point). Value types only (floats, TireCurve struct, enum), so later live tuning of the
+	// definition can never corrupt these; Reset restores from here.
+	bool _snapped;
+	float _stockPeakTorque, _stockSpring, _stockDamper, _stockTravel, _stockBrake;
+	TireCurve _stockLat, _stockLong;
+	AssistLevel _stockAssists;
+
+	// Current UNSCALED tire base (Stock or a named preset). Grip multiplies these to get the live curves.
+	TireCurve _baseLat, _baseLong;
+
+	void Snapshot()
+	{
+		var def = _car?.Definition;
+		_dials = null;
+		if ( def is null )
+		{
+			_snapped = false;
+			return;
+		}
+
+		_stockPeakTorque = def.PeakTorque;
+		_stockSpring = def.SpringRate;
+		_stockDamper = def.DamperRate;
+		_stockTravel = def.SuspensionTravel;
+		_stockBrake = def.BrakeTorque;
+		_stockLat = def.LateralCurve;
+		_stockLong = def.LongitudinalCurve;
+		// Stock assist = the authored definition default. Read it off the definition, not the
+		// controller: the controller adopts DefaultAssists in its own OnStart, which may run a frame
+		// or two after this bind, so its live Assists is not reliable yet.
+		_stockAssists = def.DefaultAssists;
+
+		_baseLat = _stockLat;
+		_baseLong = _stockLong;
+		_gripScale = 1f;
+		_torqueScale = 1f;
+		_tirePreset = 0;
+		_snapped = true;
+		StateHasChanged();
+	}
+
+	// ---- dial model ----
+	class Dial
+	{
+		public string Name;
+		public float Min, Max, Step;
+		public Func<float> Get;
+		public Action<float> Set;
+		public Func<string> Fmt;
+		public string Display() => Fmt();
+	}
+
+	List<Dial> _dials;
+	List<Dial> SliderDials => _dials ??= BuildDials();
+
+	List<Dial> BuildDials()
+	{
+		if ( !Car.IsValid() )
+			return new List<Dial>();
+
+		var def = Car.Definition;
+		return new List<Dial>
+		{
+			new()
+			{
+				Name = "Grip", Min = 0.6f, Max = 2.2f, Step = 0.05f,
+				Get = () => _gripScale, Set = SetGrip,
+				Fmt = () => _gripScale.ToString( "0.00" ) + "x",
+			},
+			new()
+			{
+				Name = "Drive torque", Min = 0.5f, Max = 2.0f, Step = 0.05f,
+				Get = () => _torqueScale, Set = SetTorqueScale,
+				Fmt = () => _torqueScale.ToString( "0.00" ) + "x",
+			},
+			new()
+			{
+				Name = "Suspension stiffness", Min = 15000f, Max = 60000f, Step = 2000f,
+				Get = () => def.SpringRate, Set = v => { def.SpringRate = v; ApplyWheels(); },
+				Fmt = () => def.SpringRate.ToString( "0" ) + " N/m",
+			},
+			new()
+			{
+				Name = "Suspension damping", Min = 800f, Max = 6000f, Step = 200f,
+				Get = () => def.DamperRate, Set = v => { def.DamperRate = v; ApplyWheels(); },
+				Fmt = () => def.DamperRate.ToString( "0" ) + " Ns/m",
+			},
+			new()
+			{
+				Name = "Suspension travel", Min = 0.10f, Max = 0.35f, Step = 0.01f,
+				Get = () => def.SuspensionTravel, Set = v => { def.SuspensionTravel = v; ApplyWheels(); },
+				Fmt = () => (def.SuspensionTravel * 100f).ToString( "0" ) + " cm",
+			},
+			new()
+			{
+				Name = "Brake force", Min = 1500f, Max = 8000f, Step = 200f,
+				Get = () => def.BrakeTorque, Set = v => def.BrakeTorque = v,
+				Fmt = () => def.BrakeTorque.ToString( "0" ) + " Nm",
+			},
+		};
+	}
+
+	float Frac( Dial d )
+	{
+		if ( d.Max <= d.Min )
+			return 0f;
+		return Math.Clamp( (d.Get() - d.Min) / (d.Max - d.Min), 0f, 1f );
+	}
+
+	string WidthPct( Dial d ) =>
+		(Frac( d ) * 100f).ToString( "0.#", System.Globalization.CultureInfo.InvariantCulture );
+
+	void Step( Dial d, int clicks )
+	{
+		float v = Math.Clamp( d.Get() + clicks * d.Step, d.Min, d.Max );
+		d.Set( v );
+		StateHasChanged();
+	}
+
+	// Click-to-jump + drag-to-scrub on the dial track (mirrors the game panel's proven pattern). jump
+	// is true on mousedown (a bare click sets the value at the cursor) and false on mousemove (scrub
+	// only while the track owns the press). Value = mouse local x over track width, snapped to the
+	// dial's step, pushed through the SAME Set path as the +/- steps.
+	void Scrub( Dial d, Sandbox.UI.PanelEvent ev, bool jump )
+	{
+		if ( ev is not Sandbox.UI.MousePanelEvent e )
+			return;
+
+		var track = e.This;
+		if ( track is null )
+			return;
+
+		// mousemove fires whether or not the button is held; only scrub while the track owns the press.
+		if ( !jump && !track.PseudoClass.HasFlag( Sandbox.UI.PseudoClass.Active ) )
+			return;
+
+		float w = track.Box.Rect.Width;
+		if ( w <= 0f )
+			return;
+
+		float frac = Math.Clamp( e.LocalPosition.x / w, 0f, 1f );
+		float v = d.Min + frac * (d.Max - d.Min);
+		if ( d.Step > 0f )
+			v = MathF.Round( v / d.Step ) * d.Step;
+		v = Math.Clamp( v, d.Min, d.Max );
+		d.Set( v );
+		StateHasChanged();
+	}
+
+	// ---- apply paths (same seams a consumer would use) ----
+	static TireCurve Scaled( TireCurve c, float k ) =>
+		new( c.PeakSlip, c.PeakGrip * k, c.TailSlip, c.TailGrip * k );
+
+	// Push the definition's suspension + tire values onto the live wheels. The factory copies these at
+	// spawn; the wheel re-reads them every substep, so writing them here is the live-apply path.
+	void ApplyWheels()
+	{
+		var def = Car.Definition;
+		foreach ( var w in Car.Wheels )
+		{
+			w.SpringRate = def.SpringRate;
+			w.DamperRate = def.DamperRate;
+			w.SuspensionTravel = def.SuspensionTravel;
+			w.LateralCurve = def.LateralCurve;
+			w.LongitudinalCurve = def.LongitudinalCurve;
+		}
+	}
+
+	void SetGrip( float k )
+	{
+		_gripScale = k;
+		var def = Car.Definition;
+		def.LateralCurve = Scaled( _baseLat, k );
+		def.LongitudinalCurve = Scaled( _baseLong, k );
+		ApplyWheels();
+	}
+
+	// Drive torque scale multiplies the authored peak torque. Drivetrain reads def.PeakTorque live
+	// (it holds the same definition instance), so no drivetrain touch is needed.
+	void SetTorqueScale( float k )
+	{
+		_torqueScale = k;
+		Car.Definition.PeakTorque = _stockPeakTorque * k;
+	}
+
+	void CycleAssists()
+	{
+		Car.Assists = Car.Assists switch
+		{
+			AssistLevel.Casual => AssistLevel.Sport,
+			AssistLevel.Sport => AssistLevel.Sim,
+			_ => AssistLevel.Casual,
+		};
+		StateHasChanged();
+	}
+
+	string AssistLabel => Car.IsValid() ? Car.Assists.ToString() : "";
+
+	// Tire preset swaps the UNSCALED base curves, then re-applies the current grip multiplier so the
+	// grip dial and the preset compose. Stock restores the car's own authored curves.
+	void CycleTires()
+	{
+		_tirePreset = (_tirePreset + 1) % 4;
+		(_baseLat, _baseLong) = _tirePreset switch
+		{
+			1 => (TireCurve.Street, TireCurve.Street),
+			2 => (TireCurve.Sport, TireCurve.Sport),
+			3 => (TireCurve.Offroad, TireCurve.Offroad),
+			_ => (_stockLat, _stockLong),
+		};
+		SetGrip( _gripScale );
+		StateHasChanged();
+	}
+
+	string TireLabel => _tirePreset switch
+	{
+		1 => "Street",
+		2 => "Sport",
+		3 => "Offroad",
+		_ => "Stock",
+	};
+
+	// Re-apply the car's pristine authored values (captured at bind). Definitions in the demo roster
+	// are fresh per car, so "stock" is unambiguous: the values this car spawned with.
+	void ResetToStock()
+	{
+		if ( !Car.IsValid() || !_snapped )
+			return;
+
+		var def = Car.Definition;
+		def.PeakTorque = _stockPeakTorque;
+		def.SpringRate = _stockSpring;
+		def.DamperRate = _stockDamper;
+		def.SuspensionTravel = _stockTravel;
+		def.BrakeTorque = _stockBrake;
+		def.LateralCurve = _stockLat;
+		def.LongitudinalCurve = _stockLong;
+
+		_gripScale = 1f;
+		_torqueScale = 1f;
+		_tirePreset = 0;
+		_baseLat = _stockLat;
+		_baseLong = _stockLong;
+
+		Car.Assists = _stockAssists;
+		ApplyWheels();
+		StateHasChanged();
+	}
+
+	protected override void OnEnabled()
+	{
+		// Play->Stop->Play hygiene: the static open flag must not survive a session.
+		IsOpen = false;
+	}
+
+	protected override void OnUpdate()
+	{
+		if ( Input.Pressed( ToggleAction ) )
+		{
+			IsOpen = !IsOpen;
+			Mouse.Visibility = IsOpen ? MouseVisibility.Visible : MouseVisibility.Hidden;
+			StateHasChanged();
+		}
+
+		// The chase camera re-hides the cursor every frame while it owns it; hold it visible while open.
+		if ( IsOpen )
+			Mouse.Visibility = MouseVisibility.Visible;
+	}
+
+	protected override int BuildHash()
+	{
+		if ( !IsOpen )
+			return 0;
+
+		var h = new HashCode();
+		h.Add( _gripScale );
+		h.Add( _torqueScale );
+		h.Add( _tirePreset );
+		if ( Car.IsValid() )
+		{
+			var def = Car.Definition;
+			h.Add( def.SpringRate );
+			h.Add( def.DamperRate );
+			h.Add( def.SuspensionTravel );
+			h.Add( def.BrakeTorque );
+			h.Add( (int)Car.Assists );
+		}
+		return h.ToHashCode();
+	}
+}

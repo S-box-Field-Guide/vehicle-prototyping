@@ -1,6 +1,6 @@
 # Vehicle Physics Kit
 
-Version 0.2.1 · MIT · namespace `FieldGuide.VehiclePhysics`
+Version 0.3.0 · MIT · namespace `FieldGuide.VehiclePhysics`
 
 A raycast-wheel arcade-sim vehicle stack for s&box: contact-normal suspension, slip-curve tires
 with a friction ellipse, a full drivetrain with auto-clutch and auto/sequential shifting, per-car
@@ -85,11 +85,31 @@ input actions only register after an editor restart.
 | `ShiftMode` | G | D-pad down | toggle AUTO / MANUAL gearbox |
 | `DriveMode` | B | D-pad up | cycle assists (Casual, Sport, Sim) |
 | `Reload` | R | X | respawn the car |
+| `Tune` | T | (none) | open the demo live tuning lab (demo scene only) |
 
 Gamepad throttle/brake also read the physical trigger axes directly
 (`Input.GetAnalog(InputAnalog.RightTrigger|LeftTrigger)`), so the analog pedals work whether or not
 you bind the optional `GasTrigger`/`BrakeTrigger` actions. Steering and pedals are variable per
 device; keyboard emits exact ±1.
+
+## Live tuning (demo)
+
+The demo scene ships a small tuning lab so you can feel the physics change under you in the first
+minute. Press `Tune` (T) while driving to open it; press again to close. It binds to the car the
+chase camera is following and writes changes onto that running car:
+
+- Sliders: grip (multiplier), drive torque (multiplier), suspension stiffness, suspension damping,
+  suspension travel, brake force. Drag the track or use the +/- steps.
+- Cycles: assists (Casual, Sport, Sim) and tires (Stock, Street, Sport, Offroad).
+- Reset to stock: re-applies the values the car spawned with.
+
+This panel is demo-layer only. It is built by `DemoBootstrap` and lives in the demo scene, so a
+consumer that spawns its own cars never gets it. Treat it as a worked example, not a shipping UI:
+it applies every value through the public paths your own UI would use (mutating `CarDefinition`,
+which the drivetrain and brakes read live, and pushing suspension/tire values onto `VehicleWheel`),
+and it consumes the `VehicleCamera.CursorModalOpen` seam so the camera yields the cursor while the
+lab is open. Ride height is deliberately not a dial: the factory reads it once at spawn to place the
+wheels, so there is no live path for it without rebuilding the car.
 
 ## Console dials
 

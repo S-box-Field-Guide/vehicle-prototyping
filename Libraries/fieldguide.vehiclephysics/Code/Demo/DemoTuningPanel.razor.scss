@@ -1,0 +1,137 @@
+// Kit-native live tuning lab (demo layer). Compact left-anchored card; s&box panels default to flex
+// so no display rules are needed (which also keeps this free of inline-flex / inline-block). All text
+// is bright: instructional copy never uses dim gray.
+
+DemoTuningPanel {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	font-family: Poppins, sans-serif;
+
+	.mono { font-family: "Roboto Mono", monospace; }
+
+	.panel {
+		position: absolute;
+		left: 40px;
+		top: 40px;
+		width: 360px;
+		flex-direction: column;
+		gap: 12px;
+		padding: 20px;
+		background-color: rgba( 15, 17, 21, 0.92 );
+		border: 1px solid rgba( 255, 255, 255, 0.08 );
+		border-radius: 16px;
+		box-shadow: 0 20px 60px rgba( 0, 0, 0, 0.6 );
+		pointer-events: all;
+
+		.head {
+			flex-direction: row;
+			justify-content: space-between;
+			align-items: center;
+
+			.title { font-weight: 700; color: #F2F4F7; }
+			.kbd {
+				color: #F2F4F7;
+				border: 1px solid rgba( 255, 255, 255, 0.12 );
+				border-radius: 5px;
+				padding: 3px 8px;
+				background-color: rgba( 255, 255, 255, 0.05 );
+			}
+		}
+
+		.hint { color: #F2F4F7; }
+
+		.dials {
+			flex-direction: column;
+			gap: 12px;
+
+			.dial { flex-direction: column; gap: 6px; }
+
+			.drow {
+				flex-direction: row;
+				justify-content: space-between;
+				align-items: center;
+
+				.dname { color: #F2F4F7; }
+				.dval { color: #E8EAED; }
+			}
+
+			.dctl {
+				flex-direction: row;
+				align-items: center;
+				gap: 10px;
+
+				.step {
+					width: 28px;
+					height: 28px;
+					justify-content: center;
+					align-items: center;
+					color: #F2F4F7;
+					background-color: rgba( 255, 255, 255, 0.06 );
+					border: 1px solid rgba( 255, 255, 255, 0.10 );
+					border-radius: 6px;
+					cursor: pointer;
+					transition: all 0.12s ease;
+
+					&:hover { color: #0A161A; background-color: #4AD9F2; }
+				}
+
+				.track {
+					// Click-to-jump + drag-to-scrub hit box. Events must land on the track (not the fill)
+					// so the mouse local position stays track-relative: pointer-events all here, none on
+					// the fill.
+					position: relative;
+					flex-grow: 1;
+					height: 14px;
+					border-radius: 99px;
+					background-color: rgba( 255, 255, 255, 0.12 );
+					pointer-events: all;
+					cursor: pointer;
+
+					.fill {
+						position: absolute;
+						left: 0px;
+						height: 100%;
+						border-radius: 99px;
+						background: linear-gradient( to right, #3AC4DE, #4AD9F2 );
+						pointer-events: none;
+					}
+				}
+			}
+
+			.cycle {
+				justify-content: center;
+				align-items: center;
+				font-weight: 600;
+				color: #0A161A;
+				background-color: #4AD9F2;
+				border-radius: 6px;
+				padding: 5px 14px;
+				cursor: pointer;
+				transition: all 0.12s ease;
+
+				&:hover { background-color: #58E1F7; }
+			}
+		}
+
+		.foot {
+			flex-direction: column;
+			gap: 8px;
+
+			.btn {
+				justify-content: center;
+				align-items: center;
+				font-weight: 700;
+				color: #F2F4F7;
+				background-color: rgba( 255, 255, 255, 0.06 );
+				border: 1px solid rgba( 255, 255, 255, 0.10 );
+				border-radius: 10px;
+				padding: 11px 0;
+				cursor: pointer;
+				transition: all 0.12s ease;
+
+				&:hover { color: #E8EAED; background-color: rgba( 255, 255, 255, 0.10 ); }
+			}
+		}
+	}
+}
