@@ -53,6 +53,27 @@ public static class StationCarRegistry
 			return false;
 
 		var key = id.Trim();
+
+		// COORDINATE SPAWN (world pass 2026-07-19): "at:x,y[,yawDeg]" resolves to raw world METRES —
+		// the automation escape hatch for worlds that have no station registry (the playground stunt
+		// park). Resolved BEFORE the TestTrack lookup so it works when Stations is empty. Deliberately
+		// NOT listed in ResolvableStationIds(): the battery's measurement-world census only ever sees
+		// real proto stations, so no spec can quietly anchor a measurement to a magic coordinate.
+		if ( key.StartsWith( "at:", System.StringComparison.OrdinalIgnoreCase ) )
+		{
+			var parts = key[3..].Split( ',' );
+			if ( parts.Length is < 2 or > 3 )
+				return false;
+			if ( !TryParseInvariant( parts[0], out float x ) || !TryParseInvariant( parts[1], out float y ) )
+				return false;
+			float yaw = 0f;
+			if ( parts.Length == 3 && !TryParseInvariant( parts[2], out yaw ) )
+				return false;
+			posMeters = new Vector3( x, y, 0f );
+			facing = Rotation.FromYaw( yaw );
+			return true;
+		}
+
 		var stations = TestTrack.Stations;
 		if ( stations is null || stations.Count == 0 )
 			return false;
@@ -67,6 +88,12 @@ public static class StationCarRegistry
 		facing = s.facing;
 		return true;
 	}
+
+	/// <summary>Locale-proof float parse for the "at:" coordinate syntax (a comma-decimal system
+	/// locale must not change how automation coordinates read).</summary>
+	static bool TryParseInvariant( string s, out float value )
+		=> float.TryParse( s, System.Globalization.NumberStyles.Float,
+			System.Globalization.CultureInfo.InvariantCulture, out value );
 
 	public static CarDefinition ResolveCar( string id )
 		=> (id ?? "").Trim().ToLowerInvariant() switch
