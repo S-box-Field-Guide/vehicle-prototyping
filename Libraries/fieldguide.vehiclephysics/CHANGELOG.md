@@ -5,7 +5,7 @@ for a hotfix; manual bumps only).
 
 ## Unreleased
 
-Backported from upstream `vehicle_prototyping` `992118b` -> `da37616` (two kart stuck-turn fixes).
+Backported from upstream `vehicle_prototyping` `3f4a5cd` -> `046ceb6` (two kart stuck-turn fixes).
 
 ### Fixed
 - Kart "stuck turning" at speed: turning one direction under power could lock the car into that turn
@@ -21,7 +21,7 @@ Backported from upstream `vehicle_prototyping` `992118b` -> `da37616` (two kart 
 
 ### Notes
 - Physics behavior remains byte-for-byte the Vehicle Prototyping stack at the pinned commit (now
-  `da37616`); see PROVENANCE.md.
+  `046ceb6`); see PROVENANCE.md.
 
 ## v0.1.0 — 2026-07-18
 

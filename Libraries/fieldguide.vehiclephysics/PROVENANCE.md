@@ -7,8 +7,8 @@ updated on every backport.
 ## Source
 
 - Repo: `vehicle_prototyping` (Vehicle Prototyping), local path `../vehicle_prototyping`.
-- Pinned at commit: **da3761662d63fad40fa4e266433b9a334322eda1** (`da37616`).
-- Originally extracted 2026-07-18 at `992118b`; backported to `da37616` on 2026-07-18 (two kart
+- Pinned at commit: **046ceb67541ae1451862e6b2e1d7543ca3d92662** (`046ceb6`).
+- Originally extracted 2026-07-18 at `3f4a5cd`; backported to `046ceb6` on 2026-07-18 (two kart
   stuck-turn fixes, see Backport log below).
 - Upstream namespace: `VehicleProto` → renamed to `FieldGuide.VehiclePhysics` here.
 
@@ -49,13 +49,13 @@ shipping lands upstream, port it here, bump the kit version, and update the pinn
 
 ## Backport log
 
-### 992118b -> da37616 (2026-07-18): kart stuck-turn fixes
+### 3f4a5cd -> 046ceb6 (2026-07-18): kart stuck-turn fixes
 
 Two upstream kart "stuck turning" fixes ported:
 
 - `7956776` cap-aware drive-torque rolloff. Auto-ported into `Code/VehicleWheel.cs` by
   `tools/sync_from_upstream.py` (mechanical; namespace rewrite only).
-- `da37616` Casual TC floor relaxation at extreme slip. Hand-merged into
+- `046ceb6` Casual TC floor relaxation at extreme slip. Hand-merged into
   `Code/VehicleController.cs` (seamed file). The change is confined to `ApplyTractionControl`;
   the lifted-out `Code/DriveInputs.cs` was flagged by the tool (it shares the upstream
   `VehicleController.cs` mapping) but needed no change. Code lines are byte-identical to upstream;
@@ -64,4 +64,10 @@ Two upstream kart "stuck turning" fixes ported:
 Tooling gap noted: `sync_from_upstream.py` cannot auto-advance this pin because a seamed file was
 hand-merged. It only diffs the upstream file across `pin..HEAD` and never compares the kit file's
 content, so a seamed upstream change keeps re-flagging until the pin moves. The pin above was
-therefore advanced to `da37616` by hand.
+therefore advanced to `046ceb6` by hand.
+
+### Pin remap (2026-07-18)
+
+Upstream rewrote public history the same day (commit message hygiene scrub, content
+unchanged). Pins remapped: old da37616 is now 046ceb6, old 992118b is now 3f4a5cd.
+Physics content at the pin is identical.
