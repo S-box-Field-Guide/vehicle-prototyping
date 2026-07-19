@@ -1,6 +1,6 @@
 {
   "kit": "fieldguide.vehiclephysics",
-  "description": "Upstream-sync map for the Vehicle Physics Kit. Drives tools/sync_from_upstream.py. Each entry maps a kit Code/ file to the upstream file it was ported from, with a sync mode. See docs/sync-workflow.md.",
+  "description": "HISTORICAL, DEPRECATED 2026-07-19: the canonicality flip (see PROVENANCE.md) made the KIT canonical and the game a vendored consumer, so this game-to-kit sync map is frozen as an extraction record. Do NOT run tools/sync_from_upstream.py; it would overwrite canonical kit files with the game's copies. Kept for the port history it documents.",
   "upstream": {
     "repo": "vehicle_prototyping",
     "path": "../vehicle_prototyping",
