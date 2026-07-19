@@ -640,7 +640,21 @@ public sealed class VehicleController : Component, Component.ICollisionListener
 		if ( worstSlip <= TcSlipTarget )
 			return throttle;
 
-		return throttle * Math.Clamp( TcSlipTarget / worstSlip, 0.2f, 1f );
+		// TC floor relaxation (kart cap-camping fix 2026-07-18): the flat 0.2 throttle floor still fed
+		// enough torque to sustain a spinning rear on a light car (260 kg kart), so TC could not
+		// arrest the wheelspin that pins a collapsing-corner rear far past the grip peak (the "stuck
+		// turning" bug — offline: this is the decisive lever, cutting sustained rear slip 3.2 -> 0.4).
+		// Once slip is deep past the tail (the longitudinal curve reaches its tail by slip 0.40;
+		// TcFloorRelaxStart 1.0 is well beyond it), fade the floor toward 0 so the proportional
+		// response can cut throttle to near-zero. Below TcFloorRelaxStart the floor stays 0.2 so all
+		// below-threshold behavior is byte-identical.
+		const float TcFloorRelaxStart = 1.0f;
+		const float TcFloorRelaxEnd = 2.5f;
+		float floor = 0.2f;
+		if ( worstSlip > TcFloorRelaxStart )
+			floor *= Math.Clamp( (TcFloorRelaxEnd - worstSlip) / (TcFloorRelaxEnd - TcFloorRelaxStart), 0f, 1f );
+
+		return throttle * Math.Clamp( TcSlipTarget / worstSlip, floor, 1f );
 	}
 
 	void ApplyStabilityAssist()
