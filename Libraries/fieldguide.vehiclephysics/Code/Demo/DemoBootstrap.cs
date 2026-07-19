@@ -11,6 +11,13 @@ public sealed class DemoBootstrap : Component
 	/// <summary>Spacing between spawned cars along the row (metres).</summary>
 	[Property] public float SpacingMeters { get; set; } = 5f;
 
+	/// <summary>Cars falling below this world height (metres) are placed back on their spawn spot.</summary>
+	[Property] public float VoidResetHeightM { get; set; } = -20f;
+
+	readonly List<VehicleController> _cars = new();
+	readonly List<Vector3> _spawns = new();
+	VehicleController _active;
+
 	protected override void OnStart()
 	{
 		// ~1.1 g like the source proving ground, so the tuned handling feels right. Read live by the
@@ -29,7 +36,8 @@ public sealed class DemoBootstrap : Component
 		float m = Units.MetersToUnits;
 		float startY = -(roster.Length - 1) * SpacingMeters * 0.5f;
 
-		VehicleController first = null;
+		_cars.Clear();
+		_spawns.Clear();
 		for ( int i = 0; i < roster.Length; i++ )
 		{
 			var def = roster[i];
@@ -37,12 +45,49 @@ public sealed class DemoBootstrap : Component
 			var pos = new Vector3( 0f, startY + i * SpacingMeters, seatZ ) * m;
 
 			var go = VehicleFactory.Spawn( Scene, def, pos, Rotation.Identity );
-			first ??= go.Components.Get<VehicleController>();
+			var controller = go.Components.Get<VehicleController>();
+			if ( controller is not null )
+			{
+				_cars.Add( controller );
+				_spawns.Add( pos );
+			}
 		}
 
-		// Point the scene's chase camera at the first car so the demo frames it on load.
+		_active = _cars.FirstOrDefault();
+
+		// Point the scene's chase camera at the active car so the demo frames it on load.
 		var cam = Scene.GetAllComponents<VehicleCamera>().FirstOrDefault();
 		if ( cam is not null )
-			cam.Target = first;
+			cam.Target = _active;
+	}
+
+	protected override void OnFixedUpdate()
+	{
+		float m = Units.MetersToUnits;
+
+		for ( int i = 0; i < _cars.Count; i++ )
+		{
+			var car = _cars[i];
+			if ( car is null || !car.IsValid() )
+				continue;
+
+			// Only the camera's car listens to the player; parked cars hold neutral inputs.
+			// (With no override every controller samples the same keyboard, so one W press
+			// would launch the whole row at once.)
+			car.InputOverride = car == _active ? null : default( DriveInputs );
+
+			// Void watchdog: driving off the pad edge otherwise means falling forever.
+			if ( car.GameObject.WorldPosition.z < VoidResetHeightM * m )
+			{
+				car.GameObject.WorldPosition = _spawns[i];
+				car.GameObject.WorldRotation = Rotation.Identity;
+				var body = car.GameObject.Components.Get<Rigidbody>();
+				if ( body is not null )
+				{
+					body.Velocity = Vector3.Zero;
+					body.AngularVelocity = Vector3.Zero;
+				}
+			}
+		}
 	}
 }
