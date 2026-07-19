@@ -165,8 +165,13 @@ public static class PlaygroundBuilder
 		ChainLine( new Vector2( -20f, 95f ), 0.6f, count: 3, spacingM: 25f, widthM: 7f );
 		// BIG line (scaled ~2×): three 2.5 m kickers, ~56 m spacing so you must carry real speed to link
 		ChainLine( new Vector2( -25f, 135f ), 2.5f, count: 3, spacingM: 56f, widthM: 9f );
-		// south rhythm: three 1.2 m kickers for southern-field coverage, ~34 m spacing
-		ChainLine( new Vector2( -30f, -45f ), 1.2f, count: 3, spacingM: 34f, widthM: 7f );
+		// south rhythm: three 1.2 m kickers for southern-field coverage, ~34 m spacing. y=-38, not -45:
+		// at -45 the 7 m-wide kickers (edges y -48.5..-41.5) laterally overlapped the ladder's 0.6 m lane
+		// landing corridor (lane at y=-48, kickers 8 m wide, so edges -52..-44) — a car landing off the
+		// 0.6 lane plowed into the first south kicker's side (measured 76 G spike + stuck). At -38 the
+		// line edge sits 2.5 m clear of the lane edge and 3.5 m clear of the jump-onto-box corridor (y
+		// -31..-19).
+		ChainLine( new Vector2( -30f, -38f ), 1.2f, count: 3, spacingM: 34f, widthM: 7f );
 	}
 
 	static void ChainLine( Vector2 firstBaseM, float heightM, int count, float spacingM, float widthM )
@@ -235,12 +240,16 @@ public static class PlaygroundBuilder
 	/// crest height — a wall hit. Zero gap removes the wall by construction.</summary>
 	static void BuildDoubleMounds()
 	{
-		// (crestX, crestY, heightM) — spread across the open mid-field for coverage from every direction
+		// (crestX, crestY, heightM) — spread across the open mid-field for coverage from every direction.
+		// The 1.2 mound moved y=60 to y=64: at 60 its 7 m width reached y 56.5, only ~0.6 m clear of the
+		// mid rhythm line's approach lane at y=55 (a test car snagged its west base corner and wedged,
+		// measured 700+ stuck ticks). y=64 gives the lane ~4.6 m clearance and keeps 2 m to the mid
+		// line's kicker edge.
 		var mounds = new (float cx, float cy, float h)[]
 		{
 			(   20f, -15f, 1.0f ),
 			(   25f, -105f, 1.5f ),
-			(  -50f,  60f, 1.2f ),
+			(  -50f,  64f, 1.2f ),
 			(  120f,  40f, 2.0f ),
 		};
 		foreach ( var p in mounds )
@@ -373,10 +382,14 @@ public static class PlaygroundBuilder
 
 	/// <summary>Classic tabletop: up-kicker → flat deck → down-kicker, deck top and both lips share
 	/// deckTop so the run is seamless. Launch off the front, land on the deck or clear it to the far
-	/// down-ramp.</summary>
+	/// down-ramp. Pass-3 fix: this was the last kicker still using a hand-picked run length below the
+	/// curvature law (8 m at 1.4 m lip = R 23.6 m, vs the law's 28.6 m); measured on the hatch at 21.5
+	/// m/s: 112 G face stop with only 0.18 s of air. kickLen now comes from LengthFor, which keeps the
+	/// deck seam flush because the lip height still equals deckTop.</summary>
 	static void BuildTabletop( Vector2 centreM )
 	{
-		const float deckHalf = 7f, kickLen = 8f, deckTop = 1.4f, w = 9f;
+		const float deckHalf = 7f, deckTop = 1.4f, w = 9f;
+		float kickLen = RampKicker.LengthFor( deckTop );
 		Kicker( new Vector2( centreM.x - deckHalf - kickLen, centreM.y ), 0f, kickLen, w, deckTop, RampGrey );
 		Block( new Vector3( centreM.x, centreM.y, deckTop * 0.5f ) * M,
 			new Vector3( deckHalf * 2f, w, deckTop ), RampGrey, name: "TabletopDeck" );
@@ -483,6 +496,12 @@ public static class PlaygroundBuilder
 		for ( int i = 0; i < segs; i++ )
 		{
 			float a = i / (float)segs * MathF.PI * 2f;
+			// entry/exit mouth: skip the three segments facing the open field (NE, toward the park
+			// centre). Measured without it: cars that dropped into the bowl could not climb out at
+			// low speed (700+ stuck ticks hatch; the kart circled and hit the ring at 117 G). A real
+			// velodrome has an apron opening; cars now roll in and out at grade through the mouth.
+			if ( i is 2 or 3 or 4 )      // segs 2/3/4 are centred on 30/45/60°, the NE-facing arc for this SW-corner bowl
+				continue;
 			float cx = centreM.x + MathF.Cos( a ) * radiusM;
 			float cy = centreM.y + MathF.Sin( a ) * radiusM;
 			float yawToCentre = MathF.Atan2( centreM.y - cy, centreM.x - cx ).RadianToDegree();

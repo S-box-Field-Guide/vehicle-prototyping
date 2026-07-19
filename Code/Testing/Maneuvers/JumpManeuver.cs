@@ -9,7 +9,10 @@ namespace VehicleProto;
 /// Why the two phases (audit 2026-07-13 MEDIUM — the old profile ignored <c>approachSpeedMs</c> and
 /// always floored it): the cruise makes 18 vs 22 m/s produce measurably different ramp-entry speeds;
 /// the latched full-throttle commit keeps power ON across take-off so there is no throttle-lift pitch
-/// artifact at the lip (a lift-off would pitch the nose and corrupt landing attitude).</summary>
+/// artifact at the lip (a lift-off would pitch the nose and corrupt landing attitude).
+///
+/// Optional <c>airLift</c> param (default 0, off) cuts throttle once airborne, for an A/B isolating
+/// whether in-air drive torque tumbles light cars off jumps.</summary>
 public sealed class JumpManeuver : ManeuverBase
 {
 	public override string Name => "jump";
@@ -45,7 +48,12 @@ public sealed class JumpManeuver : ManeuverBase
 		float drive;
 		if ( _committed )
 		{
-			drive = 1f;
+			// airLift=1: cut throttle while airborne (a human lifts in the air; the default keeps
+			// power ON so ramp-entry speed stays parameter-controlled). The A/B isolates whether
+			// in-air drive torque, spinning the unloaded wheels up and pitching the chassis in
+			// reaction, is what tumbles light cars off jumps.
+			bool airborne = ctx.Telemetry.ContactlessS > 0.05f;
+			drive = (ctx.Param( "airLift", 0f ) > 0.5f && airborne) ? 0f : 1f;
 		}
 		else
 		{
