@@ -811,3 +811,24 @@ byte-identical unless they enter the pathological state.
   signature (that lives in the jturn overshoot + free-drive feel); the yaw <= 320 ceiling stays
   as an upper bound. The C# recovery clause stays as a gated safety net (inert unless a
   spin-stop demands steer past the cap at near-standstill).
+
+
+## Omega-anchor fix battery gate (2026-07-19, kit v0.3.0 wave)
+
+Physics context: the kit's standstill fix (parking blend now anchors wheel omega to
+vLong/Radius by the same blend; kit commit chain through the camera-seam hardening,
+vp master 919c096 sync). Engine 26.07.15a, editor MCP 7276, full battery via
+tools/vp_test.py --all. Artifacts: artifacts/battery-omega-fix-919c096/.
+
+VERDICT: GATE PASS. Zero verdict flips against battery-baseline-da37616 on every
+row that is stable across both baseline runs; all FAILs in the run are the
+pre-existing documented reds, unchanged. The two known-noisy slalom rows (hatch,
+kart) both landed PASS. Deterministic anchors: jturn hatch and coupe BIT-IDENTICAL
+to baseline; jturn kart on its documented 2.12/2.16 one-tick-alias pair; jturn
+pickup on the same alias family with an unchanged verdict.
+
+Fix footprint (the only measurable deltas): brake-to-stop tails moved at the
+millimeter scale (hatch 47.049683 -> 47.055176 m over a 47 m stop, lockupTicks
+146 -> 144; coupe similar), exactly the near-rest regime the omega anchor touches.
+Cruise-speed rows are value-identical. This matches the offline sim's prediction
+(blend inert above 1.5 m/s, byte-identical cruise).
