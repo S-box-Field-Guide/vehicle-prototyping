@@ -67,6 +67,10 @@ public sealed class GameBootstrap : Component
 		// rates; ~1.1 g keeps the suspension math honest (lesson from anywheredrive)
 		Scene.PhysicsWorld.Gravity = Vector3.Down * 9.81f * 1.1f * m;
 
+		// Wire the Vehicle Physics Kit seams to the game before the first spawn or camera use: the
+		// part-kit body builder (CustomBodyBuilder) and the camera cursor-modal check (CursorModalOpen).
+		PartKitFactory.InstallSeams();
+
 		// Build the selected world + spawn the default hatch (the shared path a live world switch reuses).
 		var controller = BuildWorldAndCar( CarDefinitions.Hatch );
 
@@ -133,7 +137,7 @@ public sealed class GameBootstrap : Component
 		// seat-height offset are in metres; VehicleFactory.Spawn wants engine units, so convert the whole
 		// position at this one boundary. Proto's spawn is (0,0,0) so the conversion is a no-op for it —
 		// only the playground's -150 m west apron actually moves (previously it landed at unit-space -150).
-		var car = VehicleFactory.Spawn( Scene, def,
+		var car = PartKitFactory.Spawn( Scene, def,
 			(spawnPosM + Vector3.Up * seatZM) * m,
 			spawnFacing );
 		var controller = car.Components.Get<VehicleController>();

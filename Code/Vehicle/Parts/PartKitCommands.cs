@@ -64,7 +64,7 @@ public static class PartKitCommands
 		float seatZM = VehiclePilot.SeatHeightM( def );
 		var pos = posM * m + Vector3.Up * seatZM * m;
 
-		var carGo = VehicleFactory.Spawn( scene, def, pos, facing );
+		var carGo = PartKitFactory.Spawn( scene, def, pos, facing );
 		var controller = carGo.Components.Get<VehicleController>();
 
 		if ( pilot is not null )
