@@ -1,0 +1,13 @@
+// Matte demo-pad ground. The engine default material is glossy enough that the pad
+// mirrors the cars, and reflection passes drop per-renderer tint, so every car ghosted
+// WHITE in the floor from low camera angles. Full roughness kills the reflection.
+Layer0
+{
+	shader "shaders/complex.shader"
+
+	TextureColor "models/vehicle_blockouts/white.png"
+	g_vColorTint "[0.5400 0.5400 0.5600 0.0000]"
+	g_flModelTintAmount "1.000"
+	TextureRoughness "[1.0000 1.0000 1.0000 1.0000]"
+	g_flMetalness "0.000"
+}

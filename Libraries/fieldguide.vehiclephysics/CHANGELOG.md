@@ -3,6 +3,13 @@
 All notable changes to this kit. Versions are display versions (minor per content publish, patch
 for a hotfix; manual bumps only).
 
+## Unreleased
+
+### Fixed
+- The demo pad no longer mirrors ghostly white copies of the cars. The ground used a glossy
+  default material and the engine's reflection passes drop per-car tint, so reflections rendered
+  untinted. The pad now ships a matte material of its own.
+
 ## v0.3.0 - 2026-07-19
 
 Demo becomes a physics lab: live tuning and a much bigger pad.
