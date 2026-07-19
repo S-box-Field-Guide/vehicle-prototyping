@@ -22,6 +22,31 @@ public static class VehicleFactory
 	// and by a custom body that opts into the shared driver. A custom builder may seat its own driver.
 	static readonly Vector3 DefaultDriverLocalM = new( 0.05f, 0f, 0.06f );
 
+	// ---- blockout model assets (owner-approved art pass; tools/vehicle_blockouts) ----
+	// Kit-Assets-relative paths. Keyed by roster Name so CarDefinition stays untouched
+	// (physics contract); an unmapped name or missing model falls back to the primitive
+	// box/kart builders, so a consumer with a custom roster loses nothing.
+	static readonly Dictionary<string, string> BlockoutBodyModels = new()
+	{
+		["Compact Hatch"] = "models/vehicle_blockouts/body_hatch.vmdl",
+		["Sports Coupe"] = "models/vehicle_blockouts/body_coupe.vmdl",
+		["Go-Kart"] = "models/vehicle_blockouts/body_kart.vmdl",
+		["Utility Pickup"] = "models/vehicle_blockouts/body_pickup.vmdl",
+	};
+
+	const string TireModelPath = "models/vehicle_blockouts/tire.vmdl";
+
+	// Canonical radius (m) the shared tire model is exported at; wheel visuals scale by
+	// def.WheelRadius / this so the rendered tire always matches the physics contact
+	// radius. See tools/vehicle_blockouts/README.md.
+	const float TireModelRadiusM = 0.30f;
+
+	// Imported blockout meshes follow the proven OBJ frame contract (authored +X forward
+	// imports as model-local +Y forward), so every blockout BODY GameObject wears this yaw
+	// to face the car root's +X. The tire needs no yaw: its axle is authored to import as
+	// model-local +Y, the axis WheelVisual spins about.
+	static readonly Rotation BlockoutBodyYaw = Rotation.FromYaw( -90f );
+
 	public static GameObject Spawn( Scene scene, CarDefinition def, Vector3 position, Rotation rotation )
 	{
 		float m = Units.MetersToUnits;
@@ -53,10 +78,15 @@ public static class VehicleFactory
 
 		if ( !customBody )
 		{
-			if ( def.Style == BodyStyle.Kart )
-				BuildKartBody( scene, root, def ); // adds its own driver when HasDriver
-			else
-				BuildBoxBody( scene, root, def );
+			// Modeled blockout body first (visuals only; same physics on every path).
+			// Fallback keeps the original primitive builders for unmapped/missing models.
+			if ( !TryBuildBlockoutModelBody( scene, root, def ) )
+			{
+				if ( def.Style == BodyStyle.Kart )
+					BuildKartBody( scene, root, def ); // adds its own driver when HasDriver
+				else
+					BuildBoxBody( scene, root, def );
+			}
 		}
 		else if ( def.HasDriver )
 		{
@@ -140,9 +170,41 @@ public static class VehicleFactory
 		return def.SuspensionTravel + def.WheelRadius - staticCompression + def.RideHeight;
 	}
 
-	/// <summary>Build the VISIBLE blockout wheel (squashed dev sphere) under <paramref name="wheelGo"/>.
-	/// The shared wheel visual for the blockout body path; a custom body builder that wants modeled
-	/// wheels can replace these under each wheel GameObject after spawn.</summary>
+	/// <summary>Build the modeled blockout body (single mesh, neutral-gray albedo tinted per car)
+	/// under the car root. Returns false when this def has no mapped model or the model fails to
+	/// load, so the caller can fall back to the primitive box/kart builders. Visual only: the
+	/// root collider, wheels, and all physics are identical on every body path.</summary>
+	static bool TryBuildBlockoutModelBody( Scene scene, GameObject root, CarDefinition def )
+	{
+		if ( !BlockoutBodyModels.TryGetValue( def.Name, out var path ) )
+			return false;
+
+		var model = Model.Load( path );
+		if ( model is null || model.IsError )
+			return false;
+
+		var go = scene.CreateObject();
+		go.Name = "Body (blockout model)";
+		go.SetParent( root, false );
+		go.LocalRotation = BlockoutBodyYaw; // model-local +Y forward -> root +X forward
+
+		var renderer = go.Components.Create<ModelRenderer>();
+		renderer.Model = model;
+		renderer.Tint = def.Tint; // neutral-gray albedo * per-car tint = the roster colour
+
+		// The kart body model has no driver baked in; seat the shared citizen exactly as
+		// the primitive kart builder does.
+		if ( def.HasDriver )
+			AddDriver( scene, root, def );
+
+		return true;
+	}
+
+	/// <summary>Build the VISIBLE blockout wheel under <paramref name="wheelGo"/>: the modeled
+	/// tire (baked dark tire + light rim, deliberately NOT body-tinted) scaled from its canonical
+	/// export radius to this car's physics radius. Falls back to the original squashed dev sphere
+	/// when the tire model is missing. A custom body builder that wants its own modeled wheels can
+	/// replace these under each wheel GameObject after spawn.</summary>
 	public static void BuildBlockoutWheelVisual( Scene scene, GameObject wheelGo, VehicleWheel wheel, CarDefinition def )
 	{
 		float m = Units.MetersToUnits;
@@ -151,15 +213,28 @@ public static class VehicleFactory
 		visualGo.Name = "Visual (blockout)";
 		visualGo.SetParent( wheelGo, false );
 
-		// blockout: squashed sphere, drawn chunkier than physics radius
-		bool kart = def.Style == BodyStyle.Kart;
-		float diameterScale = def.WheelRadius * m / 50f * (kart ? 1.3f : 1.1f);
-		visualGo.LocalScale = new Vector3( diameterScale, diameterScale * (kart ? 0.85f : 0.6f), diameterScale );
+		var tireModel = Model.Load( TireModelPath );
+		if ( tireModel is not null && !tireModel.IsError )
+		{
+			// Uniform scale maps the canonical export radius onto the physics radius, so the
+			// rendered tire matches where the suspension ray contacts. No tint, no material
+			// override: the tire's baked vmats (dark tire + light rim disc) show as authored.
+			visualGo.LocalScale = def.WheelRadius / TireModelRadiusM;
+			var tireRenderer = visualGo.Components.Create<ModelRenderer>();
+			tireRenderer.Model = tireModel;
+		}
+		else
+		{
+			// fallback: the original 30-minute blockout, a squashed dev sphere
+			bool kart = def.Style == BodyStyle.Kart;
+			float diameterScale = def.WheelRadius * m / 50f * (kart ? 1.3f : 1.1f);
+			visualGo.LocalScale = new Vector3( diameterScale, diameterScale * (kart ? 0.85f : 0.6f), diameterScale );
 
-		var sphereRenderer = visualGo.Components.Create<ModelRenderer>();
-		sphereRenderer.MaterialOverride = Material.Load( "materials/default.vmat" );
-		sphereRenderer.Model = Model.Load( "models/dev/sphere.vmdl" );
-		sphereRenderer.Tint = new Color( 0.12f, 0.12f, 0.13f );
+			var sphereRenderer = visualGo.Components.Create<ModelRenderer>();
+			sphereRenderer.MaterialOverride = Material.Load( "materials/default.vmat" );
+			sphereRenderer.Model = Model.Load( "models/dev/sphere.vmdl" );
+			sphereRenderer.Tint = new Color( 0.12f, 0.12f, 0.13f );
+		}
 
 		var visual = visualGo.Components.Create<WheelVisual>();
 		visual.Wheel = wheel;
