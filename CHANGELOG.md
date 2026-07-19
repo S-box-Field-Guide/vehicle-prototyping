@@ -6,6 +6,17 @@ monotonic tester-attribution counter; the display version (`VpBuild.Version`, sh
 in-game) is bumped by hand alongside it — minor per content publish, patch per hotfix — and is
 display-only (see `Code/Game/VpBuild.cs` for the full policy).
 
+## build 12 — 2026-07-18 (v0.3.1)
+- FIX cranking the engine torque way up on the go-kart no longer makes it wobble left and right. Under
+  heavy power a wheel could spin far past the rev limiter for a split second, so one rear tire would
+  light up while the other kept grip. Drive power now respects redline every physics tick, on every car.
+- FIX the kart no longer locks into a turn at speed. Hard cornering under sustained full throttle could
+  send the rear tires into endless wheelspin, wiping out their sideways grip, so the kart kept rotating
+  no matter how hard you countersteered until you lifted off. Traction control now cuts power fully when
+  the rear breaks away, and engine power eases off as it approaches redline instead of camping on it.
+- High-torque karts can actually corner now: at maximum engine torque the kart used to become undrivable
+  through tight weaves even with traction control. With the fix it threads a full slalom cleanly.
+
 ## build 11 — 2026-07-17 (v0.3.0)
 - NEW d-pad up now cycles the DRIVE MODE (casual → sport → sim); the auto/manual gearbox toggle moved
   to d-pad down. On keyboard the drive-mode cycle gets a new `B` key (gearbox stays on `G`). Both
