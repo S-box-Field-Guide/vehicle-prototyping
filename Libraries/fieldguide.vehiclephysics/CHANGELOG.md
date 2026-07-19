@@ -7,6 +7,12 @@ for a hotfix; manual bumps only).
 
 First published release (s&box Library Manager, org `fieldguide`).
 
+### Demo
+- Only the chase camera's car takes player input; the other roster cars hold neutral inputs
+  (previously every controller sampled the same keyboard, so one W press launched all four).
+- Void watchdog: a car driven off the demo pad is placed back on its spawn spot instead of
+  falling forever.
+
 Backported from upstream `vehicle_prototyping` `3f4a5cd` -> `046ceb6` (two kart stuck-turn fixes).
 
 ### Fixed
