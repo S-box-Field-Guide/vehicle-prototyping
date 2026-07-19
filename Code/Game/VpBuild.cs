@@ -27,5 +27,5 @@ public static class VpBuild
 	/// 1.0.0 is reserved for feature-complete. DISPLAY ONLY — it never gates compatibility
 	/// (<see cref="PublishStamp"/> keeps that job). Bumps are deliberate manual edits to this line,
 	/// never automated: tools/bump_publish_stamp.py touches only the stamp and note lines above.</summary>
-	public const string Version = "0.3.1";
+	public const string Version = "0.4.0";
 }
