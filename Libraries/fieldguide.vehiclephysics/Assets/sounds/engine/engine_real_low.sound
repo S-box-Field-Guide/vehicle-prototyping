@@ -1,0 +1,14 @@
+{
+  "UI": false,
+  "Volume": "1",
+  "Pitch": "1",
+  "Decibels": 70,
+  "Sounds": [
+    "sounds/engine/engine_real_low.vsnd"
+  ],
+  "SelectionMode": "Random",
+  "Distance": 3000,
+  "DistanceAttenuation": true,
+  "__references": [],
+  "__version": 0
+}
