@@ -2,41 +2,124 @@
   "__guid": "b7c1d2e3-1a2b-4c3d-8e4f-5a6b7c8d9e01",
   "GameObjects": [
     {
+      "__guid": "196c9bde-351e-4303-9420-2771e782eef9",
+      "__version": 2,
+      "Flags": 0,
+      "Name": "Scene Information",
+      "Position": "0,0,0",
+      "Rotation": "0,0,0,1",
+      "Scale": "1,1,1",
+      "Tags": "",
+      "Enabled": true,
+      "NetworkMode": 2,
+      "NetworkFlags": 0,
+      "NetworkOrphaned": 0,
+      "NetworkTransmit": true,
+      "OwnerTransfer": 1,
+      "Components": [
+        {
+          "__type": "Sandbox.SceneInformation",
+          "__guid": "e347194e-0e50-46de-ba32-e4a54a5063ef",
+          "__enabled": true,
+          "Flags": 0,
+          "Author": null,
+          "Changes": null,
+          "Description": "Vehicle Physics Kit demo: one blockout car per roster entry on a flat pad.",
+          "Group": null,
+          "OnComponentDestroy": null,
+          "OnComponentDisabled": null,
+          "OnComponentEnabled": null,
+          "OnComponentFixedUpdate": null,
+          "OnComponentStart": null,
+          "OnComponentUpdate": null,
+          "SceneTags": "",
+          "Title": "vehiclephysics_demo",
+          "Version": null
+        }
+      ],
+      "Children": []
+    },
+    {
       "__guid": "a1b2c3d4-1111-4a2b-8c3d-e5f6a7b8c901",
+      "__version": 2,
       "Flags": 0,
       "Name": "Sun",
-      "Rotation": "-0.0729315,0.4822396,0.1305433,0.8631827",
+      "Position": "0,0,0",
+      "Rotation": "-0.0729314983,0.482239604,0.130543306,0.863182724",
+      "Scale": "1,1,1",
       "Tags": "light_directional,light",
       "Enabled": true,
+      "NetworkMode": 2,
+      "NetworkFlags": 0,
+      "NetworkOrphaned": 0,
+      "NetworkTransmit": true,
+      "OwnerTransfer": 1,
       "Components": [
         {
           "__type": "Sandbox.DirectionalLight",
           "__guid": "b2c3d4e5-2222-4b3c-9d4e-f6a7b8c90112",
+          "__enabled": true,
+          "Flags": 0,
+          "ContactShadows": true,
+          "Contribution": "Diffuse, Specular, Transmissive",
           "FogMode": "Enabled",
           "FogStrength": 1,
           "LightColor": "1,0.97,0.88,1",
+          "OnComponentDestroy": null,
+          "OnComponentDisabled": null,
+          "OnComponentEnabled": null,
+          "OnComponentFixedUpdate": null,
+          "OnComponentStart": null,
+          "OnComponentUpdate": null,
+          "ShadowBias": 0.0005,
+          "ShadowCascadeCount": 4,
+          "ShadowCascadeSplitRatio": 0.91,
+          "ShadowHardness": 0,
           "Shadows": true,
-          "SkyColor": "0.36,0.44,0.52,1"
+          "SkyColor": "0.36,0.44,0.52,1",
+          "Visualizer": {}
         }
-      ]
+      ],
+      "Children": []
     },
     {
       "__guid": "c3d4e5f6-3333-4c4d-8e5f-a7b8c9011223",
+      "__version": 2,
       "Flags": 0,
       "Name": "2D Skybox",
+      "Position": "0,0,0",
+      "Rotation": "0,0,0,1",
+      "Scale": "1,1,1",
       "Tags": "skybox",
       "Enabled": true,
+      "NetworkMode": 2,
+      "NetworkFlags": 0,
+      "NetworkOrphaned": 0,
+      "NetworkTransmit": true,
+      "OwnerTransfer": 1,
       "Components": [
         {
           "__type": "Sandbox.SkyBox2D",
           "__guid": "d4e5f6a7-4444-4d5e-9f6a-b8c901122334",
+          "__enabled": true,
+          "Flags": 0,
+          "OnComponentDestroy": null,
+          "OnComponentDisabled": null,
+          "OnComponentEnabled": null,
+          "OnComponentFixedUpdate": null,
+          "OnComponentStart": null,
+          "OnComponentUpdate": null,
+          "SkyIndirectLighting": true,
           "SkyMaterial": "materials/skybox/skybox_day_01.vmat",
           "Tint": "1,1,1,1"
         },
         {
           "__type": "Sandbox.EnvmapProbe",
           "__guid": "e5f6a7b8-5555-4e6f-8a7b-c90112233445",
-          "Texture": "textures/cubemaps/default2.vtex",
+          "__enabled": true,
+          "Flags": 0,
+          "__version": 1,
+          "BakedTexture": null,
           "Bounds": {
             "Mins": "-20000,-20000,-20000",
             "Maxs": "20000,20000,20000"
@@ -45,35 +128,67 @@
           "Feathering": 0.02,
           "FrameInterval": 5,
           "MaxDistance": 20000,
+          "Mode": "CustomTexture",
+          "MultiBounce": false,
+          "OnComponentDestroy": null,
+          "OnComponentDisabled": null,
+          "OnComponentEnabled": null,
+          "OnComponentFixedUpdate": null,
+          "OnComponentStart": null,
+          "OnComponentUpdate": null,
+          "Priority": 0,
           "Projection": "Sphere",
-          "RenderDynamically": false,
+          "RenderExcludeTags": "",
+          "Resolution": "Small",
+          "Texture": "textures/cubemaps/default2.vtex",
           "TintColor": "1,1,1,1",
           "UpdateStrategy": "OnEnabled",
           "ZFar": 4096,
           "ZNear": 16
         }
-      ]
+      ],
+      "Children": []
     },
     {
       "__guid": "f6a7b8c9-6666-4f7a-9b8c-011223344556",
+      "__version": 2,
       "Flags": 0,
       "Name": "Camera",
       "Position": "-400,0,250",
-      "Rotation": "0,0.2079117,0,0.9781476",
+      "Rotation": "0,0.2079117,0,0.978147626",
+      "Scale": "1,1,1",
+      "Tags": "",
       "Enabled": true,
+      "NetworkMode": 2,
+      "NetworkFlags": 0,
+      "NetworkOrphaned": 0,
+      "NetworkTransmit": true,
+      "OwnerTransfer": 1,
       "Components": [
         {
           "__type": "Sandbox.CameraComponent",
           "__guid": "a7b8c901-7777-4a8b-8c9d-122334455667",
+          "__enabled": true,
+          "Flags": 0,
           "BackgroundColor": "0.55,0.75,0.88,1",
           "ClearFlags": "All",
+          "EnablePostProcessing": true,
           "FieldOfView": 70,
+          "FovAxis": "Horizontal",
           "IsMainCamera": true,
+          "OnComponentDestroy": null,
+          "OnComponentDisabled": null,
+          "OnComponentEnabled": null,
+          "OnComponentFixedUpdate": null,
+          "OnComponentStart": null,
+          "OnComponentUpdate": null,
           "Orthographic": false,
           "OrthographicHeight": 1204,
+          "PostProcessAnchor": null,
           "Priority": 1,
           "RenderExcludeTags": "",
           "RenderTags": "",
+          "RenderTexture": null,
           "TargetEye": "None",
           "Viewport": "0,0,1,1",
           "ZFar": 30000,
@@ -81,71 +196,189 @@
         },
         {
           "__type": "FieldGuide.VehiclePhysics.VehicleCamera",
-          "__guid": "b8c90112-7788-4b9c-9dae-233445566778"
+          "__guid": "b8c90112-7788-4b9c-9dae-233445566778",
+          "__enabled": true,
+          "Flags": 0,
+          "BaseFov": 70,
+          "Distance": 6.5,
+          "Height": 2.2,
+          "MaxDistance": 14,
+          "MinDistance": 3,
+          "OnComponentDestroy": null,
+          "OnComponentDisabled": null,
+          "OnComponentEnabled": null,
+          "OnComponentFixedUpdate": null,
+          "OnComponentStart": null,
+          "OnComponentUpdate": null,
+          "OrbitReturnDelay": 5,
+          "ZoomPerNotch": 0.85
         }
-      ]
+      ],
+      "Children": []
     },
     {
       "__guid": "c9011223-8888-4cad-8ebf-344556677889",
+      "__version": 2,
       "Flags": 0,
       "Name": "Ground Collider",
       "Position": "0,0,0",
+      "Rotation": "0,0,0,1",
+      "Scale": "1,1,1",
+      "Tags": "",
       "Enabled": true,
+      "NetworkMode": 2,
+      "NetworkFlags": 0,
+      "NetworkOrphaned": 0,
+      "NetworkTransmit": true,
+      "OwnerTransfer": 1,
       "Components": [
         {
           "__type": "Sandbox.BoxCollider",
           "__guid": "d0112233-9999-4dbe-9fc0-455667788990",
+          "__enabled": true,
+          "Flags": 0,
           "Center": "0,0,-50",
+          "ColliderFlags": 0,
+          "Elasticity": null,
+          "Friction": null,
+          "IsTrigger": false,
+          "OnComponentDestroy": null,
+          "OnComponentDisabled": null,
+          "OnComponentEnabled": null,
+          "OnComponentFixedUpdate": null,
+          "OnComponentStart": null,
+          "OnComponentUpdate": null,
+          "OnObjectTriggerEnter": null,
+          "OnObjectTriggerExit": null,
+          "OnTriggerEnter": null,
+          "OnTriggerExit": null,
+          "RollingResistance": null,
           "Scale": "40000,40000,100",
-          "Static": true
+          "Static": true,
+          "Surface": null,
+          "SurfaceVelocity": "0,0,0"
         }
-      ]
+      ],
+      "Children": []
     },
     {
       "__guid": "e1223344-aaaa-4ecf-8ad1-566778899001",
+      "__version": 2,
       "Flags": 0,
       "Name": "Ground Visual",
       "Position": "0,0,-50",
+      "Rotation": "0,0,0,1",
       "Scale": "800,800,2",
+      "Tags": "",
       "Enabled": true,
+      "NetworkMode": 2,
+      "NetworkFlags": 0,
+      "NetworkOrphaned": 0,
+      "NetworkTransmit": true,
+      "OwnerTransfer": 1,
       "Components": [
         {
           "__type": "Sandbox.ModelRenderer",
           "__guid": "f2334455-bbbb-4fda-9be2-677889900112",
+          "__enabled": true,
+          "Flags": 0,
+          "BodyGroups": 18446744073709551615,
+          "CreateAttachments": false,
+          "LodOverride": null,
+          "MaterialGroup": null,
+          "MaterialOverride": "models/vehicle_blockouts/materials/pad.vmat",
+          "Materials": null,
           "Model": "models/dev/box.vmdl",
+          "OnComponentDestroy": null,
+          "OnComponentDisabled": null,
+          "OnComponentEnabled": null,
+          "OnComponentFixedUpdate": null,
+          "OnComponentStart": null,
+          "OnComponentUpdate": null,
+          "RenderOptions": {
+            "GameLayer": true,
+            "OverlayLayer": false,
+            "BloomLayer": false,
+            "AfterUILayer": false
+          },
+          "RenderType": "On",
           "Tint": "0.32,0.33,0.35,1"
         }
-      ]
+      ],
+      "Children": []
     },
     {
       "__guid": "03445566-cccc-4a0b-8cf3-788990011223",
+      "__version": 2,
       "Flags": 0,
       "Name": "Demo",
+      "Position": "0,0,0",
+      "Rotation": "0,0,0,1",
+      "Scale": "1,1,1",
+      "Tags": "",
       "Enabled": true,
+      "NetworkMode": 2,
+      "NetworkFlags": 0,
+      "NetworkOrphaned": 0,
+      "NetworkTransmit": true,
+      "OwnerTransfer": 1,
       "Components": [
         {
           "__type": "FieldGuide.VehiclePhysics.DemoBootstrap",
           "__guid": "14556677-dddd-4b1c-9d04-899001122334",
-          "SpacingMeters": 5
+          "__enabled": true,
+          "Flags": 0,
+          "OnComponentDestroy": null,
+          "OnComponentDisabled": null,
+          "OnComponentEnabled": null,
+          "OnComponentFixedUpdate": null,
+          "OnComponentStart": null,
+          "OnComponentUpdate": null,
+          "SpacingMeters": 5,
+          "VoidResetHeightM": -20
         }
-      ]
+      ],
+      "Children": []
     }
   ],
   "SceneProperties": {
-    "FixedUpdateFrequency": 50,
-    "MaxFixedUpdates": 5,
-    "NetworkFrequency": 60,
     "NetworkInterpolation": true,
-    "ThreadedAnimation": true,
     "TimeScale": 1,
-    "UseFixedUpdate": true,
+    "WantsSystemScene": true,
+    "Metadata": {
+      "Title": "vehiclephysics_demo",
+      "Description": "Vehicle Physics Kit demo: one blockout car per roster entry on a flat pad."
+    },
     "NavMesh": {
-      "Enabled": false
+      "Enabled": false,
+      "IncludeStaticBodies": true,
+      "IncludeKeyframedBodies": true,
+      "EditorAutoUpdate": false,
+      "AgentHeight": 64,
+      "AgentRadius": 16,
+      "AgentStepSize": 18,
+      "AgentMaxSlope": 40,
+      "ExcludedBodies": "",
+      "IncludedBodies": "",
+      "DeferGeneration": false,
+      "CustomBounds": false
+    },
+    "GameObjectSystems": {
+      "Sandbox.Clutter.ClutterGridSystem": {
+        "Storage": {
+          "$blob": "f11e12e2-14fd-41dd-a1f0-410489fdd6c3"
+        }
+      },
+      "Sandbox.SelectionSetsSystem": {
+        "Data": {
+          "SelectionSets": []
+        }
+      }
     }
   },
+  "ResourceVersion": 3,
   "Title": "vehiclephysics_demo",
   "Description": "Vehicle Physics Kit demo: one blockout car per roster entry on a flat pad.",
-  "ResourceVersion": 1,
   "__references": [],
-  "__version": 1
+  "__version": 3
 }
