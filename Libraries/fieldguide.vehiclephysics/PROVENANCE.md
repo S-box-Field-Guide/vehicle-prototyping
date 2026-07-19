@@ -4,7 +4,16 @@ This kit is a curated, renamed, seam-decoupled release of code from a Field Guid
 code is Field Guide's own (MIT). This file pins the exact source it was extracted from and is
 updated on every backport.
 
-## Source
+## Canonicality flip (2026-07-19)
+
+As of Vehicle Prototyping's merge of its library-inversion branch (vp master `f45f01b`),
+THIS KIT IS CANONICAL for the vehicle physics stack. The game vendors the kit and
+consumes it through seams; changes flow kit-first and sync outward to the vendored
+copies. The upstream pin below records the extraction history and stays frozen at the
+flip point; the sync tooling that ported game-side changes into the kit is retired for
+this kit.
+
+## Source (extraction history, frozen at the flip)
 
 - Repo: `vehicle_prototyping` (Vehicle Prototyping), https://github.com/S-box-Field-Guide/vehicle-prototyping
 - Pinned at commit: **046ceb67541ae1451862e6b2e1d7543ca3d92662** (`046ceb6`).
