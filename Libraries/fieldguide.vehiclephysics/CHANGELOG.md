@@ -1,9 +1,11 @@
-# Changelog — Vehicle Physics Kit
+# Changelog: Vehicle Physics Kit
 
 All notable changes to this kit. Versions are display versions (minor per content publish, patch
 for a hotfix; manual bumps only).
 
-## Unreleased
+## v0.2.0 - 2026-07-19
+
+First published release (s&box Library Manager, org `fieldguide`).
 
 Backported from upstream `vehicle_prototyping` `3f4a5cd` -> `046ceb6` (two kart stuck-turn fixes).
 
@@ -23,7 +25,7 @@ Backported from upstream `vehicle_prototyping` `3f4a5cd` -> `046ceb6` (two kart 
 - Physics behavior remains byte-for-byte the Vehicle Prototyping stack at the pinned commit (now
   `046ceb6`); see PROVENANCE.md.
 
-## v0.1.0 — 2026-07-18
+## v0.1.0 - 2026-07-18 (internal, unreleased)
 
 First extraction from Vehicle Prototyping.
 

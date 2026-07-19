@@ -1,4 +1,4 @@
-# Provenance — Vehicle Physics Kit
+# Provenance: Vehicle Physics Kit
 
 This kit is a curated, renamed, seam-decoupled release of code from a Field Guide game repo. All
 code is Field Guide's own (MIT). This file pins the exact source it was extracted from and is
@@ -6,7 +6,7 @@ updated on every backport.
 
 ## Source
 
-- Repo: `vehicle_prototyping` (Vehicle Prototyping), local path `../vehicle_prototyping`.
+- Repo: `vehicle_prototyping` (Vehicle Prototyping), https://github.com/S-box-Field-Guide/vehicle-prototyping
 - Pinned at commit: **046ceb67541ae1451862e6b2e1d7543ca3d92662** (`046ceb6`).
 - Originally extracted 2026-07-18 at `3f4a5cd`; backported to `046ceb6` on 2026-07-18 (two kart
   stuck-turn fixes, see Backport log below).
