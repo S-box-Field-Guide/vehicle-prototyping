@@ -297,7 +297,14 @@ public static class CityBuilder
 			int seed = bx * 7 + by * 13 + lot * 29;
 
 			string model = SuburbModels[seed % SuburbModels.Length];
-			float yaw = lot % 2 == 0 ? 90f : -90f; // face the nearest N-S street
+			// FRONT AXIS (discovered 2026-07-19): every village model's door is authored on
+			// LOCAL +X (OBJ wb_door_brown ground band on the max-Z face; OBJ +Z imports to
+			// engine +X, fingerprinted via civic_hall's asymmetric depth). Yaw therefore IS
+			// the door's world heading. Each lot is a corner lot equidistant from its two
+			// bounding streets; face the N-S street: west-column lots (lot 0/2) point the
+			// door west at their street, east-column lots east. (The old 90/-90 guess had
+			// every door facing north/south, blank gable walls to the street.)
+			float yaw = lot % 2 == 0 ? 180f : 0f;
 			if ( !PlaceModel( model, new Vector2( lotX, lotY ), yaw, targetHeight: 0f ) )
 			{
 				Block( new Vector3( lotX, lotY, 3f ) * M, new Vector3( 10f, 9f, 6f ),
@@ -369,6 +376,9 @@ public static class CityBuilder
 	static void PlaceTower( Vector2 at, uint h )
 	{
 		string model = DowntownTowers[h % (uint)DowntownTowers.Length];
+		// Generated city models have NO front axis (verified in tools/gen_buildings.py:
+		// window bands AND the ground accent wrap all four faces, no door geometry), so
+		// the hash yaw is pure silhouette variety, not a facing decision.
 		float yaw = 90f * ((h >> 3) & 3);
 		if ( PlaceModel( model, at, yaw, targetHeight: 0f ) )
 			return;
@@ -381,6 +391,7 @@ public static class CityBuilder
 	static void PlaceShop( Vector2 at, uint h )
 	{
 		string model = CommercialModels[h % (uint)CommercialModels.Length];
+		// No front axis on the generated shop models either (see PlaceTower note).
 		float yaw = 90f * ((h >> 3) & 3);
 		if ( PlaceModel( model, at, yaw, targetHeight: 0f ) )
 			return;
@@ -411,7 +422,11 @@ public static class CityBuilder
 			// one work building (natural scale), box-warehouse fallback
 			var centre = new Vector2( min.x + BlockSize * 0.5f, min.y + BlockSize * 0.5f );
 			string model = IndustrialModels[seed % IndustrialModels.Length];
-			float yaw = 90f * (seed % 4);
+			// Work buildings are village models: door on LOCAL +X (same OBJ finding as the
+			// suburb set). The building sits dead-centre in its block, equidistant from all
+			// four bounding streets, so per the facing rule the tie breaks SOUTH: yaw -90
+			// points the door down -Y at the block's south street. (Was hash-random 90s.)
+			float yaw = -90f;
 			if ( !PlaceModel( model, centre, yaw, targetHeight: 0f ) )
 			{
 				var color = IndustrialPalette[seed % IndustrialPalette.Length];
