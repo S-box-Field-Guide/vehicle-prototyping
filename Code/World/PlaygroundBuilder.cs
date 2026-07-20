@@ -104,6 +104,62 @@ public static class PlaygroundBuilder
 		return layout;
 	}
 
+	/// <summary>
+	/// Build the stunt content INTO the proto world (owner intent 2026-07-19: players load into the
+	/// town, drive east through the gate and spur onto the hardpack, and the stunt park is just
+	/// THERE - no world switch). Re-hosts the EXISTING feature builders (zero geometry changes,
+	/// re-layout only) in three zones on the proving-grounds hardpack (world x 500-1500,
+	/// y -280..320), each zone rectangle authored with 15+ m margins from every station corridor
+	/// (skidpad, drag/brake/topspeed lane, slalom, ramps/washboard/hill lane, lowgrip, jturn,
+	/// banked curve, crash lane, spur entry). BATTERY LAW: nothing may be placed outside these
+	/// rectangles, no station moves, TestTrack.cs untouched.
+	///   NORTH BAND      x 720-1240, y 80..318   (ladder, big-air, rhythm lines, mounds)
+	///   SOUTH-EAST      x 1060-1300, y -278..-85 (bowl, wall-ride, stairs, ball pit)
+	///   SOUTH-WEST      x 505-625,  y -270..-75  (welcome zone off the spur: jumpbox, tabletop, mounds)
+	/// Footprint audit 2026-07-19 (extents derived from RampKicker.LengthFor): every feature's
+	/// computed rectangle sits inside its zone, no nudges needed. Tightest spot: the (760,120)
+	/// 1.0 mound's north edge (y 123.5) is 0.5 m from the ladder 0.6-lane kicker corridor
+	/// (lane y 128, width 8, edge 124) - clear, and the lane centreline misses it by 3.6 m.
+	/// The playground WORLD (Build above) is untouched and stays dev-only (vp_world/vp_setworld).
+	/// Both entries reset the shared statics, so either can run in a session without stale state.
+	/// </summary>
+	public static void BuildProtoStuntZones( Scene scene )
+	{
+		_scene = scene;
+		_root = scene.CreateObject();
+		_root.Name = "Stunt Zones";
+		_terrain = false;
+		_ramps = _bowlSegs = _balls = _boxes = 0;
+
+		// ---- north band (x 720-1240, y 80..318) ----
+		Runway( new Vector2( 730f, 176f ), new Vector2( 795f, 176f ), 14f );   // feed to the ladder lanes
+		BuildKickerLadder( new Vector2( 800f, 176f ) );
+		Runway( new Vector2( 745f, 290f ), new Vector2( 828f, 290f ), 12f );   // big-air runway
+		BuildBigAir( new Vector2( 830f, 290f ) );
+		ChainLine( new Vector2( 950f, 130f ), 1.0f, count: 4, spacingM: 36f, widthM: 7f );
+		ChainLine( new Vector2( 950f, 160f ), 0.6f, count: 3, spacingM: 25f, widthM: 7f );
+		ChainLine( new Vector2( 950f, 250f ), 2.5f, count: 3, spacingM: 56f, widthM: 9f );
+		DoubleMound( new Vector2( 760f, 120f ), 1.0f );
+		DoubleMound( new Vector2( 760f, 250f ), 1.2f );
+		DoubleMound( new Vector2( 1150f, 200f ), 1.5f );
+		DoubleMound( new Vector2( 1200f, 120f ), 2.0f );
+
+		// ---- south-east zone (x 1060-1300, y -278..-85) ----
+		BuildBankedBowl( new Vector2( 1150f, -200f ), radiusM: 34f, bankDeg: 26f );
+		BuildWallRide( new Vector2( 1240f, -120f ) );
+		BuildStepStairs( new Vector2( 1100f, -120f ) );
+		BuildBallPit( new Vector2( 1240f, -220f ) );
+
+		// ---- south-west welcome zone (x 505-625, y -270..-75) ----
+		BuildJumpOntoBox( new Vector2( 505f, -110f ) );
+		BuildTabletop( new Vector2( 560f, -180f ) );
+		DoubleMound( new Vector2( 540f, -140f ), 1.0f );
+		DoubleMound( new Vector2( 600f, -230f ), 1.2f );
+
+		Log.Info( $"[vp] stunt zones built: {_ramps} kickers, {_boxes} boxes/platforms, " +
+			$"banked bowl {_bowlSegs} segs, {_balls} balls" );
+	}
+
 	// ---------------------------------------------------------------- ground
 
 	static void BuildGround()
