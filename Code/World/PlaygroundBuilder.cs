@@ -78,13 +78,13 @@ public static class PlaygroundBuilder
 		// ---- runup guides (flush, non-colliding dark strips that read as "build speed here") ----
 		Runway( new Vector2( -150f, 0f ), new Vector2( -40f, 0f ), 16f );     // spawn → kicker ladder
 		Runway( new Vector2( -150f, 90f ), new Vector2( -30f, 90f ), 12f );   // west feed → rhythm field
-		Runway( new Vector2( -30f, -130f ), new Vector2( 58f, -130f ), 14f ); // big-air runway (south-east)
+		Runway( new Vector2( -70f, -130f ), new Vector2( 18f, -130f ), 14f ); // big-air runway (south-east)
 
 		BuildKickerLadder( new Vector2( -60f, 0f ) );   // the FIVE showcase heights, side by side (one-way)
 		BuildRhythmLines();                             // chained same-direction kicker lines you rhythm
-		// base 95 -> 60 (full-bore law pass): the law-lengthened launch + longer landing down-slope
-		// ran the set-piece out to x 268, through the perimeter wall at 254; at 60 it ends at 233.
-		BuildBigAir( new Vector2( 60f, -130f ) );       // huge 6 m launch + landing mound down the runway
+		// base 95 -> 60 (law pass) -> 20 (easement pass): each profile stretch ran the set-piece
+		// closer to the perimeter wall at 254; at 20 the easement chain ends at ~239.
+		BuildBigAir( new Vector2( 20f, -130f ) );       // huge 6 m launch + landing mound down the runway
 		BuildDoubleMounds();                            // double-sided mound jumps (bidirectional)
 		BuildScatterSingles();                          // more coverage singles across the open field
 		BuildJumpOntoBox( new Vector2( 40f, -25f ) );   // launch → land on an elevated box → ramp down
@@ -118,10 +118,10 @@ public static class PlaygroundBuilder
 	///   NORTH BAND      x 720-1240, y 80..318   (ladder, big-air, rhythm lines, mounds)
 	///   SOUTH-EAST      x 1060-1300, y -278..-85 (bowl, wall-ride, stairs, ball pit)
 	///   SOUTH-WEST      x 505-625,  y -270..-75  (welcome zone off the spur: jumpbox, tabletop, mounds)
-	/// Footprint audit, full-bore law revision (extents derived from RampKicker.LengthFor under
-	/// R(H) = max(90, 52H)): every feature stays inside its zone. Extremes: north band max
-	/// x 1220.3 (2.0 mound) vs 1240, big-air chain ends 1002.6; SE max x 1266 (ball pit); SW max
-	/// x 586.8 (jumpbox down-ramp) vs 625. Tightest spot: the (760,120) 1.0 mound's north edge
+	/// Footprint audit, easement revision (extents = RampKicker.GroundRunFor easement runs, ~29%
+	/// past the R(H) = max(90, 52H) law lengths at blend 0.5): every feature stays inside its
+	/// zone. Extremes: north band max x ~1226 (2.0 mound) vs 1240, big-air chain ends ~1049; SE
+	/// max x 1266 (ball pit); SW max x ~613 (jumpbox down-ramp) vs 625. Tightest spot: the (760,120) 1.0 mound's north edge
 	/// (y 123.5) is 0.5 m from the ladder 0.6-lane kicker corridor (lane y 128, width 8, edge
 	/// 124) - clear, and the lane centreline misses it by 3.6 m. FULL-BORE (46 m/s) LANDING
 	/// CORRIDORS verified clear: ladder lanes land x 860-939 on their own lanes' flat; big-air
@@ -299,19 +299,19 @@ public static class PlaygroundBuilder
 		// With the 11.3-degree exit and the longer down-slope, the full-bore trajectory intercepts
 		// the falling board (~35-45 G effective); mid-speed (~26 m/s) still lands on the up-face.
 		const float launchH = 6f, moundH = 4.5f, gapM = 11f, downLenM = 55f, w = 12f;
-		float launchLen = RampKicker.LengthFor( launchH );      // ≈ 61 m run, R ≈ 312 m
-		float lipX = baseAtM.x + launchLen;                     // launch edge
-		float upLen = RampKicker.LengthFor( moundH );           // ≈ 46 m catch slope
+		float launchLen = RampKicker.LengthFor( launchH );      // authored ≈ 61 m, easement run ≈ 72 m
+		float lipX = baseAtM.x + Run( launchLen, launchH );     // launch edge (REAL easement run)
+		float upLen = RampKicker.LengthFor( moundH );           // authored ≈ 46 m catch slope
 		float upBaseX = lipX + gapM;                            // mound starts after the clear-air gap
-		float crestX = upBaseX + upLen;
+		float crestX = upBaseX + Run( upLen, moundH );
 
 		// launch (car flies off this, +X)
 		Kicker( baseAtM, 0f, launchLen, w, launchH, HeightColor( launchH ) );
 		// landing mound: up-face and down-face lips COINCIDE at the crest (no exposed vertical faces).
-		// The down side runs longer than the curvature law asks (R ≈ 338 m) so fast overshoots still
+		// The down side runs longer than the curvature law asks so fast overshoots still
 		// meet falling ground instead of flat (full-bore intercepts it near its foot).
 		Kicker( new Vector2( upBaseX, baseAtM.y ), 0f, upLen, w, moundH, HeightColor( moundH ) );
-		Kicker( new Vector2( crestX + downLenM, baseAtM.y ), 180f, downLenM, w, moundH, HeightColor( moundH ) );
+		Kicker( new Vector2( crestX + Run( downLenM, moundH ), baseAtM.y ), 180f, downLenM, w, moundH, HeightColor( moundH ) );
 	}
 
 	// ---------------------------------------------------------------- double-sided mounds (bidirectional)
@@ -346,11 +346,12 @@ public static class PlaygroundBuilder
 	static void DoubleMound( Vector2 crestM, float heightM )
 	{
 		float len = RampKicker.LengthFor( heightM );
+		float run = Run( len, heightM );   // easement run: the lips must still MEET at the crest
 		var col = HeightColor( heightM );
 		// west face: launches +X, lip at the crest
-		Kicker( new Vector2( crestM.x - len, crestM.y ), 0f, len, 7f, heightM, col );
-		// east face: launches −X (yaw 180), lip at the crest (base = crest + len further east)
-		Kicker( new Vector2( crestM.x + len, crestM.y ), 180f, len, 7f, heightM, col );
+		Kicker( new Vector2( crestM.x - run, crestM.y ), 0f, len, 7f, heightM, col );
+		// east face: launches −X (yaw 180), lip at the crest (base = crest + run further east)
+		Kicker( new Vector2( crestM.x + run, crestM.y ), 180f, len, 7f, heightM, col );
 	}
 
 	// ---------------------------------------------------------------- jump onto a box
@@ -376,9 +377,9 @@ public static class PlaygroundBuilder
 		// ~20 m/s to terminal: the graze band is gone structurally, undershoots still deflect off
 		// the nose, and deep shorts land flat in the gap as before.
 		const float launchH = 3.0f, boxTop = 3.2f, boxDepth = 15f, boxWidth = 12f, noseR = 2.2f;
-		float launchLen = RampKicker.LengthFor( launchH );      // ≈ 30 m, R = 156 m
-		float downLen = RampKicker.LengthFor( boxTop );         // ≈ 32 m falling lander off the back
-		float lipX = baseAtM.x + launchLen;                     // where the launch kicker throws you
+		float launchLen = RampKicker.LengthFor( launchH );      // authored ≈ 30 m, easement run ≈ 36 m
+		float downLen = RampKicker.LengthFor( boxTop );         // authored ≈ 32 m falling lander off the back
+		float lipX = baseAtM.x + Run( launchLen, launchH );     // where the launch kicker throws you
 		float boxFrontX = lipX + 12f;                           // 12 m air gap over the flat
 		float boxBackX = boxFrontX + boxDepth;
 
@@ -417,7 +418,7 @@ public static class PlaygroundBuilder
 
 		// down-ramp off the far edge: a yaw-180 kicker whose lip (height boxTop) lands exactly on the
 		// box's back-top edge and descends +X back to grade — seamless roll-off, sealed underside.
-		Kicker( new Vector2( boxBackX + downLen, baseAtM.y ), 180f, downLen, boxWidth, boxTop, BoxGrey );
+		Kicker( new Vector2( boxBackX + Run( downLen, boxTop ), baseAtM.y ), 180f, downLen, boxWidth, boxTop, BoxGrey );
 	}
 
 	// ---------------------------------------------------------------- ball pit
@@ -485,11 +486,12 @@ public static class PlaygroundBuilder
 	{
 		const float deckHalf = 7f, deckTop = 1.4f, w = 9f;
 		float kickLen = RampKicker.LengthFor( deckTop );
-		Kicker( new Vector2( centreM.x - deckHalf - kickLen, centreM.y ), 0f, kickLen, w, deckTop, RampGrey );
+		float kickRun = Run( kickLen, deckTop );   // easement run keeps the deck seams flush
+		Kicker( new Vector2( centreM.x - deckHalf - kickRun, centreM.y ), 0f, kickLen, w, deckTop, RampGrey );
 		Block( new Vector3( centreM.x, centreM.y, deckTop * 0.5f ) * M,
 			new Vector3( deckHalf * 2f, w, deckTop ), RampGrey, name: "TabletopDeck" );
 		_boxes++;
-		Kicker( new Vector2( centreM.x + deckHalf + kickLen, centreM.y ), 180f, kickLen, w, deckTop, RampGrey );
+		Kicker( new Vector2( centreM.x + deckHalf + kickRun, centreM.y ), 180f, kickLen, w, deckTop, RampGrey );
 	}
 
 	/// <summary>A staircase with a centre RIDE BOARD: the 0.5 m steps themselves are NOT climbable at
@@ -532,7 +534,7 @@ public static class PlaygroundBuilder
 			.Tags.Add( "road" );
 
 		// roll-off the back: yaw-180 kicker landing on the top step's back edge, descending +X to grade
-		Kicker( new Vector2( deckBackX + 10f, baseAtM.y ), 180f, 10f, w, deckTopH, BoxGrey );
+		Kicker( new Vector2( deckBackX + Run( 10f, deckTopH ), baseAtM.y ), 180f, 10f, w, deckTopH, BoxGrey );
 	}
 
 	/// <summary>A curved QUARTER-PIPE wall-ride bank: the <see cref="RampKicker"/> tangent-arc profile
@@ -553,6 +555,9 @@ public static class PlaygroundBuilder
 		// y = centre+11.2, lip at y = centre. The width axis (local Y, centred by construction per
 		// RampKicker's LOCAL FRAME doc) maps to world X, so no x offset: the 34 m ride length spans
 		// x [centre−17, centre+17] as-is. RampKicker carries its own colliders and "road" tag.
+		// PROFILE: deliberately PURE ARC, not easement. The wall-ride is ridden ALONG the face at
+		// a shallow climb component (its documented curvature-law exemption); an easement blend
+		// would stretch the quarter-pipe footprint and soften the 48-degree wall character.
 		RampKicker.Build( _scene, _root, new Vector3( centreM.x, centreM.y + 11.2f, 0f ), -90f, 11.2f, 34f, 5f, BowlGrey );
 		_ramps++;
 
@@ -678,11 +683,21 @@ public static class PlaygroundBuilder
 		renderer.Tint = RunwayGrey;
 	}
 
+	/// <summary>Every stunt kicker uses the clothoid EASEMENT profile (ramp-flow pass: the pure
+	/// arc's curvature step ate ~16% of full-bore speed as a hitch at the base; see RampKicker.
+	/// RampProfile). The proving-ground ramps stay pure Arc via the default (battery law).</summary>
+	const RampKicker.RampProfile StuntProfile = RampKicker.RampProfile.Easement;
+
+	/// <summary>REAL ground run of a stunt kicker authored as (lenM, hM): the easement profile
+	/// runs ~29% longer than the authored law length (blend 0.5). Chained placements (deck seams,
+	/// mound crests, gap lips, down-ramp bases) must use this, never the authored length.</summary>
+	static float Run( float lenM, float hM ) => RampKicker.GroundRunFor( lenM, hM, StuntProfile );
+
 	/// <summary>Place a curved solid launch kicker (base tangent to grade → no lip; collision follows
 	/// the curved face; closed underside → no drive-under gap).</summary>
 	static void Kicker( Vector2 baseAtM, float yawDeg, float lenM, float widthM, float heightM, Color color )
 	{
-		RampKicker.Build( _scene, _root, new Vector3( baseAtM.x, baseAtM.y, 0f ), yawDeg, lenM, widthM, heightM, color );
+		RampKicker.Build( _scene, _root, new Vector3( baseAtM.x, baseAtM.y, 0f ), yawDeg, lenM, widthM, heightM, color, StuntProfile );
 		_ramps++;
 	}
 

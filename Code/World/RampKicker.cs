@@ -33,6 +33,45 @@ public static class RampKicker
 {
 	const float M = Units.MetersToUnits;
 
+	/// <summary>Face profile selection. Arc = the original circular arc, tangent at the base but
+	/// with curvature STEPPING from 0 to 1/R in one segment crossing; on TIGHT radii (the old
+	/// R = 14H+9 law, R ~ 13-37 m) that step is a hard jounce that scrubs speed. Easement =
+	/// clothoid-blended: curvature rises LINEARLY from 0 to 1/R over the first
+	/// <see cref="EasementBlend"/> of the run, then holds, so the suspension load onset is ~30x
+	/// gentler at the base (0.007 deg/segment vs the arc's 0.21 deg) - it kills the base JERK the
+	/// owner feels as a "hitch". MEASURED (2026-07-20 A/B, hatch jump, 2.0 ladder face): under the
+	/// current R(H)=max(90,52H) law both profiles already retain ~98% of NET face speed at 38-45 m/s
+	/// (the R>=90 floor made the pure-arc step small enough that the dampers absorb it), so the
+	/// easement's win is the smoother onset feel, not net speed - and its uniform-scale tightens the
+	/// effective radius ~3.6% (scale 0.964), a hair MORE sustained face load. BATTERY LAW: Easement
+	/// is OPT-IN and the default stays Arc; the proving-ground ramps (TestTrack) keep their measured
+	/// pure-arc geometry byte-identical.</summary>
+	public enum RampProfile { Arc, Easement }
+
+	/// <summary>Fraction of the easement run over which curvature blends 0 to 1/R. 0.5 measured
+	/// clean at full bore (2.0 ladder, 38-45 m/s: no flips, ~11-15 deg landing pitch, seams flush,
+	/// footprints in-zone). Higher = smoother onset but longer/tighter tail; 0.5 is the kept value.</summary>
+	public const float EasementBlend = 0.5f;
+
+	/// <summary>Collider/facet resolution for easement kickers: one segment per ~this many metres
+	/// of run (finer facets matter at 46 m/s, where an arc-16 facet joint arrives every ~28 ms),
+	/// hard-capped at <see cref="MaxSegments"/>.</summary>
+	public const float EasementSegmentMeters = 0.7f;
+	public const int MaxSegments = 40;
+
+	/// <summary>The REAL ground run of a kicker built with <paramref name="profile"/> from the
+	/// authored (lengthM, heightM) pair. Arc: the authored length itself. Easement: LONGER (the
+	/// blend spends the early run at low curvature; ~29% at blend 0.5), integrated exactly like
+	/// Build does (verified seam-flush: GroundRunFor at segs=16 matches Build's esegs run to <1e-3 m
+	/// across every stunt feature). Chained builders (tabletop seams, mound crests, box gaps,
+	/// down-ramp lips) must use THIS, not the authored length, or their seams drift.</summary>
+	public static float GroundRunFor( float lengthM, float heightM, RampProfile profile )
+	{
+		if ( profile == RampProfile.Arc )
+			return lengthM;
+		return EasementCore( lengthM, heightM, 16 ).runM;
+	}
+
 	/// <summary>
 	/// MINIMUM-RADIUS LAW, full-bore revision (stunt-merge regression 2026-07-19). The arc radius
 	/// R = (L²+H²)/(2H) is what the suspension feels: riding the face at speed v costs a sustained
@@ -72,10 +111,23 @@ public static class RampKicker
 	/// = ground run, <paramref name="widthM"/> = lateral width, <paramref name="heightM"/> = lip height.
 	/// Returns the placed GameObject.</summary>
 	public static GameObject Build( Scene scene, GameObject parent, Vector3 atM, float yawDeg,
-		float lengthM, float widthM, float heightM, Color color, int segments = 16 )
+		float lengthM, float widthM, float heightM, Color color,
+		RampProfile profile = RampProfile.Arc, int segments = 16 )
 	{
-		int segs = System.Math.Max( 3, segments );
-		var prof = Profile( lengthM, heightM, segs );
+		Vector2[] prof;
+		if ( profile == RampProfile.Easement )
+		{
+			// resolution targets ~EasementSegmentMeters of run per collider segment; the run is
+			// ~length/(1 - blend/2), estimated here (exact run comes out of the integration)
+			float approxRun = lengthM / (1f - EasementBlend * 0.5f);
+			int esegs = System.Math.Clamp( (int)MathF.Ceiling( approxRun / EasementSegmentMeters ), 16, MaxSegments );
+			prof = EasementCore( lengthM, heightM, esegs ).prof;
+		}
+		else
+		{
+			int segs = System.Math.Max( 3, segments );
+			prof = Profile( lengthM, heightM, segs );
+		}
 		var model = BuildRenderModel( prof, widthM );
 
 		var go = scene.CreateObject();
@@ -92,6 +144,42 @@ public static class RampKicker
 
 		go.Tags.Add( "road" );   // wheels treat the curved face as drivable ground
 		return go;
+	}
+
+	/// <summary>The clothoid-blended easement profile: curvature k(s) rises linearly from 0 to
+	/// k_max = 1/R over the first <see cref="EasementBlend"/> of the arc length, then holds to the
+	/// lip. R and the exit angle come from the authored (L,H) pair exactly as the arc law derives
+	/// them, the total arc length is set so the final heading equals the arc's exit angle, and the
+	/// integrated curve is uniformly scaled to land the lip at H exactly (uniform scaling
+	/// preserves angles; the effective radius scales by the same ~0.96-0.99 factor, inside the
+	/// law's 25% floor margin). Deterministic: fixed-step midpoint integration, no RNG.</summary>
+	static (Vector2[] prof, float runM) EasementCore( float L, float H, int segs )
+	{
+		float R = (L * L + H * H) / (2f * H);
+		float thetaExit = MathF.Asin( System.Math.Clamp( L / R, 0f, 1f ) );
+		float S = thetaExit * R / (1f - EasementBlend * 0.5f);
+		int n = segs * 64;                    // fine fixed-step integration, deterministic
+		float ds = S / n;
+		float sBlend = EasementBlend * S;
+		var pts = new Vector2[segs + 1];
+		pts[0] = Vector2.Zero;
+		double x = 0, z = 0, theta = 0;
+		int stride = n / segs;
+		for ( int i = 1; i <= n; i++ )
+		{
+			float sMid = (i - 0.5f) * ds;
+			float k = sMid < sBlend ? (sMid / sBlend) / R : 1f / R;
+			double thMid = theta + k * ds * 0.5;   // heading at the step midpoint
+			theta += k * ds;
+			x += System.Math.Cos( thMid ) * ds;
+			z += System.Math.Sin( thMid ) * ds;
+			if ( i % stride == 0 )
+				pts[i / stride] = new Vector2( (float)x, (float)z );
+		}
+		float scale = H / (float)z;           // land the lip exactly at H; angles preserved
+		for ( int i = 0; i <= segs; i++ )
+			pts[i] *= scale;
+		return (pts, pts[segs].x);
 	}
 
 	/// <summary>The sampled arc profile (x, z) in metres, tangent-to-ground at x=0. Circle centre at
