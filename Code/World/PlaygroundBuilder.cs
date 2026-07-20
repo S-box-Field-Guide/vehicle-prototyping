@@ -78,11 +78,13 @@ public static class PlaygroundBuilder
 		// ---- runup guides (flush, non-colliding dark strips that read as "build speed here") ----
 		Runway( new Vector2( -150f, 0f ), new Vector2( -40f, 0f ), 16f );     // spawn → kicker ladder
 		Runway( new Vector2( -150f, 90f ), new Vector2( -30f, 90f ), 12f );   // west feed → rhythm field
-		Runway( new Vector2( 5f, -130f ), new Vector2( 95f, -130f ), 14f );   // big-air runway (south-east)
+		Runway( new Vector2( -30f, -130f ), new Vector2( 58f, -130f ), 14f ); // big-air runway (south-east)
 
 		BuildKickerLadder( new Vector2( -60f, 0f ) );   // the FIVE showcase heights, side by side (one-way)
 		BuildRhythmLines();                             // chained same-direction kicker lines you rhythm
-		BuildBigAir( new Vector2( 95f, -130f ) );       // huge 6 m launch + landing mound down the runway
+		// base 95 -> 60 (full-bore law pass): the law-lengthened launch + longer landing down-slope
+		// ran the set-piece out to x 268, through the perimeter wall at 254; at 60 it ends at 233.
+		BuildBigAir( new Vector2( 60f, -130f ) );       // huge 6 m launch + landing mound down the runway
 		BuildDoubleMounds();                            // double-sided mound jumps (bidirectional)
 		BuildScatterSingles();                          // more coverage singles across the open field
 		BuildJumpOntoBox( new Vector2( 40f, -25f ) );   // launch → land on an elevated box → ramp down
@@ -116,11 +118,22 @@ public static class PlaygroundBuilder
 	///   NORTH BAND      x 720-1240, y 80..318   (ladder, big-air, rhythm lines, mounds)
 	///   SOUTH-EAST      x 1060-1300, y -278..-85 (bowl, wall-ride, stairs, ball pit)
 	///   SOUTH-WEST      x 505-625,  y -270..-75  (welcome zone off the spur: jumpbox, tabletop, mounds)
-	/// Footprint audit 2026-07-19 (extents derived from RampKicker.LengthFor): every feature's
-	/// computed rectangle sits inside its zone, no nudges needed. Tightest spot: the (760,120)
-	/// 1.0 mound's north edge (y 123.5) is 0.5 m from the ladder 0.6-lane kicker corridor
-	/// (lane y 128, width 8, edge 124) - clear, and the lane centreline misses it by 3.6 m.
-	/// The playground WORLD (Build above) is untouched and stays dev-only (vp_world/vp_setworld).
+	/// Footprint audit, full-bore law revision (extents derived from RampKicker.LengthFor under
+	/// R(H) = max(90, 52H)): every feature stays inside its zone. Extremes: north band max
+	/// x 1220.3 (2.0 mound) vs 1240, big-air chain ends 1002.6; SE max x 1266 (ball pit); SW max
+	/// x 586.8 (jumpbox down-ramp) vs 625. Tightest spot: the (760,120) 1.0 mound's north edge
+	/// (y 123.5) is 0.5 m from the ladder 0.6-lane kicker corridor (lane y 128, width 8, edge
+	/// 124) - clear, and the lane centreline misses it by 3.6 m. FULL-BORE (46 m/s) LANDING
+	/// CORRIDORS verified clear: ladder lanes land x 860-939 on their own lanes' flat; big-air
+	/// intercepts its lengthened down-slope ~x 984; chains land flat or on the next kicker's low
+	/// face (the 11-degree faces are rollable at any landing height); mound overshoots land on
+	/// open pad (the (1200,120) east launch lands ~x 1284, off-zone but on flat hardpack clear of
+	/// the banked-curve corridor at y 175+); jumpbox/tabletop full-bore overshoots land flat
+	/// inside/just east of the SW zone at y -110/-180, feature-free rows. Rhythm spacings kept:
+	/// at the ~21.4 m/s link speed the flatter exits land 1-6 m short of the next base (better
+	/// than the old geometry, which landed on the next low face).
+	/// The playground WORLD (Build above) stays dev-only (vp_world/vp_setworld); its big-air
+	/// moved west so the law-lengthened set-piece stays inside the perimeter wall.
 	/// Both entries reset the shared statics, so either can run in a session without stale state.
 	/// </summary>
 	public static void BuildProtoStuntZones( Scene scene )
@@ -147,7 +160,11 @@ public static class PlaygroundBuilder
 		// ---- south-east zone (x 1060-1300, y -278..-85) ----
 		BuildBankedBowl( new Vector2( 1150f, -200f ), radiusM: 34f, bankDeg: 26f );
 		BuildWallRide( new Vector2( 1240f, -120f ) );
-		BuildStepStairs( new Vector2( 1100f, -120f ) );
+		// stairs y -120 -> -95 (full-bore law pass): at -120 the stairs' eastward roll-out corridor
+		// ran dead into the wall-ride's vertical WEST END FACE 80 m on (its ride face is entered
+		// from the north, its back wedge from the south; the x-end faces are walls). At -95 the
+		// roll-out passes 14 m north of the wall-ride footprint (y -132.5..-108.8) on open pad.
+		BuildStepStairs( new Vector2( 1100f, -95f ) );
 		BuildBallPit( new Vector2( 1240f, -220f ) );
 
 		// ---- south-west welcome zone (x 505-625, y -270..-75) ----
@@ -277,18 +294,22 @@ public static class PlaygroundBuilder
 	/// rolls out. A directional set-piece (one-way, like the ladder) with its own runway.</summary>
 	static void BuildBigAir( Vector2 baseAtM )
 	{
-		const float launchH = 6f, moundH = 4.5f, gapM = 11f, downLenM = 35f, w = 12f;
-		float launchLen = RampKicker.LengthFor( launchH );      // ≈ 33 m run, R ≈ 93 m
+		// downLenM 35 -> 55 (full-bore law pass): at 46 m/s entry the flight overshoots the whole
+		// mound and used to land FLAT ~50 m past its end at vz ~14 m/s (60 G measured at 45.1).
+		// With the 11.3-degree exit and the longer down-slope, the full-bore trajectory intercepts
+		// the falling board (~35-45 G effective); mid-speed (~26 m/s) still lands on the up-face.
+		const float launchH = 6f, moundH = 4.5f, gapM = 11f, downLenM = 55f, w = 12f;
+		float launchLen = RampKicker.LengthFor( launchH );      // ≈ 61 m run, R ≈ 312 m
 		float lipX = baseAtM.x + launchLen;                     // launch edge
-		float upLen = RampKicker.LengthFor( moundH );           // ≈ 25 m catch slope
+		float upLen = RampKicker.LengthFor( moundH );           // ≈ 46 m catch slope
 		float upBaseX = lipX + gapM;                            // mound starts after the clear-air gap
 		float crestX = upBaseX + upLen;
 
 		// launch (car flies off this, +X)
 		Kicker( baseAtM, 0f, launchLen, w, launchH, HeightColor( launchH ) );
 		// landing mound: up-face and down-face lips COINCIDE at the crest (no exposed vertical faces).
-		// The down side runs longer than the curvature law asks (R ≈ 138 m) so ~30 m/s overshoots still
-		// meet falling ground instead of flat.
+		// The down side runs longer than the curvature law asks (R ≈ 338 m) so fast overshoots still
+		// meet falling ground instead of flat (full-bore intercepts it near its foot).
 		Kicker( new Vector2( upBaseX, baseAtM.y ), 0f, upLen, w, moundH, HeightColor( moundH ) );
 		Kicker( new Vector2( crestX + downLenM, baseAtM.y ), 180f, downLenM, w, moundH, HeightColor( moundH ) );
 	}
@@ -334,18 +355,29 @@ public static class PlaygroundBuilder
 
 	// ---------------------------------------------------------------- jump onto a box
 
-	/// <summary>A 2.2 m launch kicker, then an AIR GAP, then an elevated drivable box whose top sits a
-	/// bit below the jump apex (landable at speed, missable when slow), then a curved kicker DOWN off
-	/// the far edge so you are never stranded. Design window ≈ 16-22 m/s lands on the deck; faster
-	/// overshoots onto the down-kicker's falling face (rollable). Pass-3 fix for the short-lander: the
-	/// box's front-top edge carries a ROUNDED ROLL-OVER NOSE (quarter-round chords, motocross tabletop
-	/// knuckle), so a car that arrives just below deck height deflects up onto the deck instead of
-	/// slamming a vertical face. Deep shorts land flat before the box at low speed.</summary>
+	/// <summary>A 3.0 m launch kicker, then an AIR GAP, then an elevated drivable box whose top sits
+	/// just above the lip (0.2 m), then a curved kicker DOWN off the far edge so you are never
+	/// stranded. Speed bands (full-bore law, 11.3-degree exit, measured/derived): below ~13 m/s
+	/// lands flat in the gap; ~14-20 arrives below deck and deflects up the roll-over NOSE
+	/// (quarter-round chords, motocross tabletop knuckle - no vertical face in the flight path
+	/// above z 1); ~20-28 lands on the deck; above ~28 sails the whole box and lands on the
+	/// down-kicker's shallow foot or flat. KNOWN RESIDUAL (pre-existing class): a narrow ~12.5-14
+	/// m/s airborne band crosses the gap below the nose (z &lt; 1) and meets the box's lower front
+	/// face; those cars barely launched and arrive slow. See the launchH note below for why 3.0
+	/// (the 2.2 m version had a wheel-graze band on the front-top corner at exactly the entry
+	/// speed the zone's runup geography delivers).</summary>
 	static void BuildJumpOntoBox( Vector2 baseAtM )
 	{
-		const float launchH = 2.2f, boxTop = 3.2f, boxDepth = 15f, boxWidth = 12f, noseR = 2.2f;
-		float launchLen = RampKicker.LengthFor( launchH );      // ≈ 13 m, R ≈ 40 m
-		float downLen = RampKicker.LengthFor( boxTop );         // ≈ 18 m falling lander off the back
+		// launchH 2.2 -> 3.0 (full-bore law pass, measured): with the 2.2 m lip the descent-to-deck
+		// point crossed the box's BACK edge at ~31-35 m/s entry, so that band GRAZED the front-top
+		// corner with the wheels (~0.6 m corner clearance minus droop; measured 159 G flip at 33.4,
+		// which is exactly the entry the zone's max west runup delivers). At 3.0 the lip sits only
+		// 0.2 m under the deck, so the front-corner crossing clears by 1.1+ m at every speed from
+		// ~20 m/s to terminal: the graze band is gone structurally, undershoots still deflect off
+		// the nose, and deep shorts land flat in the gap as before.
+		const float launchH = 3.0f, boxTop = 3.2f, boxDepth = 15f, boxWidth = 12f, noseR = 2.2f;
+		float launchLen = RampKicker.LengthFor( launchH );      // ≈ 30 m, R = 156 m
+		float downLen = RampKicker.LengthFor( boxTop );         // ≈ 32 m falling lander off the back
 		float lipX = baseAtM.x + launchLen;                     // where the launch kicker throws you
 		float boxFrontX = lipX + 12f;                           // 12 m air gap over the flat
 		float boxBackX = boxFrontX + boxDepth;

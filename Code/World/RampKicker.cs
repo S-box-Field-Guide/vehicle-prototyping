@@ -34,25 +34,36 @@ public static class RampKicker
 	const float M = Units.MetersToUnits;
 
 	/// <summary>
-	/// MINIMUM-RADIUS LAW (world pass 2026-07-19). The arc radius R = (L²+H²)/(2H) is what the
-	/// suspension feels: riding the face at speed v costs a sustained centripetal load v²/R on top of
-	/// gravity. The old builders always chose L = 5H, which pins R = 13H — a 0.6 m kicker got R = 7.8 m,
-	/// a ~4.7 g load at 20 m/s, so the springs bottomed, the chassis contact took over, and the kicker
-	/// read as a WALL (measured before the fix: hatch 123 G / kart 247 G longitudinal spikes, 0.3 s
-	/// "airtime", car stuck on the face; the proving-ground kickers that always drove fine have
-	/// R = 75–115 m). Radius must scale with the speed a kicker is meant to be hit at, and bigger
-	/// kickers are the faster features: R(H) = 14·H + 9 (floor 18 m) keeps every height at roughly
-	/// ≤ ~1.2 g of face load at its design speed while preserving a punchy 15–21° exit angle.
+	/// MINIMUM-RADIUS LAW, full-bore revision (stunt-merge regression 2026-07-19). The arc radius
+	/// R = (L²+H²)/(2H) is what the suspension feels: riding the face at speed v costs a sustained
+	/// centripetal load v²/R on top of gravity, and a bottomed wheel's resolution impulse on a slope
+	/// points backward: arrest + nose pitch + flip. The previous law R(H) = 14·H + 9 (floor 18) was
+	/// verified at 21-30 m/s test entries, but the merged open map gives unlimited runup and the
+	/// hatch reaches 46 m/s. MEASURED survival boundary (hatch, jump maneuver, entry = maxSpeedMs):
+	///   R 37 / exit 19°: clean at 25.0 (33 G), marginal at 28.4 (52 G), FLIP+ARREST from 31.0
+	///     (108 G) through 44.7 (233 G, the owner-reported wall-stop).
+	///   R 72 / exit 20°: 44.8 entry, NO arrest, drives on; 70 G flat-landing slam.
+	///   R 93 / exit 21°: 45.1 entry, NO arrest; 60 G flat-landing slam.
+	///   R 87.5 / exit 7.9° and R 115 / exit 5.0° (proving ramps): 42+ entry, 3-5 G, pristine.
+	/// Two separate mechanisms, two dials:
+	///   1. FACE ARREST separates on R itself, not on v²/R alone (R 37 arrested at 26 m/s² while
+	///      R 72 survived 28 m/s² at the same exit angle). Smallest radius proven safe at 45 m/s
+	///      is 72; the floor is set at 90 (25% above it, face load 2.2 g at 46 m/s).
+	///   2. LANDING SLAM scales with exit angle + lip height (landing vz 10.5 measured 33 G,
+	///      11.3 measured 52 G, 18-20 measured 60-70 G). The slope 52·H caps every exit at ~11.3°,
+	///      which holds full-bore landing vz near 11 m/s for the 2 m class. High speed does not
+	///      need steep exits: a 3 m kicker at 11° still gives ~1.7 s of air at 40 m/s; trading
+	///      exit angle for survivability is the design intent, stated here with the numbers.
 	/// </summary>
-	public const float MinRadiusM = 18f;
+	public const float MinRadiusM = 90f;
 
 	/// <summary>Speed-safe ground run for a kicker of lip height <paramref name="heightM"/>: the length
-	/// that yields the design radius R(H) = max(<see cref="MinRadiusM"/>, 14·H + 9). Never shorter than
-	/// the legacy 5·H, so tall kickers (which already satisfied the law) keep their exact footprint.
-	/// From R = (L²+H²)/(2H):  L = √(H·(2R − H)).</summary>
+	/// that yields the design radius R(H) = max(<see cref="MinRadiusM"/>, 52·H) (see the law above;
+	/// increasing in H, exit angle capped ~11.3°). Never shorter than the legacy 5·H (inert with the
+	/// 90 m floor, kept as a guard). From R = (L²+H²)/(2H):  L = √(H·(2R − H)).</summary>
 	public static float LengthFor( float heightM )
 	{
-		float r = MathF.Max( MinRadiusM, 14f * heightM + 9f );
+		float r = MathF.Max( MinRadiusM, 52f * heightM );
 		float lawLen = MathF.Sqrt( heightM * (2f * r - heightM) );
 		return MathF.Max( 5f * heightM, lawLen );
 	}
