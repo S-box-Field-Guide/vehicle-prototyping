@@ -8,11 +8,12 @@ namespace VehicleProto;
 public sealed class GameBootstrap : Component
 {
 	/// <summary>Feature gate for in-game world switching (the World &amp; Terrain panel + its M hotkey).
-	/// RE-ENABLED (world pass 2026-07-19): the Stunt Track jump physics rework landed and verified
-	/// live (curvature law + no walls in flight paths; three telemetry rounds, hatch green on every
-	/// feature). The dev console commands (<c>vp_world</c>, <c>vp_setworld</c>) remain for automation.
+	/// OFF again (stunt merge 2026-07-19): the stunt park now lives IN the main world as drive-in
+	/// zones on the hardpack (<see cref="PlaygroundBuilder.BuildProtoStuntZones"/>), so players never
+	/// need a world switch - they drive east through the gate and into it. The separate playground
+	/// world is dev-only via the console (<c>vp_world</c>, <c>vp_setworld</c>); the M panel is retired.
 	/// (static readonly, not const, so the gated call sites don't constant-fold into dead-code warnings.)</summary>
-	public static readonly bool WorldSwitchEnabled = true;
+	public static readonly bool WorldSwitchEnabled = false;
 
 	/// <summary>World selector (world-pass 2026-07-13). "proto" (DEFAULT) = the measurement scene:
 	/// CityBuilder + TestTrack with all 11 stations — the battery + vp_test.py depend on this, so it
@@ -38,10 +39,11 @@ public sealed class GameBootstrap : Component
 	public static bool PerfBoot { get; set; } = false;
 
 	/// <summary>Root GameObject names the world builders create (CityBuilder="City",
-	/// TestTrack="Proving Grounds", Outskirts="Outskirts", PlaygroundBuilder="Playground"). A live
+	/// TestTrack="Proving Grounds", Outskirts="Outskirts", PlaygroundBuilder="Playground" for the
+	/// dev-only world and "Stunt Zones" for the proto-hosted stunt content). A live
 	/// world switch tears these down by name before rebuilding — the builders are static and simply
 	/// create fresh roots.</summary>
-	static readonly string[] WorldRootNames = { "City", "Proving Grounds", "Outskirts", "Playground" };
+	static readonly string[] WorldRootNames = { "City", "Proving Grounds", "Outskirts", "Playground", "Stunt Zones" };
 
 	// Kept so a live world switch (WorldControls panel) can rewire in place instead of remounting.
 	VehiclePilot _pilot;
@@ -126,6 +128,9 @@ public sealed class GameBootstrap : Component
 			// outskirts belt (world pass 2026-07-19): ring road + city gates + the connector that
 			// makes the proving grounds drivable-to; seals the combined world with its own perimeter
 			Outskirts.Build( Scene );
+			// stunt zones ON the hardpack (stunt merge 2026-07-19): drive-in stunt content in three
+			// station-clear zone rectangles; the separate playground world stays dev-only
+			PlaygroundBuilder.BuildProtoStuntZones( Scene );
 			spawnPosM = city.SpawnPosition;
 			spawnFacing = city.SpawnFacing;
 		}

@@ -57,8 +57,8 @@ Evidence: `Code/World/` (`TestTrack`, `PlaygroundBuilder`, `PlaygroundTerrain`),
 |---|:-:|:-:|:-:|:-:|---|
 | Town (drivable scene: streets + instrumented proving section — skidpad, drag strip, brake, slalom, ramps, banked, washboard, hills, J-turn pad) | G | G | G | G | THE drivable world. Named spawn per proving station; the measurement world for the battery. `proving-grounds.md`. |
 | Outskirts belt (city gates, highway ring, proving-grounds connector, landmarks, outer perimeter) | G | G | G | - | World pass 2026-07-19: the town wall gained a gate per side and the belt beyond joins city and proving grounds into one drivable space (~5x footprint). Track cliff edges preserved behind sunken run-off basins (battery end conditions untouched). `Code/World/Outskirts.cs`. |
-| Stunt Track (jump-park world) | G | G | G | G | Jump physics reworked + live-verified 2026-07-19 (kicker curvature law, no walls in flight paths, ride board over the stairs, quarter-pipe wall-ride, bowl mouth). Known issue: the kart pitches over off tall jumps (kit-level launch-pitch carry, tracked for the kit); it flies the low features fine. Internal id stays `playground`. |
-| Live world switch + FLAT/CURVY terrain toggle (M panel) | G | G | G | - | RE-ENABLED with the Stunt Track rework (`GameBootstrap.WorldSwitchEnabled`). Dev console (`vp_setworld`) works too. |
+| Stunt Track (drive-in zones on the hardpack) | G | G | G | G | MERGED into the Town world 2026-07-19 (`PlaygroundBuilder.BuildProtoStuntZones`): players drive east through the gate and spur straight into three station-clear stunt zones (north band, south-east, south-west welcome). Same verified feature set (kicker curvature law, no walls in flight paths, ride board, quarter-pipe wall-ride, bowl mouth). Known issue: the kart pitches over off tall jumps (kit-level launch-pitch carry, tracked for the kit); it flies the low features fine. The separate playground world remains dev-only (`vp_world`/`vp_setworld`). |
+| Live world switch + FLAT/CURVY terrain toggle (M panel) | G | G | - | - | DEV-ONLY: the stunt park lives in the main world now, so the player-facing switch is retired (`GameBootstrap.WorldSwitchEnabled` off). Dev console (`vp_setworld`) still switches to the playground world. |
 | Crash wall / destruction | G | R | R | - | Full crash/destruction simulation is out of scope for this kit; a reference-only reserved plot remains. |
 
 ## 4. UI
@@ -70,7 +70,7 @@ Evidence: `Code/UI/` (Razor + scss).
 | Drive HUD (speed/gear cluster, km/h-mph unit setting, key hints) | G | G | G | Player-facing. Pedal bars + per-wheel grip chips live in the telemetry overlay (L), not here. |
 | Session menu (Tab - resume, change vehicle) | G | G | G | Roster cycle lives here. |
 | Controls / help overlay (I) | G | G | G | Auto-shows once on a fresh install; persists dismissal. Letter key — F1/Esc are host-captured. |
-| World & terrain panel (M) | G | G | - | Drives the live world switch. Feature-gated OFF this build (`GameBootstrap.WorldSwitchEnabled`); returns with the Stunt Track. |
+| World & terrain panel (M) | G | G | - | Retired from the player build (stunt zones merged into the main world); the gate (`GameBootstrap.WorldSwitchEnabled`) stays off. Dev world switching via `vp_setworld`. |
 | Tuning panel (T - live physics dials) | G | G | G | Writes onto the running car; reset control. |
 | Telemetry overlay (L) | G | G | G | Live traces from the ring buffer. Letter key — F1-F12 are host-captured (was F4, dead in the published client). |
 | Engine audio (shared placeholder loop, RPM-pitched) | Y | G | G | One 3D positional loop per car, pitch from idle-to-redline RPM, volume swells with throttle. Placeholder shared tone, not a layered engine model; three candidate loops + `vp_engine_sound` / `vp_engine_volume` console dials. `Code/Vehicle/EngineAudio.cs`. |

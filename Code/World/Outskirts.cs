@@ -177,8 +177,11 @@ public static class Outskirts
 			Block( new Vector3( -150f, 264f, 4f ), new Vector3( 14f, 10f, 8f ), new Color( 0.62f, 0.48f, 0.40f ), collide: true, name: "Barn" );
 		Block( new Vector3( -138f, 262f, 2.5f ), new Vector3( 4f, 4f, 5f ), new Color( 0.70f, 0.66f, 0.55f ), collide: true, name: "Silo" );
 
-		// NE: depot
-		if ( !PlaceModel( "models/buildings/warehouse.vmdl", new Vector2( 150f, 264f ), -90f ) )
+		// NE: depot. Yaw 90, not -90: the village models' door axis is local +X (city polish
+		// pass discovery), and the ring road's north strip runs at y = 296, just NORTH of this
+		// landmark, so -90 pointed the big depot door south at the blank city wall; 90 turns
+		// it to face the ring.
+		if ( !PlaceModel( "models/buildings/warehouse.vmdl", new Vector2( 150f, 264f ), 90f ) )
 			Block( new Vector3( 150f, 264f, 4.5f ), new Vector3( 16f, 12f, 9f ), new Color( 0.55f, 0.55f, 0.52f ), collide: true, name: "Depot" );
 		for ( int c = 0; c < 3; c++ )
 			Block( new Vector3( 132f + c * 5f, 258f, 1.3f ), new Vector3( 4f, 10f, 2.6f ),
