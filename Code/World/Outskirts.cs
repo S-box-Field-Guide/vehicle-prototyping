@@ -311,10 +311,9 @@ public static class Outskirts
 		renderer.Tint = new Color( 0.38f, 0.62f, 0.38f );
 	}
 
-	/// <summary>Vendored building model resting on grade with a static collider fit to the
-	/// model's wall footprint (CityBuilder.BuildingColliderBox: the render bounds include
-	/// roof overhangs, which made invisible walls). False when the vmdl is missing so
-	/// callers box-fallback.</summary>
+	/// <summary>Vendored building model resting on grade with the shared building collider
+	/// (CityBuilder.AttachBuildingCollider: authored mesh physics, loud wall-footprint box
+	/// fallback). False when the vmdl is missing so callers box-fallback.</summary>
 	static bool PlaceModel( string vmdlPath, Vector2 atMeters, float yaw )
 	{
 		var model = Model.Load( vmdlPath );
@@ -331,11 +330,7 @@ public static class Outskirts
 		var renderer = go.Components.Create<ModelRenderer>();
 		renderer.Model = model;
 
-		var (colCenter, colScale) = CityBuilder.BuildingColliderBox( vmdlPath, model );
-		var collider = go.Components.Create<BoxCollider>();
-		collider.Scale = colScale;
-		collider.Center = colCenter;
-		collider.Static = true;
+		CityBuilder.AttachBuildingCollider( go, vmdlPath, model );
 		return true;
 	}
 

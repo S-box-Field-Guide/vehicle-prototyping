@@ -70,6 +70,19 @@
 					},
 				]
 			},
+			{
+				_class = "PhysicsShapeList"
+				children =
+				[
+					{
+						_class = "PhysicsMeshFile"
+						filename = "models/city/highrise_e.obj"
+						import_scale = 39.37
+						surface_prop = "default"
+						collision_tags = "solid"
+					},
+				]
+			},
 		]
 	}
 }

@@ -77,6 +77,19 @@
 					},
 				]
 			},
+			{
+				_class = "PhysicsShapeList"
+				children =
+				[
+					{
+						_class = "PhysicsMeshFile"
+						filename = "models/buildings/shop.obj"
+						import_scale = 39.37
+						surface_prop = "default"
+						collision_tags = "solid"
+					},
+				]
+			},
 		]
 	}
 }

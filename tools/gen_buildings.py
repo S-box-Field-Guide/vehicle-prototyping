@@ -329,7 +329,13 @@ Layer0
         f.write(txt)
 
 
-def write_vmdl(path, obj_rel, materials):
+def write_vmdl(path, obj_rel, materials, physics=True):
+    """physics=True adds a PhysicsShapeList/PhysicsMeshFile referencing the SAME OBJ, so the
+    compiled model carries REAL concave collision matching the render mesh (city polish pass:
+    bounds/footprint boxes gave phantom walls at recessed features; pattern per the
+    sbox-knowledge models-and-import gotcha + the world-builder wb kit vmdls). The cone prop
+    opts out: it is a dynamic 4 kg punt prop with its own runtime BoxCollider, and a concave
+    mesh is static-only physics."""
     remaps = []
     for m in materials:
         vmat = f"{MAT_DIR_REL}/{m}.vmat"
@@ -338,6 +344,20 @@ def write_vmdl(path, obj_rel, materials):
     remap_lines = "\n".join(
         f'\t\t\t\t\t\t{{\n\t\t\t\t\t\t\tfrom = "{a}"\n\t\t\t\t\t\t\tto = "{b}"\n\t\t\t\t\t\t}},'
         for a, b in remaps)
+    physics_node = f"""
+\t\t\t{{
+\t\t\t\t_class = "PhysicsShapeList"
+\t\t\t\tchildren =
+\t\t\t\t[
+\t\t\t\t\t{{
+\t\t\t\t\t\t_class = "PhysicsMeshFile"
+\t\t\t\t\t\tfilename = "{obj_rel}"
+\t\t\t\t\t\timport_scale = {SCALE}
+\t\t\t\t\t\tsurface_prop = "default"
+\t\t\t\t\t\tcollision_tags = "solid"
+\t\t\t\t\t}},
+\t\t\t\t]
+\t\t\t}},""" if physics else ""
     vmdl = f"""{VMDL_HEADER}
 {{
 \trootNode =
@@ -378,7 +398,7 @@ def write_vmdl(path, obj_rel, materials):
 \t\t\t\t\t\tparent_bone = ""
 \t\t\t\t\t}},
 \t\t\t\t]
-\t\t\t}},
+\t\t\t}},{physics_node}
 \t\t]
 \t}}
 }}
@@ -475,7 +495,8 @@ def generate(names):
         else:
             obj_path = build_highrise(SPECS[nm], ASSET_DIR, nm)
         mats = obj_materials(obj_path)
-        write_vmdl(os.path.join(ASSET_DIR, f"{nm}.vmdl"), f"{ASSET_REL}/{nm}.obj", mats)
+        write_vmdl(os.path.join(ASSET_DIR, f"{nm}.vmdl"), f"{ASSET_REL}/{nm}.obj", mats,
+                   physics=(nm != "cone"))
         built.append(nm)
 
     # write every palette colour as a shared flat vmat (union across models)

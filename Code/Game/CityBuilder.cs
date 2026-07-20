@@ -694,11 +694,40 @@ public static class CityBuilder
 	};
 
 	/// <summary>
-	/// Collider box for a placed building model: the baked wall footprint when the model
-	/// has one (see <see cref="WallFootprints"/>), else the full render bounds. Returns
-	/// (Center, Scale) in the model's LOCAL units, ready for a BoxCollider (dims are
-	/// local; GO scale does the sizing). Shared with <see cref="Outskirts"/>, which
-	/// places the same village models.
+	/// Attach the right static collider for a placed building (shared with
+	/// <see cref="Outskirts"/>). PRIMARY: a ModelCollider on the model's AUTHORED physics -
+	/// every building vmdl now carries a PhysicsMeshFile of its render mesh (city polish
+	/// pass, owner regression: any single box over-covers concave ground plans, so a
+	/// portico/porch/chimney kept phantom collision in front of recessed walls; mesh
+	/// collision matches the visuals exactly). Detection per the knowledge-base
+	/// models-and-import gotcha: a render-clean model can still be collision-hollow, so
+	/// gate on Physics parts and fall back LOUDLY to the wall-footprint box (a missing
+	/// hull stays drivable and visible in the log, never silent).
+	/// </summary>
+	public static void AttachBuildingCollider( GameObject go, string vmdlPath, Model model )
+	{
+		if ( (model.Physics?.Parts?.Count ?? 0) > 0 )
+		{
+			var collider = go.Components.Create<ModelCollider>();
+			collider.Model = model;
+			collider.Static = true;
+			return;
+		}
+
+		Log.Warning( $"[vp] building model {vmdlPath} has no authored physics; wall-footprint box fallback" );
+		var (colCenter, colScale) = BuildingColliderBox( vmdlPath, model );
+		var box = go.Components.Create<BoxCollider>();
+		box.Scale = colScale;
+		box.Center = colCenter;
+		box.Static = true;
+	}
+
+	/// <summary>
+	/// FALLBACK collider box for a placed building model (used only when the model has no
+	/// authored physics, see <see cref="AttachBuildingCollider"/>): the baked wall
+	/// footprint when the model has one (see <see cref="WallFootprints"/>), else the full
+	/// render bounds. Returns (Center, Scale) in the model's LOCAL units, ready for a
+	/// BoxCollider (dims are local; GO scale does the sizing).
 	/// </summary>
 	public static (Vector3 Center, Vector3 Scale) BuildingColliderBox( string vmdlPath, Model model )
 	{
@@ -740,11 +769,7 @@ public static class CityBuilder
 		var renderer = go.Components.Create<ModelRenderer>();
 		renderer.Model = model;
 
-		var (colCenter, colScale) = BuildingColliderBox( vmdlPath, model );
-		var collider = go.Components.Create<BoxCollider>();
-		collider.Scale = colScale;
-		collider.Center = colCenter;
-		collider.Static = true;
+		AttachBuildingCollider( go, vmdlPath, model );
 
 		return true;
 	}
