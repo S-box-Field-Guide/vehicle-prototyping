@@ -664,9 +664,58 @@ public static class CityBuilder
 		}
 	}
 
+	// Wall-footprint collider table (city polish pass 2026-07-19). None of the kit's
+	// building models carry authored physics (render-only vmdls: see
+	// Assets/models/buildings/README.md and tools/gen_buildings.py write_vmdl), so the
+	// placed collider has always been a box. The old bounds-fit box included the roof:
+	// village models have eave overhangs (0.2-0.45 m per side) plus street-side door
+	// canopies up to 1.39 m deep (inn 1.39, shop 1.33, house_large 0.89), which read as
+	// invisible walls in front of the facade. Each entry here is the model's
+	// GROUND-CONTACT footprint measured from its source OBJ (vertices with height
+	// <= 0.1 m: walls, door frames, portico columns, everything that visibly stands on
+	// the ground; roof overhangs and canopies never reach it). Values are ENGINE-LOCAL
+	// metres: (xMin, xMax) along the door axis +X, plus the symmetric Y half-extent
+	// (every model's ground footprint measured Y-symmetric). Height stays the full
+	// render-bounds height: no car reaches above the eaves, and a solid box interior is
+	// unchanged behaviour. Generated city models (models/city/) are deliberately NOT
+	// listed: their bounds sit within 0.05-0.2 m of the walls (proud window/accent
+	// bands, which are visible geometry), inside the 0.3 m facade tolerance.
+	static readonly Dictionary<string, (float xMin, float xMax, float halfY)> WallFootprints = new()
+	{
+		["house_small"] = ( -2.10f, 2.17f, 2.50f ),   // eaves 0.25 m all round
+		["house_medium"] = ( -2.70f, 2.77f, 3.60f ),  // eaves 0.25 m, door canopy 0.63 m
+		["house_large"] = ( -3.50f, 3.57f, 4.80f ),   // eaves 0.35 m, porch roof 0.89 m
+		["inn"] = ( -3.75f, 3.82f, 5.25f ),           // eaves 0.40 m, street canopy 1.39 m
+		["shop"] = ( -2.75f, 2.82f, 3.50f ),          // eaves 0.20 m, awning 1.33 m
+		["civic_hall"] = ( -4.00f, 4.97f, 6.50f ),    // eaves 0.45 m; +X includes the portico columns
+		["warehouse"] = ( -9.00f, 9.08f, 6.00f ),     // eaves 0.17 m
+		["workshop"] = ( -3.50f, 3.58f, 4.25f ),      // eaves 0.25 m
+		["barn"] = ( -7.00f, 7.08f, 5.00f ),          // eaves 0.40 m
+	};
+
 	/// <summary>
-	/// Place a real model resting on the ground, with a bounds-fit static box collider
-	/// (collider dims are LOCAL — GO scale does the sizing). <paramref name="targetHeight"/>
+	/// Collider box for a placed building model: the baked wall footprint when the model
+	/// has one (see <see cref="WallFootprints"/>), else the full render bounds. Returns
+	/// (Center, Scale) in the model's LOCAL units, ready for a BoxCollider (dims are
+	/// local; GO scale does the sizing). Shared with <see cref="Outskirts"/>, which
+	/// places the same village models.
+	/// </summary>
+	public static (Vector3 Center, Vector3 Scale) BuildingColliderBox( string vmdlPath, Model model )
+	{
+		string key = vmdlPath[(vmdlPath.LastIndexOf( '/' ) + 1)..].Replace( ".vmdl", "" );
+		var b = model.Bounds;
+		if ( !WallFootprints.TryGetValue( key, out var w ) )
+			return (b.Center, b.Size);
+
+		float xMin = w.xMin * M, xMax = w.xMax * M, halfY = w.halfY * M;
+		return (new Vector3( (xMin + xMax) * 0.5f, 0f, b.Center.z ),
+			new Vector3( xMax - xMin, halfY * 2f, b.Size.z ));
+	}
+
+	/// <summary>
+	/// Place a real model resting on the ground, with a static box collider fit to the
+	/// model's WALL footprint where one is baked, else its render bounds (collider dims
+	/// are LOCAL — GO scale does the sizing). <paramref name="targetHeight"/>
 	/// &gt; 0 auto-scales the model to that height in metres; &lt;= 0 uses the model's NATURAL
 	/// scale (the building/high-rise vmdls are authored at real metres). Returns false if the vmdl
 	/// isn't available so callers can fall back to boxes.
@@ -691,9 +740,10 @@ public static class CityBuilder
 		var renderer = go.Components.Create<ModelRenderer>();
 		renderer.Model = model;
 
+		var (colCenter, colScale) = BuildingColliderBox( vmdlPath, model );
 		var collider = go.Components.Create<BoxCollider>();
-		collider.Scale = model.Bounds.Size;
-		collider.Center = model.Bounds.Center;
+		collider.Scale = colScale;
+		collider.Center = colCenter;
 		collider.Static = true;
 
 		return true;
