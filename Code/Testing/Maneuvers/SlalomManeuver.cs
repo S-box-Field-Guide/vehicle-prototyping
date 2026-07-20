@@ -10,7 +10,14 @@ public sealed class SlalomManeuver : ManeuverBase
 
 	bool _coneHitThisTick;
 
-	public override void Start( ManeuverContext ctx ) => _coneHitThisTick = false;
+	public override void Start( ManeuverContext ctx )
+	{
+		_coneHitThisTick = false;
+		// Cones are dynamic (punt-able) since the city polish pass, but strike counting is
+		// proximity-based against the authored layout: snap every cone back to its build-time
+		// transform so each run measures the identical course (battery integrity).
+		TestTrack.ResetSlalomCones();
+	}
 
 	public override bool Tick( ManeuverContext ctx, float dt )
 	{
