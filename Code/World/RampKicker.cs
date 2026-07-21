@@ -73,84 +73,123 @@ public static class RampKicker
 	}
 
 	/// <summary>
-	/// MINIMUM-RADIUS LAW. LIVE-UNVERIFIED high-speed revision (2026-07-21, owner-reopened hitch:
-	/// "the car gets stuck on the ramp, slows down, then launches like crazy - only when going
-	/// really fast"). The arc radius R = (L²+H²)/(2H) is what the suspension feels: riding the face
-	/// at speed v needs a normal force N = m(g·cosθ + v²/R) - the centripetal term v²/R on top of
-	/// gravity. TWO distinct failure regimes have been found on this face, at two different radius
-	/// scales:
+	/// RADIUS LAW, round-2 revision (2026-07-21 evening; LIVE-UNVERIFIED). The arc radius
+	/// R = (L²+H²)/(2H) is what the suspension feels on the face: riding at speed v needs a normal
+	/// force N = m(g·cosθ + v²/R). THREE distinct failure mechanisms are now known, and only the
+	/// first two are radius-law concerns; the third is a LAYOUT (spacing) concern that a bigger
+	/// radius makes WORSE:
 	///
-	///   A. FACE ARREST + FLIP (small radii, the 2026-07-19 pass). A bottomed wheel's resolution
-	///      impulse on a steep slope points backward: arrest + nose pitch + flip. MEASURED boundary
-	///      (hatch, jump maneuver, entry = maxSpeedMs): R 37/exit 19° FLIP+ARREST from 31 m/s
-	///      (233 G at 44.7); R 72/exit 20° 44.8 entry no arrest (70 G landing slam); R 93/exit 21°
-	///      45.1 no arrest (60 G slam); R 87.5/exit 7.9° and R 115/exit 5.0° pristine at 42+. Face
-	///      arrest separates on R itself, and the smallest radius proven arrest-safe at 45 m/s is 72.
-	///      The earlier floor of 90 cleared regime A.
+	///   A. FACE ARREST + FLIP (small radii; measured 2026-07-19). A bottomed wheel's resolution
+	///      impulse on a steep slope points backward: arrest + nose pitch + flip. Measured boundary
+	///      (hatch, jump maneuver): R 37/exit 19° arrests from 31 m/s (233 G at 44.7); R 72 and up
+	///      never arrested to 45 m/s. The 90 m floor (25% over the proven 72) clears regime A.
 	///
-	///   B. SUSPENSION-BOTTOMING FACE DIVE (this revision). Regime A cleared the ARREST but not the
-	///      HITCH the owner still feels above ~35 m/s. Root-caused offline (a per-tick vertical-plane
-	///      port of VehicleWheel/VehicleController - the 2 Hz live telemetry was structurally blind
-	///      to it, see KB g-game-coarse-telemetry-hz-misses-face-load-transient). The suspension's
-	///      SUSTAINED normal-force ceiling is 4·SpringRate·SuspensionTravel; net of weight that is a
-	///      centripetal capacity a_avail = (4·SpringRate·SuspensionTravel − m·g)/m. For the hatch at
-	///      1.1 g scene gravity that is (4·34000·0.20 − 1150·10.79)/1150 = 12.9 m/s². Once v²/R
-	///      exceeds a_avail (v > √(a_avail·R)), the springs BOTTOM and the chassis SINKS into the
-	///      face - a real vertical collapse that rides bottomed to the lip, then the loaded spring
-	///      unloads off the lip ("launches like crazy"). Forward speed is barely touched (~99%
-	///      retained - why net-speed telemetry missed it); the tell is the SINK depth. Offline sink
-	///      at entry speed, R 104 (old law, H 2.0): 25 m/s → 13 mm (smooth); 35 → 34 mm (onset);
-	///      45 → 116 mm; 53 → 242 mm (badly bottomed). Belly never contacts on these gentle arcs;
-	///      the dive is pure suspension bottoming. The v² scaling is exactly the owner's
-	///      "only when going really fast."
+	///   B. SUSPENSION-BOTTOMING FACE DIVE (high speed only; offline port 2026-07-21 morning). The
+	///      suspension's sustained normal-force ceiling is 4·SpringRate·SuspensionTravel; net of
+	///      weight that is a centripetal capacity a_avail = (4·SpringRate·SuspensionTravel − m·g)/m
+	///      = 12.9 m/s² for the hatch at 1.1 g (the binding car). Above v = √(a_avail·R) the springs
+	///      bottom and the chassis sinks into the face (offline sink at R 104, H 2.0: 13 mm at
+	///      25 m/s, 242 mm at 53), then the loaded springs unload off the lip. Forward speed keeps
+	///      ~99% so net-speed telemetry never sees it. Fix: SPEED-RATE the radius via
+	///      <see cref="RadiusFor"/> with a per-feature design speed. This mechanism only matters on
+	///      features that realistically take 35+ m/s entries.
 	///
-	/// FIX for regime B: rate the radius floor so the fastest realistic arrival stays UNDER the
-	/// bottoming crossover. Design ceiling v = 53 m/s (owner-observed hatch top on the open map;
-	/// the hatch is the binding car - lowest a_avail of the fast cars). Analytic no-bottom radius
-	/// is v²/a_avail = 53²/12.9 = 218 m; the dynamic sim (damper transient overshoots the static
-	/// bound) needs ~240 m for ZERO bottoming, so the floor is 240 (crossover ~55.6 m/s, a small
-	/// margin over 53). Offline before/after at 53 m/s, H 2.0: sink 242 mm → 33 mm, bottomed ticks
-	/// 12/25 → 0/38; 25 m/s stays smooth (13 mm sink either way).
+	///   C. CHAIN FLIGHT-vs-GAP OVERSHOOT (the round-2 finding, and the DOMINANT felt hitch). A car
+	///      launching a chained kicker lands range = v·cosθ·t past the lip (t from H + v·sinθ·t −
+	///      g/2·t² = 0). When that range exceeds the flat gap to the next kicker (base spacing minus
+	///      ground run), the car lands ON the next FACE: a 4x-clamp slam into rising ground, the
+	///      visible "stuck on the ramp, slows, then launches like crazy" as that face re-launches
+	///      it. Kinematic audit, hatch: OLD law (floor 90) chains failed from 20-23 m/s (the
+	///      original "only when going really fast"); the R 240 blanket floor lengthened every run
+	///      25-60%, shrank the gaps, and moved failure DOWN to 9-15 m/s (the owner's round-2 "any
+	///      speed over about 40 mph"). A blanket radius floor CANNOT fix this: bigger R means longer
+	///      runs, smaller gaps, earlier failure. The fix is the SPACING law
+	///      <see cref="MinChainSpacingM"/>, owned by the layout.
 	///
-	/// TRADEOFF (owner dial): a 240 m floor makes ramps longer and exits flatter (H 2.0: L 20→31 m,
-	/// exit 11.3°→7.4°, airtime at 53 m/s 1.92→1.27 s - still ample). Exit angle ≈ √(2H/R) so
-	/// landing slam (regime A's second dial) only IMPROVES. If poppier low-speed ramps are wanted
-	/// back at the cost of a small residual high-speed sink, the floor can be lowered: R 200 → 44 mm
-	/// sink, R 170 → 59 mm, both still a >4× cut from the 242 mm that triggered this report. The
-	/// 52·H term (below) still caps exits on H > ~4.6 m ramps at ~11.3°.
+	///   Exonerated offline (round 2, 2-axle pitch-DOF port, facet-vs-smooth A/B): the segmented
+	///   box collider. At the real facet sizes (0.7-1.05 m) facet loads differ under 3% from a
+	///   perfectly smooth face and cause no contact loss; a clean single-kicker easement climb is
+	///   smooth at every sub-bottoming speed (loads 1.1-1.3x, rears never lift, pitch tracks the
+	///   slope). The live porpoise captures (alternating axle slams, z bobbing 0.9-1.4 m at 21 m/s)
+	///   are chain-landing events, not single-face physics.
 	///
-	/// LIVE CAPTURE (owner run 2026-07-21, hatch, master build 3c19ff6, old law) confirmed the hunt
-	/// and split the complaint into two mechanisms - only the FIRST is a radius-law fix:
-	///   • HITCH at 49.4 m/s: the car went nose-HIGH mid-face (both fronts airborne, both rears on
-	///     the shallow base at ~2× static load, car root 1.0 m above rest ride height) and lofted,
-	///     losing only ~1% forward speed (179→177 km/h) - exactly the net-speed-blind, vertical/
-	///     attitude transient this offline hunt predicted. Longer/flatter geometry gentles the
-	///     high-speed slope onset that kicks the nose up AND removes the suspension bottoming, so
-	///     this floor targets both. Full pitch quantification needs a validated pitch harness or a
-	///     live A/B; the offline port here models only the (dominant) suspension/vertical axis.
-	///   • ARREST/near-flip: a car arriving airborne and sideways caught the kicker with its CHASSIS
-	///     box on a near-vertical facet (back lip / side skirt / pitched segment-box edge - the only
-	///     kicker surfaces with |n.z| under 0.5), a rigid wall-stop (81 to 13 km/h) WallGlanceAssist then
-	///     logged as a wall. This is a COLLISION-PATH issue, NOT a radius-law one; flatter geometry
-	///     only reduces the odds of a chassis-first arrival. Tracked separately for a collision fix
-	///     (VehicleController.ApplyWallGlanceAssist / kicker facet exposure).
+	///   Separate open issue (collision path, not radius): a car arriving airborne/sideways can
+	///   catch the kicker back lip / side skirt / segment-box edge (the only kicker surfaces with
+	///   |n.z| under 0.5) with its chassis box: rigid wall-stop, logged by WallGlanceAssist (live:
+	///   81 to 13 km/h, and 39 to 6 km/h straddling a side edge). Longer faces mean MORE side-wall
+	///   area, another reason not to blanket-lengthen.
 	///
-	/// LIVE-UNVERIFIED: the offline port is digit-plausible (matches the live ~1% net-speed loss at
-	/// 49 m/s and the measured ~98-99% retention) but the felt result, the residual nose-high pitch,
-	/// and the playground spacing/rhythm-line landing zones must be re-checked in the editor before
-	/// this is called fixed.
+	/// The 90 m floor is restored below; the 240 m blanket floor (round-1 fix, live-FALSIFIED as a
+	/// feel fix because mechanism C dominated) is retired in favor of the per-feature design-speed
+	/// rating. 52·H keeps every default exit at or under ~11.3° (landing-slam dial, regime A data).
 	/// </summary>
-	public const float MinRadiusM = 240f;
+	public const float MinRadiusM = 90f;
 
-	/// <summary>Speed-safe ground run for a kicker of lip height <paramref name="heightM"/>: the length
-	/// that yields the design radius R(H) = max(<see cref="MinRadiusM"/>, 52·H) (see the law above;
-	/// increasing in H, exit angle capped ~11.3°). Never shorter than the legacy 5·H (inert with the
-	/// 90 m floor, kept as a guard). From R = (L²+H²)/(2H):  L = √(H·(2R − H)).</summary>
-	public static float LengthFor( float heightM )
+	/// <summary>Sustained centripetal capacity (m/s²) of the binding roster car (hatch: combined
+	/// spring ceiling 4·34000·0.20 N minus weight at 1.1 g, over mass; see the law above). Used to
+	/// speed-rate a face radius against regime-B bottoming.</summary>
+	public const float BottomingCentripetalCapacity = 12.9f;
+
+	/// <summary>Dynamic margin over the analytic no-bottom radius v²/a_avail: the damper transient
+	/// overshoots the static bound; the offline port needed ~1.1x for zero bottomed ticks.</summary>
+	public const float BottomingRadiusMargin = 1.1f;
+
+	/// <summary>Design radius for a kicker of lip height <paramref name="heightM"/>. Base law
+	/// max(<see cref="MinRadiusM"/>, 52·H) (arrest floor + exit-angle cap). Pass a positive
+	/// <paramref name="designSpeedMs"/> (the fastest REALISTIC entry for this specific feature) to
+	/// also clear regime-B bottoming at that speed: R at least
+	/// <see cref="BottomingRadiusMargin"/>·v²/<see cref="BottomingCentripetalCapacity"/>
+	/// (53 m/s gives ~240 m, the round-1 full-bore figure). Leave it 0 for rhythm/chain kickers,
+	/// whose entries are link-speed bound and whose spacing needs the short run.</summary>
+	public static float RadiusFor( float heightM, float designSpeedMs = 0f )
 	{
 		float r = MathF.Max( MinRadiusM, 52f * heightM );
+		if ( designSpeedMs > 0f )
+			r = MathF.Max( r, BottomingRadiusMargin * designSpeedMs * designSpeedMs / BottomingCentripetalCapacity );
+		return r;
+	}
+
+	/// <summary>Speed-safe ground run for a kicker of lip height <paramref name="heightM"/>: the length
+	/// that yields the design radius <see cref="RadiusFor"/>(H, designSpeedMs). Never shorter than the
+	/// legacy 5·H (inert with the 90 m floor, kept as a guard). From R = (L²+H²)/(2H):
+	/// L = √(H·(2R − H)). The optional <paramref name="designSpeedMs"/> is regime-B speed rating;
+	/// existing single-argument call sites get the pre-2026-07-21 geometry back (floor 90).</summary>
+	public static float LengthFor( float heightM, float designSpeedMs = 0f )
+	{
+		float r = RadiusFor( heightM, designSpeedMs );
 		float lawLen = MathF.Sqrt( heightM * (2f * r - heightM) );
 		return MathF.Max( 5f * heightM, lawLen );
+	}
+
+	/// <summary>Flat-ground flight range (m) past the lip for a car leaving a kicker of height
+	/// <paramref name="heightM"/> built by <see cref="LengthFor"/>(H, designSpeedMs) at
+	/// <paramref name="exitSpeedMs"/>: ballistic from lip height H at the face exit angle
+	/// asin(L/R), landing back on grade, under the live 1.1 g scene gravity. The building block of
+	/// <see cref="MinChainSpacingM"/>.</summary>
+	public static float FlightRangeM( float heightM, float exitSpeedMs, float designSpeedMs = 0f )
+	{
+		const float g = 9.81f * 1.1f;   // GameBootstrap scene gravity
+		float r = RadiusFor( heightM, designSpeedMs );
+		float len = LengthFor( heightM, designSpeedMs );
+		float exitAngle = MathF.Asin( System.Math.Clamp( len / r, 0f, 1f ) );
+		float vz = exitSpeedMs * MathF.Sin( exitAngle );
+		float vx = exitSpeedMs * MathF.Cos( exitAngle );
+		float t = (vz + MathF.Sqrt( vz * vz + 2f * g * heightM )) / g;
+		return vx * t;
+	}
+
+	/// <summary>Minimum base-to-base spacing (m) for CHAINED same-height kickers so a car linking
+	/// them at up to <paramref name="maxLinkSpeedMs"/> lands on the FLAT between them, never on the
+	/// next face (failure mechanism C in the law above): easement ground run + flight range at the
+	/// link speed + <paramref name="marginM"/>. Entries above the link speed will still overshoot
+	/// onto the next face; the link speed is the chain's protected envelope and belongs in the
+	/// layout's comment for the line. LIVE-UNVERIFIED: derived from the offline kinematic audit
+	/// that matched both owner failure-threshold reports (20-23 m/s on floor-90 geometry,
+	/// 9-15 m/s on the retired floor-240 geometry).</summary>
+	public static float MinChainSpacingM( float heightM, float maxLinkSpeedMs, float designSpeedMs = 0f, float marginM = 4f )
+	{
+		float run = GroundRunFor( LengthFor( heightM, designSpeedMs ), heightM, RampProfile.Easement );
+		return run + FlightRangeM( heightM, maxLinkSpeedMs, designSpeedMs ) + marginM;
 	}
 
 	/// <summary>Place a curved solid kicker under <paramref name="parent"/>. <paramref name="lengthM"/>

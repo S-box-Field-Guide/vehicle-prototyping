@@ -1,25 +1,27 @@
 """
-Offline evidence for the RampKicker high-speed-hitch fix (MinRadiusM 90 -> 240,
-2026-07-21). Root-cause + retune tool for the stunt-kicker "gets stuck / slows
-down / launches like crazy at high speed" report.
+Offline evidence tool for the stunt-kicker hitch hunt (rounds 1-2, 2026-07-21).
 
-STABLE point-mass-on-arc port of the VP raycast-wheel car (Hatch) traversing a
-RampKicker easement face. The pitch DOF is dropped on purpose: it is numerically
-stiff in a plain per-tick integrator and is NOT the suspension mechanism this tool
-isolates (the live capture shows the pitch/nose-high story separately). Measures:
-  1. suspension bottoming and its SPEED crossover (v > sqrt(a_avail * R)),
-  2. the vertical DIVE (chassis sinking into the face) depth vs entry speed,
-  3. forward-speed scrub (found negligible: ~99%, matching the live ~1% loss),
-  4. whether the chassis belly reaches the surface (it does not on these arcs).
+ROUND-2 VERDICT (supersedes the round-1 framing): the blanket MinRadiusM 240 floor
+was live-FALSIFIED as a feel fix and is retired; RampKicker.cs is back on the 90 m
+arrest floor with an opt-in per-feature design-speed rating (RadiusFor/LengthFor
+designSpeedMs) plus a chain spacing law (MinChainSpacingM). What this tool proved:
+  1. BOTTOMING (regime B) is real but HIGH-SPEED only: sink at R 104, H 2.0 is
+     13 mm at 25 m/s vs 242 mm at 53. Speed-rate only features that take 35+ m/s.
+  2. CHAIN FLIGHT-vs-GAP (regime C, chain_audit below) is the geometry event at
+     PLAYER speeds: on floor-90 geometry chains put flight range past the flat gap
+     from 20-23 m/s (the original "only when really fast"); the retired floor-240
+     runs shrank the gaps and moved failure to 9-15 m/s ("any speed over 40 mph").
+     A radius floor can never fix this; spacing must include flight range.
+  3. Facets (segmented box collider) and clean single-face climbs are EXONERATED:
+     a 2-axle pitch-DOF port (scratchpad ramp_pitch_port.py) showed facet-vs-smooth
+     loads within 3%, no contact loss, pitch tracking the slope at all
+     sub-bottoming speeds. Forward retention ~99% everywhere - matching the owner's
+     round-2 confirmation that exit speed is correct and the felt hitch is VISUAL.
 
 Faithful to VehicleWheel suspension: combined 4-wheel spring/damper, compression
 clamped to travel, Load clamped to 4x static, force along contact normal, surface
 traced ONCE per 50 Hz fixed tick (VehicleController). Constants are the shipped
 Hatch (CarRoster.cs) + CarDefinition.cs defaults + GameBootstrap 1.1 g gravity.
-
-Retune: MinRadiusM is the single dial. Change `FLOOR_AFTER` below and re-run to
-trade footprint for residual high-speed sink (e.g. 200 -> 44 mm, 170 -> 59 mm,
-240 -> 33 mm at 53 m/s; the old floor 90/104 gave 242 mm).
 """
 import math
 
@@ -179,9 +181,37 @@ def report(entry_v, L, H):
     print(f"  min com_above {min_comabove*1000:.0f}mm (rest {COM_ABOVE_REST*1000:.0f}, bottom {(REST_FULL-TRAVEL)*1000:.0f})  "
           f"min vz {min_vz:.2f} m/s (dive)  belly {max_belly*1000:.1f}mm")
 
-FLOOR_BEFORE = 90.0    # old MinRadiusM
-FLOOR_AFTER = 240.0    # new MinRadiusM (retune dial)
+FLOOR_BEFORE = 90.0    # the shipped MinRadiusM (arrest floor, restored in round 2)
+FLOOR_AFTER = 240.0    # the retired round-1 blanket floor (kept for the A/B tables)
 LADDER = (0.6, 1.2, 2.0, 3.0, 4.5)
+
+def exit_angle_deg(L, H):
+    R = (L*L + H*H) / (2*H)
+    return math.degrees(math.asin(min(max(L/R, 0.0), 1.0)))
+
+def flight_range(v, exit_deg, H):
+    """Ballistic range past the lip (height H, face exit angle) to flat grade."""
+    th = math.radians(exit_deg)
+    vz = v*math.sin(th); vx = v*math.cos(th)
+    t = (vz + math.sqrt(vz*vz + 2*G*H)) / G
+    return vx*t
+
+def chain_audit():
+    """Regime C: for each shipped chain line, the entry speed from which the car
+    lands ON the next kicker's face (flight range exceeds the flat gap)."""
+    run_scale_segs = 200
+    chains = (("mid 1.0m x36", 1.0, 36.0), ("fastlow 0.6m x25", 0.6, 25.0),
+              ("BIG 2.5m x56", 2.5, 56.0), ("south 1.2m x40", 1.2, 40.0))
+    print("\n=== CHAIN AUDIT: lip-to-next-base gap vs flight range (hatch) ===")
+    for name, H, sp in chains:
+        for law, floor in (("floor90", FLOOR_BEFORE), ("floor240", FLOOR_AFTER)):
+            R = max(floor, 52*H); L = math.sqrt(H*(2*R - H))
+            surf = Surf(L, H)              # easement run
+            gap = sp - surf.run
+            eD = exit_angle_deg(L, H)
+            vcrit = next((v for v in range(8, 60) if flight_range(v, eD, H) > gap), None)
+            print(f"  {name:16s} {law:8s} run {surf.run:5.1f} gap {gap:5.1f}m exit {eD:4.1f}deg"
+                  f" -> lands on next FACE from v >= {vcrit} m/s")
 
 def sink_at(v, L, H):
     surf, tr = sim(v, L, H)
@@ -208,3 +238,4 @@ if __name__ == "__main__":
         print(f"  {H:>4} | R{Ro:3.0f} L{Lo:4.1f} {o25[2]:4.1f}  {o25[0]:3.0f}  {o53[0]:3.0f}(b{o53[1]}) "
               f"| R{Rn:3.0f} L{Ln:4.1f} {n25[2]:4.1f}  {n25[0]:3.0f}  {n53[0]:3.0f}(b{n53[1]})")
     print("  (sink = vertical chassis collapse into the face; b = bottomed 50 Hz ticks)")
+    chain_audit()
