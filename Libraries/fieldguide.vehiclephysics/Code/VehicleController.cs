@@ -173,6 +173,7 @@ public sealed class VehicleController : Component, Component.ICollisionListener
 		ApplySpinRecoveryAssist();
 		ApplyStabilityAssist();
 		ApplyWallGlanceAssist();
+		ApplyAirAttitudeAssist();
 
 		// dense driving telemetry: 2 Hz while moving or on input — parseable for analysis
 		if ( _telemetry > 0.5f && (SpeedMs > 0.5f || Throttle > 0f || Brake > 0f) )
@@ -554,6 +555,41 @@ public sealed class VehicleController : Component, Component.ICollisionListener
 			floor *= Math.Clamp( (TcFloorRelaxEnd - worstSlip) / (TcFloorRelaxEnd - TcFloorRelaxStart), 0f, 1f );
 
 		return throttle * Math.Clamp( slipTarget / worstSlip, floor, 1f );
+	}
+
+	/// <summary>
+	/// Airborne pitch-rate damping time constant, seconds. Leaving a ramp lip pivots the car over
+	/// its rear axle, so every launch departs rotating nose-down (19-46 deg/s measured); with no
+	/// air management the car rotates through the whole flight and lands nose-first, digging in.
+	/// Flight-recorder capture (2026-07-21, Lad2 at 35.5 m/s): launch attitude 8.6 deg nose-UP,
+	/// landing attitude 17.8 deg nose-DOWN, touchdown 35.5 to 31.7 m/s in 40 ms (a ~5 g spike)
+	/// then pitch slammed level in 100 ms - the owner's "hitch going off the ramps", reported
+	/// identically at every speed because the lip pivot exists at every speed. Damping the
+	/// car-local pitch rate while fully airborne holds the launch attitude so the car lands
+	/// wheels-matched (slightly tail-first). 0 or negative disables. LIVE-UNVERIFIED.
+	/// </summary>
+	[Property] public float AirPitchDampTau { get; set; } = 0.30f;
+
+	void ApplyAirAttitudeAssist()
+	{
+		if ( AirPitchDampTau <= 0f )
+			return;
+
+		// fully airborne only: any grounded wheel means suspension owns attitude and this
+		// assist is inert, so grounded driving is byte-identical by construction
+		foreach ( var w in Wheels )
+			if ( w.IsGrounded )
+				return;
+		if ( Wheels.Count == 0 )
+			return;
+
+		// the drift button doubles as "let me rotate" in the air: deliberate flips stay possible
+		if ( Handbrake )
+			return;
+
+		var local = WorldRotation.Inverse * _rigidbody.AngularVelocity;
+		local.y *= MathF.Exp( -Time.Delta / AirPitchDampTau );
+		_rigidbody.AngularVelocity = WorldRotation * local;
 	}
 
 	void ApplyStabilityAssist()
