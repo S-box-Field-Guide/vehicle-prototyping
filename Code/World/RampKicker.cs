@@ -40,7 +40,7 @@ public static class RampKicker
 	/// <see cref="EasementBlend"/> of the run, then holds, so the suspension load onset is ~30x
 	/// gentler at the base (0.007 deg/segment vs the arc's 0.21 deg) - it kills the base JERK the
 	/// owner feels as a "hitch". MEASURED (2026-07-20 A/B, hatch jump, 2.0 ladder face): under the
-	/// current R(H)=max(90,52H) law both profiles already retain ~98% of NET face speed at 38-45 m/s
+	/// R(H)=max(MinRadiusM,52H) law both profiles already retain ~98% of NET face speed at 38-45 m/s
 	/// (the R>=90 floor made the pure-arc step small enough that the dampers absorb it), so the
 	/// easement's win is the smoother onset feel, not net speed - and its uniform-scale tightens the
 	/// effective radius ~3.6% (scale 0.964), a hair MORE sustained face load. BATTERY LAW: Easement
