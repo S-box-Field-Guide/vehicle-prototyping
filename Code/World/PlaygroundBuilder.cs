@@ -109,34 +109,74 @@ public static class PlaygroundBuilder
 	/// <summary>
 	/// Build the stunt content INTO the proto world (owner intent 2026-07-19: players load into the
 	/// town, drive east through the gate and spur onto the hardpack, and the stunt park is just
-	/// THERE - no world switch). Re-hosts the EXISTING feature builders (zero geometry changes,
-	/// re-layout only) in three zones on the proving-grounds hardpack (world x 500-1500,
+	/// THERE - no world switch). Three zones on the proving-grounds hardpack (world x 500-1500,
 	/// y -280..320), each zone rectangle authored with 15+ m margins from every station corridor
 	/// (skidpad, drag/brake/topspeed lane, slalom, ramps/washboard/hill lane, lowgrip, jturn,
 	/// banked curve, crash lane, spur entry). BATTERY LAW: nothing may be placed outside these
 	/// rectangles, no station moves, TestTrack.cs untouched.
-	///   NORTH BAND      x 720-1240, y 80..318   (ladder, big-air, rhythm lines, mounds)
-	///   SOUTH-EAST      x 1060-1300, y -278..-85 (bowl, wall-ride, stairs, ball pit)
+	///   NORTH BAND      x 720-1240, y 80..318   (ladder + big-air set-pieces, freeform scatter)
+	///   SOUTH-EAST      x 1060-1300, y -278..-85 (bowl, wall-ride, ball pit, smooth entry mound)
 	///   SOUTH-WEST      x 505-625,  y -270..-75  (welcome zone off the spur: jumpbox, tabletop, mounds)
-	/// Footprint audit, easement revision (extents = RampKicker.GroundRunFor easement runs, ~29%
-	/// past the R(H) = max(MinRadiusM, 52H) law lengths at blend 0.5): every feature stays inside its
-	/// zone. NOTE the 2026-07-21 MinRadiusM 90 -> 240 bump lengthens every ramp under ~4.6 m tall (the
-	/// ladder and the H 3.0 box-gap/mound launches grow ~25-60%); this footprint audit and the
-	/// per-feature landing-clearance/rhythm-spacing tuning below are LIVE-UNVERIFIED under it.
-	/// Extremes (pre-bump): north band max x ~1226 (2.0 mound) vs 1240, big-air chain ends ~1049; SE
-	/// max x 1266 (ball pit); SW max x ~613 (jumpbox down-ramp) vs 625. Tightest spot: the (760,120) 1.0 mound's north edge
-	/// (y 123.5) is 0.5 m from the ladder 0.6-lane kicker corridor (lane y 128, width 8, edge
-	/// 124) - clear, and the lane centreline misses it by 3.6 m. FULL-BORE (46 m/s) LANDING
-	/// CORRIDORS verified clear: ladder lanes land x 860-939 on their own lanes' flat; big-air
-	/// intercepts its lengthened down-slope ~x 984; chains land flat or on the next kicker's low
-	/// face (the 11-degree faces are rollable at any landing height); mound overshoots land on
-	/// open pad (the (1200,120) east launch lands ~x 1284, off-zone but on flat hardpack clear of
-	/// the banked-curve corridor at y 175+); jumpbox/tabletop full-bore overshoots land flat
-	/// inside/just east of the SW zone at y -110/-180, feature-free rows. Rhythm spacings kept:
-	/// at the ~21.4 m/s link speed the flatter exits land 1-6 m short of the next base (better
-	/// than the old geometry, which landed on the next low face).
-	/// The playground WORLD (Build above) stays dev-only (vp_world/vp_setworld); its big-air
-	/// moved west so the law-lengthened set-piece stays inside the perimeter wall.
+	///
+	/// REDESIGN 2026-07-21 (owner: "more ramps spread out, not so uniform... facing multiple
+	/// positions so no matter where you're driving someone can go off a ramp... get rid of the
+	/// leftover rigid ramps that are just hard angles in the back-right corner... keep the ball
+	/// pit... make that whole area more natural to drive around"). Three changes:
+	///  1. NORTH BAND DE-GRIDDED. The old three parallel rhythm rows + four grid-placed mounds are
+	///     gone; in their place a FREEFORM SCATTER: two fans (west-centre N/NE/E, east S-of-curve
+	///     E/SE/NNW), two bidirectional mounds, and coverage singles facing N, S, W, SE across the
+	///     open field. Headings now span the full compass, so a car on any approach has a launch
+	///     face lined up (the ORIENTATION LAW's lone-jump/side-by-side forms, scattered not rowed).
+	///  2. HARD-ANGLE CLUSTER REMOVED. The step-stairs (5 stacked 0.5 m VERTICAL riser boxes) were
+	///     the "rigid ramps, no slope, just hard angles" the owner flagged in the SE (back-right as
+	///     you drive in). A 0.5 m riser is a wall to a raycast wheel (2026-07-14 telemetry) and a
+	///     near-vertical facet is exactly this week's chassis wall-stop class; removing them is
+	///     safety, not just looks. Replaced by a smooth bidirectional mound + a pop in the open
+	///     pocket east of the wall-ride. (The centre ride-board hack the stairs carried is retired
+	///     with them.) BuildStepStairs stays only in the dev-only Build() world.
+	///  3. KEPT (earned live-verification): bowl (with its NE entry-mouth escape route), wall-ride
+	///     quarter-pipe, big-air + landing mound, ball pit (12 balls), jumpbox, tabletop, mounds,
+	///     and the five-height calibrated LADDER (the ramp-physics measurement instrument), tucked
+	///     along the band's west edge as its own coherent +X lane, clearly apart from the scatter.
+	///
+	/// GEOMETRY LAW: every kicker length comes from RampKicker.LengthFor(h) (restored MinRadiusM 90,
+	/// the "poppy" default of branch ramp-highspeed-hitch); footprints/seams use the easement run
+	/// RampKicker.GroundRunFor (~28% past the authored length at blend 0.5). No length is hardcoded,
+	/// so a future radius-law change flows through untouched.
+	///
+	/// FULL-BORE (46 m/s) LANDING-CORRIDOR + OVERLAP AUDIT (offline, tools/layout_validate.py, the
+	/// exact LengthFor/EasementCore/FlightRangeM port; every corridor = lip -> ballistic landing at
+	/// 46 m/s under 1.1 g, swept at kicker width, tested against every other feature footprint, the
+	/// banked-curve wall, the external hill-ladder ramps, and the drivable-slab bounds). RESULT:
+	/// zero corridor-into-obstacle, zero corridor-into-kicker-body, zero footprint-out-of-zone
+	/// across the 20 north-band + 3 SE kickers.
+	///   NORTH BAND: the ONLY external collidable obstacle in reach is the banked-curve ring wall
+	///     (x 1251-1303, y 167-227). Every east/north-east corridor stays clear of it: the closest
+	///     approaches are fanB_E landing (1231,150) and scSE landing (1286,92), both south of the
+	///     wall's y 167 by 17+ m or east of it on open flat. Ladder lanes (exit 6.6-11.3 deg) land
+	///     x 798-887 each on its own lane's flat. Big-air (base 760,300) overshoot meets its own
+	///     lengthened down-slope. Mound overshoots and the S/N pops land on open hardpack (sPop
+	///     lands (1000,27) on the collide-false drag pad; nEdge/scNE/scN2 land inside the slab with
+	///     20+ m to the y 320 edge). Drag-strip distance boards and skidpad/jturn/lowgrip markers
+	///     are collide-false, so south-facing corridors onto that flat are safe.
+	///   SE ZONE: the entry mound (crest 1100,-108, h1.2) throws E to (1170,-108) and W to
+	///     (1030,-108), both north of the bowl (y -166), the bowl-mouth drive-in lane (y < -120),
+	///     the wall-ride (x 1223-1257) and the external hill ramps (x 1026-1054, y < -145). The E
+	///     pop (1280,-110, N) lands (1280,-29) on open flat east of the wall-ride. Bowl NE mouth
+	///     and wall-ride ride-face approaches left clear.
+	///   SW ZONE: unchanged (owner: keep). Re-verified under floor-90: the shorter runs fit with
+	///     seams auto-flush (LengthFor/Run drive every seam), and the only launches that leave the
+	///     slab are the west-edge ones (jumpbox base + m1 east face) landing onto the DRIVABLE spur
+	///     road west of x 505, as before.
+	/// REGIME-B ENVELOPE (recorded design choice): at floor-90 the small-radius scatter/ladder faces
+	/// re-launch poppy but a car arriving above ~34-37 m/s feels the RampKicker regime-B suspension
+	/// sink on the tightest faces (R 90-104). This is the branch's accepted poppy default, not a
+	/// per-feature bottoming rating; big-air is inherently safe (its heights force R >= 234). If a
+	/// specific long-runup single reads as hitchy at speed in the editor, rate it via
+	/// LengthFor(h, designSpeedMs: 53) without moving it.
+	/// LIVE-UNVERIFIED: geometry math only. An editor pass must drive the scatter from several
+	/// headings, confirm the SE mound/pop and the removed-stairs area feel clean, and re-check the
+	/// ladder + big-air at full bore. The dev-only Build() world is unchanged.
 	/// Both entries reset the shared statics, so either can run in a session without stale state.
 	/// </summary>
 	public static void BuildProtoStuntZones( Scene scene )
@@ -147,30 +187,42 @@ public static class PlaygroundBuilder
 		_terrain = false;
 		_ramps = _bowlSegs = _balls = _boxes = 0;
 
-		// ---- north band (x 720-1240, y 80..318) ----
-		Runway( new Vector2( 730f, 176f ), new Vector2( 795f, 176f ), 14f );   // feed to the ladder lanes
-		BuildKickerLadder( new Vector2( 800f, 176f ) );
-		Runway( new Vector2( 745f, 290f ), new Vector2( 828f, 290f ), 12f );   // big-air runway
-		BuildBigAir( new Vector2( 830f, 290f ) );
-		ChainLine( new Vector2( 950f, 130f ), 1.0f, count: 4, spacingM: 36f, widthM: 7f );
-		ChainLine( new Vector2( 950f, 160f ), 0.6f, count: 3, spacingM: 25f, widthM: 7f );
-		ChainLine( new Vector2( 950f, 250f ), 2.5f, count: 3, spacingM: 56f, widthM: 9f );
-		DoubleMound( new Vector2( 760f, 120f ), 1.0f );
-		DoubleMound( new Vector2( 760f, 250f ), 1.2f );
-		DoubleMound( new Vector2( 1150f, 200f ), 1.5f );
-		DoubleMound( new Vector2( 1200f, 120f ), 2.0f );
+		// ---- NORTH BAND (x 720-1240, y 80..318): two directional set-pieces + freeform scatter ----
+		// calibrated instrument: the five-height ladder, tucked along the WEST edge, its own +X lane
+		Runway( new Vector2( 690f, 132f ), new Vector2( 730f, 132f ), 14f );
+		BuildKickerLadder( new Vector2( 735f, 132f ) );
+		// directional set-piece: big-air down its own runway along the north strip
+		Runway( new Vector2( 718f, 300f ), new Vector2( 758f, 300f ), 12f );
+		BuildBigAir( new Vector2( 760f, 300f ) );
+		// west-centre fan (angular coverage N / NE / E)
+		Scatter( new Vector2( 905f, 175f ), 90f, 1.0f );
+		Scatter( new Vector2( 915f, 150f ), 55f, 1.2f );
+		Scatter( new Vector2( 905f, 120f ), 10f, 1.0f );
+		// bidirectional mounds (each launches from two opposite headings, no vertical face)
+		DoubleMound( new Vector2( 1050f, 120f ), 1.5f );
+		DoubleMound( new Vector2( 1080f, 235f ), 1.2f );
+		// east fan (E / SE / NNW), all kept south of the banked-curve corridor
+		Scatter( new Vector2( 1150f, 150f ), 0f, 1.0f );
+		Scatter( new Vector2( 1160f, 120f ), 315f, 1.0f );
+		Scatter( new Vector2( 1140f, 175f ), 105f, 1.2f );
+		// coverage singles filling the open pockets, varied headings
+		Scatter( new Vector2( 1165f, 225f ), 90f, 0.6f );    // N pop, mid-field
+		Scatter( new Vector2( 1000f, 108f ), 270f, 1.0f );   // S pop onto the open drag flat
+		Scatter( new Vector2( 1210f, 265f ), 180f, 1.0f );   // NE corner, faces W back across the field
+		Scatter( new Vector2( 980f, 272f ), 315f, 0.6f );    // N-centre small SE pop
+		Scatter( new Vector2( 1205f, 92f ), 0f, 1.0f );      // SE of band, faces E (open, S of the curve)
 
-		// ---- south-east zone (x 1060-1300, y -278..-85) ----
+		// ---- SOUTH-EAST ZONE (x 1060-1300, y -278..-85): bowl, wall-ride, ball pit + smooth entry ----
 		BuildBankedBowl( new Vector2( 1150f, -200f ), radiusM: 34f, bankDeg: 26f );
 		BuildWallRide( new Vector2( 1240f, -120f ) );
-		// stairs y -120 -> -95 (full-bore law pass): at -120 the stairs' eastward roll-out corridor
-		// ran dead into the wall-ride's vertical WEST END FACE 80 m on (its ride face is entered
-		// from the north, its back wedge from the south; the x-end faces are walls). At -95 the
-		// roll-out passes 14 m north of the wall-ride footprint (y -132.5..-108.8) on open pad.
-		BuildStepStairs( new Vector2( 1100f, -95f ) );
+		// step-stairs REMOVED here (the hard-angle cluster the owner flagged; see the summary). A
+		// smooth bidirectional mound takes their place at the entry; a low pop sits in the open
+		// pocket east of the wall-ride so the corner reads varied without a wall a car can meet.
+		DoubleMound( new Vector2( 1100f, -108f ), 1.2f );
+		Scatter( new Vector2( 1280f, -110f ), 90f, 1.0f );
 		BuildBallPit( new Vector2( 1240f, -220f ) );
 
-		// ---- south-west welcome zone (x 505-625, y -270..-75) ----
+		// ---- SOUTH-WEST WELCOME ZONE (x 505-625, y -270..-75): unchanged (owner: keep) ----
 		BuildJumpOntoBox( new Vector2( 505f, -110f ) );
 		BuildTabletop( new Vector2( 560f, -180f ) );
 		DoubleMound( new Vector2( 540f, -140f ), 1.0f );
@@ -695,6 +747,13 @@ public static class PlaygroundBuilder
 	/// runs ~29% longer than the authored law length (blend 0.5). Chained placements (deck seams,
 	/// mound crests, gap lips, down-ramp bases) must use this, never the authored length.</summary>
 	static float Run( float lenM, float hM ) => RampKicker.GroundRunFor( lenM, hM, StuntProfile );
+
+	/// <summary>A scatter single: one launch kicker at a chosen heading and height, length from the
+	/// curvature law (RampKicker.LengthFor, so a law change flows through). Colour-coded by height.
+	/// The freeform-scatter form of the orientation law - each faces its own way for multi-directional
+	/// coverage; its full-bore landing corridor is validated clear in BuildProtoStuntZones' audit.</summary>
+	static void Scatter( Vector2 baseAtM, float yawDeg, float heightM, float widthM = 8f )
+		=> Kicker( baseAtM, yawDeg, RampKicker.LengthFor( heightM ), widthM, heightM, HeightColor( heightM ) );
 
 	/// <summary>Place a curved solid launch kicker (base tangent to grade → no lip; collision follows
 	/// the curved face; closed underside → no drive-under gap).</summary>
