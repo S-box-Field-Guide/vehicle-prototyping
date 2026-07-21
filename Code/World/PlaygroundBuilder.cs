@@ -120,7 +120,7 @@ public static class PlaygroundBuilder
 	///   SOUTH-WEST      x 505-625,  y -270..-75  (welcome zone off the spur: jumpbox, tabletop, mounds)
 	/// Footprint audit, easement revision (extents = RampKicker.GroundRunFor easement runs, ~29%
 	/// past the R(H) = max(MinRadiusM, 52H) law lengths at blend 0.5): every feature stays inside its
-	/// zone. NOTE the 2026-07-21 MinRadiusM 90 -> 240 bump lengthens every H < ~4.6 m ramp (the
+	/// zone. NOTE the 2026-07-21 MinRadiusM 90 -> 240 bump lengthens every ramp under ~4.6 m tall (the
 	/// ladder and the H 3.0 box-gap/mound launches grow ~25-60%); this footprint audit and the
 	/// per-feature landing-clearance/rhythm-spacing tuning below are LIVE-UNVERIFIED under it.
 	/// Extremes (pre-bump): north band max x ~1226 (2.0 mound) vs 1240, big-air chain ends ~1049; SE
