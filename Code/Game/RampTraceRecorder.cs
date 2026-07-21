@@ -117,6 +117,16 @@ public sealed class RampTraceRecorder : Component
 		} );
 	}
 
+	protected override void OnDisabled()
+	{
+		// Scene teardown (play stop) must not lose a capture in progress: dump whatever we have.
+		if ( _capturing && _fixed is { Count: > 0 } )
+		{
+			try { Dump(); }
+			catch ( Exception e ) { Log.Warning( $"[vp] ramptrace teardown dump failed: {e.Message}" ); }
+		}
+	}
+
 	void Begin()
 	{
 		_fixed = new List<FixedSample>( MaxFixedSamples );
