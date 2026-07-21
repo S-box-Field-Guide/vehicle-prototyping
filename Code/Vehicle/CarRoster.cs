@@ -34,8 +34,42 @@ public static class CarDefinitions
 		TrackWidth = 1.50f,  // kit spec
 		WheelRadius = 0.30f, // kit spec
 		Layout = DriveLayout.FWD,
-		// tuning iter 2b: 150→162 for the 8-10 s 0-100 band (+8% mid-range; topspeed stays in band)
-		PeakTorque = 162f,
+		// LIVE-UNVERIFIED (2026-07-21): owner feel call -- "up the horsepower of the Hatch, it's just
+		// too slow" -- 162->210 (+~30%, round number). Redline/gearing left UNCHANGED (no clear need):
+		// EngineTorqueAt (Drivetrain.cs) scales this flat across the whole rev band, so every gear pulls
+		// harder proportionally; RedlineWheelSpeed (Drivetrain.cs) -- and therefore the hatch's redline-
+		// limited top gear speed -- is a function of RedlineRpm/FinalDrive/GearRatios/WheelRadius only,
+		// NOT PeakTorque, so top speed itself should barely move (this kit has no aero-drag term --
+		// VehicleWheel.cs never integrates one -- so the terminal wheel speed a run converges to is
+		// gearing-set, not torque-set; extra torque only gets there sooner within the fixed run window).
+		// Safety, verified in code before raising this:
+		//   - per-substep drive-omega clamp (VehicleWheel.cs IntegrateWheelSpin, ~line 247-253): drive
+		//     torque can never push a driven wheel's AngularVelocity past DriveOmegaCap (redline-
+		//     equivalent for the current gear) within one substep, regardless of how much torque is on
+		//     tap -- this is the exact backstop the kit's high-PeakTorque wobble-class fix targeted.
+		//   - smoothstep torque rolloff (VehicleWheel.cs, DriveRolloffOnset=0.90f, ~line 206/222-229):
+		//     drive torque fades to zero as a wheel's own spin approaches 90% of DriveOmegaCap, so more
+		//     torque can't "camp" a wheel at the cap and blow the slip ratio out past the tire's tail.
+		//   Both are roster-wide kit behavior (VehicleWheel is shared), so this can't reintroduce the
+		//   historical high-torque wobble class.
+		// TC sanity check: hatch is FWD, no Sport TC opt-in (SportTcSlipTarget unset -> Sport is raw
+		// "ABS only", byte-identical either way). Casual TC (VehicleController.ApplyTractionControl)
+		// targets slip 0.14 by cutting THROTTLE proportionally every substep (slipTarget/worstSlip,
+		// floored then relaxed past slip 1.0-2.5) -- it is a closed-loop response to MEASURED slip, not
+		// a fixed counter to torque, so 30% more torque doesn't overwhelm it: TC just clamps throttle
+		// harder to hold the same 0.14 target. Net effect: launch (grip-limited, TC-governed) stays
+		// close to today's wheelspin character; the gain shows up once the car is rolling and pulling in
+		// a taller gear (torque-limited, not grip-limited), improving mid-run acceleration into topspeed.
+		// Battery bands this will most likely shift when the master baseline re-measures (owner
+		// sign-off required before re-anchoring; NOT touched here):
+		//   - specs/maneuvers/launch.json (car hatch): zeroToHundredS (band 8.0-10.0 s) -- expected
+		//     to IMPROVE (drop) once past the initial TC-governed launch phase.
+		//   - specs/maneuvers/launch.json (car hatch): wheelspinS (band <=0.5 s) -- expected roughly
+		//     FLAT (TC's slip target is unchanged), small risk of a slightly longer TC settle window.
+		//   - specs/maneuvers/topspeed.json (car hatch): maxSpeedMs (band 47.22-54.17 m/s) and
+		//     gearAtVmax (>=4) -- expected to move LITTLE if at all per the no-drag/gearing-set-topspeed
+		//     reasoning above, but named per the spec since the run reaches its terminal speed sooner.
+		PeakTorque = 210f,
 		RedlineRpm = 6300f,
 		// Real recorded car set: deep muscle idle crossfaded up to a revving high layer.
 		EngineSoundEvent = "sounds/engine/engine_real_low.sound",
