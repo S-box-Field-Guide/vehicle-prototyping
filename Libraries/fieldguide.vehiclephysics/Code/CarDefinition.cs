@@ -15,8 +15,8 @@ public enum BodyStyle
 
 public enum AssistLevel
 {
-	Casual, // ABS + traction control
-	Sport,  // ABS only
+	Casual, // full traction control + yaw-stability damping + ABS
+	Sport,  // ABS + optional REDUCED-authority TC / yaw-stability (per-car opt-in; drift feel preserved)
 	Sim     // nothing
 }
 
@@ -132,6 +132,27 @@ public class CarDefinition
 	public float WallGlanceHeadOnDeg { get; set; } = 60f;  // at/above this incidence: no assist (hard stop preserved)
 	public float WallAlignStrength { get; set; } = 6f;     // yaw-align rate toward the wall tangent (per second)
 
+	// ── Sport-mode stability posture (owner call 2026-07-21) ──
+	// Sport historically ran with NO traction control and NO yaw-stability damping (both Casual-only),
+	// so a full-throttle RWD car spun the rears to redline and the counter-steer pendulum went divergent
+	// — uncatchable spin-outs. These give Sport a REDUCED-authority version of each assist, opt-in per
+	// car. Both default to 0 (disabled), so any car that doesn't set them keeps the raw "ABS only" Sport
+	// and — critically — Casual and Sim stay byte-identical (the controller multiplies Casual authority
+	// by exactly 1 and returns early for Sim, unchanged).
+
+	// Sport traction control. When >0, Sport runs the same proportional TC as Casual
+	// (VehicleController.ApplyTractionControl) but holds driven-wheel slip near THIS ratio instead of the
+	// Casual 0.14 grip-peak target. Set it LOOSER than the peak (e.g. 0.30-0.45) so the rears still break
+	// into a throttle-steerable slide (drift stays alive) while the redline free-spin that torches rear
+	// lateral grip is capped. 0 = no Sport TC (raw wheelspin, the old behavior).
+	public float SportTcSlipTarget { get; set; } = 0f;
+
+	// Sport yaw-stability. When >0, Sport runs the yaw-rate damper (VehicleController.ApplyStabilityAssist)
+	// at THIS fraction of the Casual authority (0-1). It bleeds the stored yaw rate that snaps a
+	// counter-steered slide the OTHER way (the pendulum spin-out) so slides stay CATCHABLE, without
+	// killing deliberate rotation the way full Casual authority would. 0 = no Sport yaw damping.
+	public float SportStabilityScale { get; set; } = 0f;
+
 	// Driver seated pose (citizen animgraph; sit enum: 0 none, 1-3 chair poses, 4-5 ground poses).
 	// Defaults = the original upright chair pose. Made per-car so a recumbent kart driver — legs
 	// extended forward to the pedals — can be authored without disturbing any upright-seated car.
@@ -218,6 +239,8 @@ public static class CarDefinitions
 		ReverseSpeedCap = 4.0f,
 		HandbrakeGripScale = 0.45f,  // deepest rear cut in the roster — 1900 kg + 3.4 m wheelbase needs real help
 		SpinRecoveryAssist = 7.0f,
+		SportTcSlipTarget = 0.30f,   // Sport keeps the torquey RWD truck from lighting the rears to redline
+		SportStabilityScale = 0.5f,  // half-authority yaw damp so a Sport slide stays catchable
 		DefaultAssists = AssistLevel.Casual,
 		Tint = new Color( 0.55f, 0.13f, 0.11f ), // dark brick red
 	};
@@ -264,6 +287,8 @@ public static class CarDefinitions
 		AbsSlipThreshold = 0.20f, // earlier release for the lockup-prone kart
 		HandbrakeGripScale = 0.70f, // mild rear cut — the light kart already rotates
 		SpinRecoveryAssist = 7.0f,
+		SportTcSlipTarget = 0.40f,  // loosest Sport TC — the light kart is meant to be playful
+		SportStabilityScale = 0.45f, // gentle yaw damp; the kart rotates easily so keep it light
 		HandbrakeSlipCap = -0.7f, // keep the rears rotating mid-slide for a cleaner drift exit
 		// Recumbent kart driver pose: reclines with legs extended forward to the pedals.
 		DriverSit = 4,
@@ -297,6 +322,8 @@ public static class CarDefinitions
 		BrakeTorque = 6200f,
 		WheelRadius = 0.33f,
 		SpinRecoveryAssist = 7.0f,
+		SportTcSlipTarget = 0.35f,   // Sport TC: rears still slide on throttle but can't free-spin to redline
+		SportStabilityScale = 0.5f,  // half-authority yaw damp: the counter-steer pendulum stays catchable
 		MaxSteerAngle = 30f,
 		HighSpeedSteerAngle = 10f, // sportiest car gets the most high-speed turn-in
 		Tint = new Color( 0.80f, 0.05f, 0.07f ), // bright signal red

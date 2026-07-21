@@ -132,6 +132,11 @@ public static class CarDefinitions
 		// never broke loose at 1.0 (J-turn no-180 through runs 1-3); the truck needs real help.
 		HandbrakeGripScale = 0.45f,
 		SpinRecoveryAssist = 7.0f, // spin-recovery default (tested 2026-07-15 on hatch, 6→7; other cars inherit as a starting point); tunable dial
+		// Sport-mode posture (owner call 2026-07-21) — same exposure as the coupe: torquey 320 N-m RWD
+		// truck lights the rears to redline in raw Sport. Reduced-authority Sport TC + yaw damp; slightly
+		// tighter TC than the coupe (heavier, less playful). LIVE-UNVERIFIED; owner to feel/tune.
+		SportTcSlipTarget = 0.30f,
+		SportStabilityScale = 0.5f,
 		DefaultAssists = AssistLevel.Casual,
 		Tint = new Color( 0.55f, 0.13f, 0.11f ), // matches kit body_red
 	};
@@ -200,6 +205,11 @@ public static class CarDefinitions
 		// J-turn quick without making the tame pointless.
 		HandbrakeGripScale = 0.70f,
 		SpinRecoveryAssist = 7.0f, // spin-recovery default (tested 2026-07-15 on hatch, 6→7; other cars inherit as a starting point); tunable dial
+		// Sport-mode posture (owner call 2026-07-21) — same exposure as the coupe: light RWD kart spins
+		// its rears freely in raw Sport. Loosest Sport TC in the roster + gentle yaw damp (the kart already
+		// rotates easily, keep it playful). LIVE-UNVERIFIED; owner to feel/tune.
+		SportTcSlipTarget = 0.40f,
+		SportStabilityScale = 0.45f,
 		// Feel session 2026-07-13: drift-exit soft-lock. Baseline (full lock)
 		// measured driftexit speedRetention 0.415, peakSlip 77.6° — the "lose too much momentum"
 		// complaint. Cap the handbrake-induced rear slip so the rears keep rotating mid-slide.
@@ -255,6 +265,13 @@ public static class CarDefinitions
 		BrakeTorque = 6200f,
 		WheelRadius = 0.33f,
 		SpinRecoveryAssist = 7.0f, // spin-recovery default (tested 2026-07-15 on hatch, 6→7; other cars inherit as a starting point); tunable dial
+		// Sport-mode posture (owner call 2026-07-21: "Sport mode spins out all over the place"). Sport ran
+		// with NO traction control and NO yaw damping (both Casual-only), so full throttle spun the 340 N-m
+		// RWD rears to redline (telemetry rearK ~11 at 10 km/h in gear 2) and the counter-steer pendulum
+		// went divergent. These add a reduced-authority Sport TC + yaw damp that keep the tail lively and
+		// drift-capable but recoverable. Starting values — LIVE-UNVERIFIED; owner to feel/tune.
+		SportTcSlipTarget = 0.35f,
+		SportStabilityScale = 0.5f,
 		MaxSteerAngle = 30f,
 		// steer-forgiveness pass 2026-07-17: sportiest car gets the most high-speed turn-in — 8→10
 		// (+25%, top of the roster: pickup 8 < hatch 9.5 < coupe 10). Low-speed lock 30 and the
