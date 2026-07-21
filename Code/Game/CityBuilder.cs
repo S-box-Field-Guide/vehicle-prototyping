@@ -139,7 +139,9 @@ public static class CityBuilder
 		// spawn: the stunt park's west entry on the hardpack, facing east into the scatter
 		// (owner 2026-07-21: spawn near the ramps; the old central-intersection spawn was a
 		// 700 m drive from the park). Identity faces +X = east, straight at the north band.
-		layout.SpawnPosition = new Vector3( 730f, 200f, 0f );
+		// Owner-tuned same day: 30 m back (west) and 30 m right (south) of the first pick,
+		// which puts the car directly in front of a ramp.
+		layout.SpawnPosition = new Vector3( 700f, 170f, 0f );
 		layout.SpawnFacing = Rotation.Identity;
 
 		Log.Info( $"[vp] city built: {GridBlocks}x{GridBlocks} blocks, {Total:F0}m span" );
