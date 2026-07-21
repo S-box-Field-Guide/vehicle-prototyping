@@ -73,28 +73,74 @@ public static class RampKicker
 	}
 
 	/// <summary>
-	/// MINIMUM-RADIUS LAW, full-bore revision (stunt-merge regression 2026-07-19). The arc radius
-	/// R = (L²+H²)/(2H) is what the suspension feels: riding the face at speed v costs a sustained
-	/// centripetal load v²/R on top of gravity, and a bottomed wheel's resolution impulse on a slope
-	/// points backward: arrest + nose pitch + flip. The previous law R(H) = 14·H + 9 (floor 18) was
-	/// verified at 21-30 m/s test entries, but the merged open map gives unlimited runup and the
-	/// hatch reaches 46 m/s. MEASURED survival boundary (hatch, jump maneuver, entry = maxSpeedMs):
-	///   R 37 / exit 19°: clean at 25.0 (33 G), marginal at 28.4 (52 G), FLIP+ARREST from 31.0
-	///     (108 G) through 44.7 (233 G, the owner-reported wall-stop).
-	///   R 72 / exit 20°: 44.8 entry, NO arrest, drives on; 70 G flat-landing slam.
-	///   R 93 / exit 21°: 45.1 entry, NO arrest; 60 G flat-landing slam.
-	///   R 87.5 / exit 7.9° and R 115 / exit 5.0° (proving ramps): 42+ entry, 3-5 G, pristine.
-	/// Two separate mechanisms, two dials:
-	///   1. FACE ARREST separates on R itself, not on v²/R alone (R 37 arrested at 26 m/s² while
-	///      R 72 survived 28 m/s² at the same exit angle). Smallest radius proven safe at 45 m/s
-	///      is 72; the floor is set at 90 (25% above it, face load 2.2 g at 46 m/s).
-	///   2. LANDING SLAM scales with exit angle + lip height (landing vz 10.5 measured 33 G,
-	///      11.3 measured 52 G, 18-20 measured 60-70 G). The slope 52·H caps every exit at ~11.3°,
-	///      which holds full-bore landing vz near 11 m/s for the 2 m class. High speed does not
-	///      need steep exits: a 3 m kicker at 11° still gives ~1.7 s of air at 40 m/s; trading
-	///      exit angle for survivability is the design intent, stated here with the numbers.
+	/// MINIMUM-RADIUS LAW. LIVE-UNVERIFIED high-speed revision (2026-07-21, owner-reopened hitch:
+	/// "the car gets stuck on the ramp, slows down, then launches like crazy — only when going
+	/// really fast"). The arc radius R = (L²+H²)/(2H) is what the suspension feels: riding the face
+	/// at speed v needs a normal force N = m(g·cosθ + v²/R) — the centripetal term v²/R on top of
+	/// gravity. TWO distinct failure regimes have been found on this face, at two different radius
+	/// scales:
+	///
+	///   A. FACE ARREST + FLIP (small radii, the 2026-07-19 pass). A bottomed wheel's resolution
+	///      impulse on a steep slope points backward: arrest + nose pitch + flip. MEASURED boundary
+	///      (hatch, jump maneuver, entry = maxSpeedMs): R 37/exit 19° FLIP+ARREST from 31 m/s
+	///      (233 G at 44.7); R 72/exit 20° 44.8 entry no arrest (70 G landing slam); R 93/exit 21°
+	///      45.1 no arrest (60 G slam); R 87.5/exit 7.9° and R 115/exit 5.0° pristine at 42+. Face
+	///      arrest separates on R itself, and the smallest radius proven arrest-safe at 45 m/s is 72.
+	///      The earlier floor of 90 cleared regime A.
+	///
+	///   B. SUSPENSION-BOTTOMING FACE DIVE (this revision). Regime A cleared the ARREST but not the
+	///      HITCH the owner still feels above ~35 m/s. Root-caused offline (a per-tick vertical-plane
+	///      port of VehicleWheel/VehicleController — the 2 Hz live telemetry was structurally blind
+	///      to it, see KB g-game-coarse-telemetry-hz-misses-face-load-transient). The suspension's
+	///      SUSTAINED normal-force ceiling is 4·SpringRate·SuspensionTravel; net of weight that is a
+	///      centripetal capacity a_avail = (4·SpringRate·SuspensionTravel − m·g)/m. For the hatch at
+	///      1.1 g scene gravity that is (4·34000·0.20 − 1150·10.79)/1150 = 12.9 m/s². Once v²/R
+	///      exceeds a_avail (v > √(a_avail·R)), the springs BOTTOM and the chassis SINKS into the
+	///      face — a real vertical collapse that rides bottomed to the lip, then the loaded spring
+	///      unloads off the lip ("launches like crazy"). Forward speed is barely touched (~99%
+	///      retained — why net-speed telemetry missed it); the tell is the SINK depth. Offline sink
+	///      at entry speed, R 104 (old law, H 2.0): 25 m/s → 13 mm (smooth); 35 → 34 mm (onset);
+	///      45 → 116 mm; 53 → 242 mm (badly bottomed). Belly never contacts on these gentle arcs;
+	///      the dive is pure suspension bottoming. The v² scaling is exactly the owner's
+	///      "only when going really fast."
+	///
+	/// FIX for regime B: rate the radius floor so the fastest realistic arrival stays UNDER the
+	/// bottoming crossover. Design ceiling v = 53 m/s (owner-observed hatch top on the open map;
+	/// the hatch is the binding car — lowest a_avail of the fast cars). Analytic no-bottom radius
+	/// is v²/a_avail = 53²/12.9 = 218 m; the dynamic sim (damper transient overshoots the static
+	/// bound) needs ~240 m for ZERO bottoming, so the floor is 240 (crossover ~55.6 m/s, a small
+	/// margin over 53). Offline before/after at 53 m/s, H 2.0: sink 242 mm → 33 mm, bottomed ticks
+	/// 12/25 → 0/38; 25 m/s stays smooth (13 mm sink either way).
+	///
+	/// TRADEOFF (owner dial): a 240 m floor makes ramps longer and exits flatter (H 2.0: L 20→31 m,
+	/// exit 11.3°→7.4°, airtime at 53 m/s 1.92→1.27 s — still ample). Exit angle ≈ √(2H/R) so
+	/// landing slam (regime A's second dial) only IMPROVES. If poppier low-speed ramps are wanted
+	/// back at the cost of a small residual high-speed sink, the floor can be lowered: R 200 → 44 mm
+	/// sink, R 170 → 59 mm, both still a >4× cut from the 242 mm that triggered this report. The
+	/// 52·H term (below) still caps exits on H > ~4.6 m ramps at ~11.3°.
+	///
+	/// LIVE CAPTURE (owner run 2026-07-21, hatch, master build 3c19ff6, old law) confirmed the hunt
+	/// and split the complaint into two mechanisms — only the FIRST is a radius-law fix:
+	///   • HITCH at 49.4 m/s: the car went nose-HIGH mid-face (both fronts airborne, both rears on
+	///     the shallow base at ~2× static load, car root 1.0 m above rest ride height) and lofted,
+	///     losing only ~1% forward speed (179→177 km/h) — exactly the net-speed-blind, vertical/
+	///     attitude transient this offline hunt predicted. Longer/flatter geometry gentles the
+	///     high-speed slope onset that kicks the nose up AND removes the suspension bottoming, so
+	///     this floor targets both. Full pitch quantification needs a validated pitch harness or a
+	///     live A/B; the offline port here models only the (dominant) suspension/vertical axis.
+	///   • ARREST/near-flip: a car arriving airborne and sideways caught the kicker with its CHASSIS
+	///     box on a near-vertical facet (back lip / side skirt / pitched segment-box edge — the only
+	///     kicker surfaces with |n.z| under 0.5), a rigid wall-stop (81 to 13 km/h) WallGlanceAssist then
+	///     logged as a wall. This is a COLLISION-PATH issue, NOT a radius-law one; flatter geometry
+	///     only reduces the odds of a chassis-first arrival. Tracked separately for a collision fix
+	///     (VehicleController.ApplyWallGlanceAssist / kicker facet exposure).
+	///
+	/// LIVE-UNVERIFIED: the offline port is digit-plausible (matches the live ~1% net-speed loss at
+	/// 49 m/s and the measured ~98-99% retention) but the felt result, the residual nose-high pitch,
+	/// and the playground spacing/rhythm-line landing zones must be re-checked in the editor before
+	/// this is called fixed.
 	/// </summary>
-	public const float MinRadiusM = 90f;
+	public const float MinRadiusM = 240f;
 
 	/// <summary>Speed-safe ground run for a kicker of lip height <paramref name="heightM"/>: the length
 	/// that yields the design radius R(H) = max(<see cref="MinRadiusM"/>, 52·H) (see the law above;
