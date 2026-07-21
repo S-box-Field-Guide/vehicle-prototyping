@@ -29,7 +29,12 @@ public sealed class DriveModePersister : Component
 
 	protected override void OnUpdate()
 	{
-		var assist = Target?.Assists ?? AssistLevel.Casual;
+		// no target (mid car-swap frame): do nothing rather than let the Casual fallback
+		// register as a phantom mode change and churn the saved preference
+		if ( Target is null )
+			return;
+
+		var assist = Target.Assists;
 
 		if ( !_seeded )
 		{
