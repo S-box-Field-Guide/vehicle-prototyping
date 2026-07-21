@@ -136,6 +136,10 @@ public static class PartKitAssembler
 				var collider = go.Components.Create<BoxCollider>();
 				collider.Scale = part.DimsM * m;
 				collider.Center = part.BoundsCenterM * m;
+				// Slick underbody, same rationale as the kit root collider (VehicleFactory):
+				// chassis contact absorbs impacts vertically without Coulomb friction eating
+				// forward speed. Tire grip is the wheel model's job, not the body boxes'.
+				collider.Friction = 0.1f;
 
 				// live cross-check: compiled model bounds vs manifest dims (verifies import_scale
 				// and that the vmdl actually compiled from the same OBJ the manifest measured)
