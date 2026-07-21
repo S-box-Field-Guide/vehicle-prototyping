@@ -38,6 +38,11 @@ public static class UiRig
 		var drivePersist = hudGo.Components.Create<DriveModePersister>();
 		drivePersist.Target = target;
 
+		// Ramp-hitch flight recorder (debug instrument, inert unless vp_ramptrace is set).
+		// Same always-on Component pattern; follows the active car via Retarget below.
+		var rampTrace = hudGo.Components.Create<RampTraceRecorder>();
+		rampTrace.Target = target;
+
 		var tuning = hudGo.Components.Create<TuningPanel>();
 		tuning.Car = target;
 
@@ -83,6 +88,8 @@ public static class UiRig
 			pt.Target = target;
 		foreach ( var dp in scene.GetAllComponents<DriveModePersister>() )
 			dp.Target = target;
+		foreach ( var rt in scene.GetAllComponents<RampTraceRecorder>() )
+			rt.Target = target;
 		foreach ( var tun in scene.GetAllComponents<TuningPanel>() )
 			tun.Car = target;
 		foreach ( var ses in scene.GetAllComponents<SessionMenu>() )
