@@ -151,7 +151,8 @@ def tc_casual(throttle, slips_grounded):
     f = min(max(0.14 / worst, floor), 1.0)
     return throttle * f, f
 
-def lip_run(v, assists_tc=True, H=2.0, R_face=180.0, pre_s=1.0, post_s=1.5, gear0=None):
+def lip_run(v, assists_tc=True, H=2.0, R_face=180.0, pre_s=1.0, post_s=1.5, gear0=None,
+            airborne_drive_gate=False, force_grounded_s=None):
     """Scripted lip crossing at forward speed v (m/s), full throttle."""
     exitA = math.asin(math.sqrt(2 * H / R_face))     # exit angle of the rated face
     vz = v * math.sin(exitA)
@@ -169,8 +170,9 @@ def lip_run(v, assists_tc=True, H=2.0, R_face=180.0, pre_s=1.0, post_s=1.5, gear
     t = -pre_s
     lipT = 0.0
     landT = t_fly
-    while t < t_fly + post_s:
-        grounded = (t < lipT) or (t >= landT)
+    t_end = (-pre_s + force_grounded_s) if force_grounded_s is not None else (t_fly + post_s)
+    while t < t_end:
+        grounded = True if force_grounded_s is not None else (t < lipT) or (t >= landT)
         load = STATIC_W
         if t >= landT and t < landT + 0.2:
             load = 2 * STATIC_W       # landing transient (round-2 sims)
@@ -197,7 +199,9 @@ def lip_run(v, assists_tc=True, H=2.0, R_face=180.0, pre_s=1.0, post_s=1.5, gear
                 drive_force_avg += fx / SUBSTEPS
             else:
                 slip = 0.0
-                omega = integrate_spin(omega, sdt, tq, 0.0, cap)
+                # airborne branch; the gate is the shipped fix (VehicleWheel.cs no-valid-contact
+                # branch: drive torque zeroed for unloaded wheels, brakes still act)
+                omega = integrate_spin(omega, sdt, 0.0 if airborne_drive_gate else tq, 0.0, cap)
                 omega *= 1 - 0.5 * sdt
         rows.append(dict(t=t, grounded=grounded, rpm=dtr.rpm, gear=dtr.gear,
                          omega=omega, surf=omega * R_W, slip=slip, tcf=tcf,
@@ -232,9 +236,40 @@ def report(v, assists_tc=True):
             print(f"  {r['t']:+.2f}   {st}   {r['gear']}   {r['rpm']:5.0f}  {r['surf']:6.1f}   "
                   f"{r['slip']:+5.2f}  {r['tcf']:4.2f}  {r['drive2']:+7.0f}{'  <shift cut>' if r['shifting'] else ''}")
 
+def grounded_byte_identity_ab():
+    """PROOF (quantized-delta lesson): a purely GROUNDED tick sequence must be bit-identical with
+    the airborne drive gate on vs off, because the gated line lives in the never-taken airborne
+    branch. Simulated as a grounded launch-and-cruise (lip pushed beyond the window)."""
+    ok = True
+    for v in (5, 20, 30, 45):
+        a, _, _ = lip_run(v, assists_tc=True, airborne_drive_gate=False, force_grounded_s=4.0)
+        b, _, _ = lip_run(v, assists_tc=True, airborne_drive_gate=True, force_grounded_s=4.0)
+        assert all(r['grounded'] for r in a), "A/B window must be grounded-only"
+        ident = all(ra == rb for ra, rb in zip(a, b)) and len(a) == len(b)
+        ok &= ident
+        print(f"  grounded A/B v={v:2d}: ticks={len(a)}  bit-identical={ident}")
+    assert ok, "grounded byte-identity FAILED - the gate leaked into grounded frames"
+    print("  PASS: airborne drive gate is byte-identical on grounded frames")
+
+def fixed_behavior_summary():
+    print("\n=== FIX (b) ACTIVE: airborne drive gate, Casual ===")
+    for v in (20, 30, 45):
+        rows, events, t_fly = lip_run(v, assists_tc=True, airborne_drive_gate=True)
+        air = [r for r in rows if not r['grounded']]
+        land = [r for r in rows if r['t'] >= t_fly]
+        rpm_pin = sum(1 for r in air if r['rpm'] >= 0.94 * REDLINE) * DT
+        peak_slip = max((r['slip'] for r in land[:25]), default=0)
+        min_tcf = min((r['tcf'] for r in land[:25]), default=1)
+        gear_land = land[0]['gear'] if land else 0
+        print(f"  v={v}: airborne rpm>=94% redline {rpm_pin:.2f}s | shifts in air: "
+              f"{len(events)} | touchdown slip {peak_slip:+.2f} | min TC {min_tcf:.2f} | lands gear {gear_land}")
+
 if __name__ == "__main__":
     for v in (20, 30, 45):
         report(v, assists_tc=True)
     print("\n" + "=" * 70)
     for v in (20, 30, 45):
         report(v, assists_tc=False)
+    print("\n=== BYTE-IDENTITY A/B (grounded-only, gate on vs off) ===")
+    grounded_byte_identity_ab()
+    fixed_behavior_summary()
