@@ -15,6 +15,8 @@ Keep this in sync with any layout edit; it is the source of the audit in the C# 
 import math
 
 MIN_R=90.0; A_CAP=12.9; B_MARGIN=1.1; BLEND=0.5; G=9.81*1.1
+# per-feature face-load speed ratings (keep in sync with PlaygroundBuilder consts)
+VD_LADDER=46.0; VD_BIGAIR=53.0; VD_SCATTER=35.0
 V_FULL=46.0   # full-bore safety arrival
 V_TYP=30.0
 SLAB=(500.0,1500.0,-280.0,320.0)   # track hardpack extent; corridors must land inside
@@ -112,14 +114,15 @@ def analyze(zone_rects=None, report=True):
                   f"landFULL({d['land_full'][0]:.0f},{d['land_full'][1]:.0f}) range46={d['rf']:.0f}")
     return issues
 
-def DM(name,cx,cy,h,w=7):
-    r=run_of(h)
-    K(name+"_W",cx-r,cy,0,h,w)      # west face launches +X
-    K(name+"_E",cx+r,cy,180,h,w)    # east face launches -X
+def DM(name,cx,cy,h,w=7,vdes=0.0):
+    r=run_of(h,vdes)
+    K(name+"_W",cx-r,cy,0,h,w,vdes)      # west face launches +X
+    K(name+"_E",cx+r,cy,180,h,w,vdes)    # east face launches -X
 
 def ladder(name,bx,by):
-    for i,h in enumerate([0.6,1.0,2.0,3.0,4.5]):
-        K(f"{name}{i}",bx,by-48+i*24,0,h,8)
+    # heights = C# LadderHeights (0.6,1.2,2.0,3.0,4.5); rated VD_LADDER (round-3 feel pass)
+    for i,h in enumerate([0.6,1.2,2.0,3.0,4.5]):
+        K(f"{name}{i}",bx,by-48+i*24,0,h,8,VD_LADDER)
 
 # obstacle: model my own big-air chain footprint + external banked curve
 def north_band():
@@ -128,24 +131,24 @@ def north_band():
     ladder("Lad",735,132)                          # calibrated lane, tucked W edge, faces +X
     # --- multi-directional scatter (clusters + fans + bidirectional mounds) ---
     # west-center fan (angular coverage N / NE / E)
-    K("fanA_N",905,175,90,1.0)
-    K("fanA_NE",915,150,55,1.2)
-    K("fanA_E",905,120,10,1.0)
+    K("fanA_N",905,175,90,1.0,vdes=VD_SCATTER)
+    K("fanA_NE",915,150,55,1.2,vdes=VD_SCATTER)
+    K("fanA_E",905,120,10,1.0,vdes=VD_SCATTER)
     # bidirectional mounds (each gives two opposite headings)
-    DM("dmMid",1050,120,1.5)
-    DM("dmHi",1080,235,1.2)
+    DM("dmMid",1050,120,1.5,vdes=VD_SCATTER)
+    DM("dmHi",1080,235,1.2,vdes=VD_SCATTER)
     # east fan (S-of-curve headings E / SE / NW)
-    K("fanB_E",1150,150,0,1.0)
-    K("fanB_SE",1160,120,315,1.0)
-    K("fanB_NW",1140,175,105,1.2)
+    K("fanB_E",1150,150,0,1.0,vdes=VD_SCATTER)
+    K("fanB_SE",1160,120,315,1.0,vdes=VD_SCATTER)
+    K("fanB_NW",1140,175,105,1.2,vdes=VD_SCATTER)
     # north-edge low pop facing N (kept low so it lands short of slab edge)
-    K("nEdge",1165,225,90,0.6)
+    K("nEdge",1165,225,90,0.6,vdes=VD_SCATTER)
     # south pop landing on the open drag flat
-    K("sPop",1000,108,270,1.0)
+    K("sPop",1000,108,270,1.0,vdes=VD_SCATTER)
     # extra coverage singles in open pockets
-    K("scNE",1210,265,180,1.0)    # NE corner, faces W back across the field
-    K("scN2",980,272,315,0.6)     # N-centre, small SE pop
-    K("scSE",1205,92,0,1.0)       # SE of band, faces E (open, S of banked curve)
+    K("scNE",1210,265,180,1.0,vdes=VD_SCATTER)    # NE corner, faces W back across the field
+    K("scN2",980,272,315,0.6,vdes=VD_SCATTER)     # N-centre, small SE pop
+    K("scSE",1205,92,0,1.0,vdes=VD_SCATTER)       # SE of band, faces E (open, S of banked curve)
 
 NB_ZONE=[("north",720,1240,80,318)]
 
@@ -156,8 +159,8 @@ def se_zone():
     rect("WallRide",1240,-120,40,33)             # quarter-pipe + vertical x-end faces
     rect("HillRamps",1040,-205,28,120)           # external proving-ground hill ladder (collidable)
     # NEW smooth multi-directional features where the hard stairs were (x~1100,y-95):
-    DM("seEntry",1100,-108,1.2)                  # bidirectional E-W mound where the stairs were
-    K("seE",1280,-110,90,1.0)                    # N pop in the open pocket E of the wall-ride
+    DM("seEntry",1100,-108,1.2,vdes=VD_SCATTER)                  # bidirectional E-W mound where the stairs were
+    K("seE",1280,-110,90,1.0,vdes=VD_SCATTER)                    # N pop in the open pocket E of the wall-ride
 
 SE_ZONE=[("se",1060,1300,-278,-85)]
 

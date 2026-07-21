@@ -150,15 +150,17 @@ public static class PlaygroundBuilder
 	/// banked-curve wall, the external hill-ladder ramps, and the drivable-slab bounds). RESULT:
 	/// zero corridor-into-obstacle, zero corridor-into-kicker-body, zero footprint-out-of-zone
 	/// across the 20 north-band + 3 SE kickers.
-	///   NORTH BAND: the ONLY external collidable obstacle in reach is the banked-curve ring wall
+	///   NORTH BAND (re-audited under the round-3 speed ratings; tools/layout_validate.py, still
+	///     0 issues): the ONLY external collidable obstacle in reach is the banked-curve ring wall
 	///     (x 1251-1303, y 167-227). Every east/north-east corridor stays clear of it: the closest
-	///     approaches are fanB_E landing (1231,150) and scSE landing (1286,92), both south of the
-	///     wall's y 167 by 17+ m or east of it on open flat. Ladder lanes (exit 6.6-11.3 deg) land
-	///     x 798-887 each on its own lane's flat. Big-air (base 760,300) overshoot meets its own
-	///     lengthened down-slope. Mound overshoots and the S/N pops land on open hardpack (sPop
-	///     lands (1000,27) on the collide-false drag pad; nEdge/scNE/scN2 land inside the slab with
-	///     20+ m to the y 320 edge). Drag-strip distance boards and skidpad/jturn/lowgrip markers
-	///     are collide-false, so south-facing corridors onto that flat are safe.
+	///     approaches are fanB_E landing (1229,150) and scSE landing (1284,92), both south of the
+	///     wall's y 167 by 17+ m or east of it on open flat. Ladder lanes (exit 4.7-11.3 deg under
+	///     the 46 rating) land x 792-887 each on its own lane's flat. Big-air (base 760,300)
+	///     overshoot meets its own lengthened down-slope. Mound overshoots and the S/N pops land on
+	///     open hardpack (sPop lands (1000,29) on the collide-false drag pad; nEdge/scNE/scN2 land
+	///     inside the slab with 20+ m to the y 320 edge). Drag-strip distance boards and
+	///     skidpad/jturn/lowgrip markers are collide-false, so south-facing corridors onto that
+	///     flat are safe.
 	///   SE ZONE: the entry mound (crest 1100,-108, h1.2) throws E to (1170,-108) and W to
 	///     (1030,-108), both north of the bowl (y -166), the bowl-mouth drive-in lane (y < -120),
 	///     the wall-ride (x 1223-1257) and the external hill ramps (x 1026-1054, y < -145). The E
@@ -168,12 +170,25 @@ public static class PlaygroundBuilder
 	///     seams auto-flush (LengthFor/Run drive every seam), and the only launches that leave the
 	///     slab are the west-edge ones (jumpbox base + m1 east face) landing onto the DRIVABLE spur
 	///     road west of x 505, as before.
-	/// REGIME-B ENVELOPE (recorded design choice): at floor-90 the small-radius scatter/ladder faces
-	/// re-launch poppy but a car arriving above ~34-37 m/s feels the RampKicker regime-B suspension
-	/// sink on the tightest faces (R 90-104). This is the branch's accepted poppy default, not a
-	/// per-feature bottoming rating; big-air is inherently safe (its heights force R >= 234). If a
-	/// specific long-runup single reads as hitchy at speed in the editor, rate it via
-	/// LengthFor(h, designSpeedMs: 53) without moving it.
+	/// REGIME-B / FACE-LOAD SPEED RATING (round-3 feel pass, 2026-07-21 evening; LIVE-UNVERIFIED).
+	/// The owner reproduced the ramp hitch at 32 m/s WITH fps capped to the tick rate, proving the
+	/// residual is REAL rendered motion. Offline quantification (tools/ramp_bottoming_port.py) at a
+	/// 32 m/s entry on the floor-90 faces: NO bottoming anywhere (sink 36-45 mm, zero bottomed
+	/// ticks); the felt jolt is the CENTRIPETAL CROUCH - v^2/R = 11.4 m/s^2 (1.06 g on top of
+	/// gravity, about 2.1x static axle load) held for the face crossing. The only dial that lowers
+	/// face load at speed is the radius, so the fast-approach features carry a per-feature
+	/// designSpeedMs (RampKicker.RadiusFor rating):
+	///   LADDER lanes (runway-fed, the full-bore instrument): 46 m/s -> R 180, face load at 32 m/s
+	///     drops 11.4 -> 5.7 m/s^2 (sink 15-19 mm), at 46 stays inside the law margin (11.8).
+	///   BIG-AIR (runway marquee): 53 m/s -> H6 launch unchanged (52H already 312), H4.5 catch
+	///     234 -> 240 (+2.4%): near-free correctness.
+	///   SCATTER / MOUNDS / SE POP (interior arrivals): 35 m/s -> R 104. Honest note: this trims
+	///     the 32 m/s crouch only ~15% (sink 38-45 -> 32-35 mm); interior pop is kept on purpose.
+	///     If the owner still reports hitch on a specific scatter face at 70+ mph, the next notch
+	///     is 46 on that call site (one line).
+	///   SW welcome zone: unrated (0, poppy default) - spur-road approach speeds, owner: keep.
+	/// A ramp still pitches and crouches BY DESIGN at speed; the target of this rating is no harsh
+	/// jolt (load spike + deep sink), not zero motion.
 	/// LIVE-UNVERIFIED: geometry math only. An editor pass must drive the scatter from several
 	/// headings, confirm the SE mound/pop and the removed-stairs area feel clean, and re-check the
 	/// ladder + big-air at full bore. The dev-only Build() world is unchanged.
@@ -199,8 +214,8 @@ public static class PlaygroundBuilder
 		Scatter( new Vector2( 915f, 150f ), 55f, 1.2f );
 		Scatter( new Vector2( 905f, 120f ), 10f, 1.0f );
 		// bidirectional mounds (each launches from two opposite headings, no vertical face)
-		DoubleMound( new Vector2( 1050f, 120f ), 1.5f );
-		DoubleMound( new Vector2( 1080f, 235f ), 1.2f );
+		DoubleMound( new Vector2( 1050f, 120f ), 1.5f, ScatterDesignSpeedMs );
+		DoubleMound( new Vector2( 1080f, 235f ), 1.2f, ScatterDesignSpeedMs );
 		// east fan (E / SE / NNW), all kept south of the banked-curve corridor
 		Scatter( new Vector2( 1150f, 150f ), 0f, 1.0f );
 		Scatter( new Vector2( 1160f, 120f ), 315f, 1.0f );
@@ -218,7 +233,7 @@ public static class PlaygroundBuilder
 		// step-stairs REMOVED here (the hard-angle cluster the owner flagged; see the summary). A
 		// smooth bidirectional mound takes their place at the entry; a low pop sits in the open
 		// pocket east of the wall-ride so the corner reads varied without a wall a car can meet.
-		DoubleMound( new Vector2( 1100f, -108f ), 1.2f );
+		DoubleMound( new Vector2( 1100f, -108f ), 1.2f, ScatterDesignSpeedMs );
 		Scatter( new Vector2( 1280f, -110f ), 90f, 1.0f );
 		BuildBallPit( new Vector2( 1240f, -220f ) );
 
@@ -263,6 +278,13 @@ public static class PlaygroundBuilder
 	/// <summary>The FIVE distinct heights laid out side by side, all launching +X, colour-coded by
 	/// height with a matching marker pylon — the "pick your height" showcase. Long open runup west of
 	/// it (the spawn apron + runway) so a car arrives with speed on any lane.</summary>
+	/// <summary>Per-feature face-load speed ratings (see the REGIME-B / FACE-LOAD paragraph in the
+	/// class doc): the fastest realistic arrival each feature class must stay smooth at. Passed to
+	/// RampKicker.LengthFor as designSpeedMs.</summary>
+	const float LadderDesignSpeedMs = 46f;   // runway-fed full-bore instrument
+	const float BigAirDesignSpeedMs = 53f;   // runway marquee; near no-op on its big radii
+	const float ScatterDesignSpeedMs = 35f;  // interior arrivals; keeps pop
+
 	static void BuildKickerLadder( Vector2 baseAtM )
 	{
 		float laneGap = 24f;                       // lateral spacing between the five lanes
@@ -271,7 +293,7 @@ public static class PlaygroundBuilder
 		{
 			float h = LadderHeights[i];
 			var at = new Vector2( baseAtM.x, baseAtM.y + y0 + i * laneGap );
-			Kicker( at, 0f, lenM: RampKicker.LengthFor( h ), widthM: 8f, heightM: h, HeightColor( h ) );
+			Kicker( at, 0f, lenM: RampKicker.LengthFor( h, LadderDesignSpeedMs ), widthM: 8f, heightM: h, HeightColor( h ) );
 			// marker pylon off to the +Y side of the lane (out of the drive path)
 			MarkerPost( new Vector2( at.x, at.y + 5.5f ), h );
 		}
@@ -354,9 +376,11 @@ public static class PlaygroundBuilder
 		// With the 11.3-degree exit and the longer down-slope, the full-bore trajectory intercepts
 		// the falling board (~35-45 G effective); mid-speed (~26 m/s) still lands on the up-face.
 		const float launchH = 6f, moundH = 4.5f, gapM = 11f, downLenM = 55f, w = 12f;
-		float launchLen = RampKicker.LengthFor( launchH );      // authored ≈ 61 m, easement run ≈ 72 m
+		// speed-rated at 53 (BigAirDesignSpeedMs): H6 launch unchanged (52H = 312 already exceeds the
+		// rating), H4.5 catch mound 234 -> 240 (+0.6 m authored). Seams flow through Run() as always.
+		float launchLen = RampKicker.LengthFor( launchH, BigAirDesignSpeedMs );  // authored ≈ 61 m, easement run ≈ 72 m
 		float lipX = baseAtM.x + Run( launchLen, launchH );     // launch edge (REAL easement run)
-		float upLen = RampKicker.LengthFor( moundH );           // authored ≈ 46 m catch slope
+		float upLen = RampKicker.LengthFor( moundH, BigAirDesignSpeedMs );       // authored ≈ 46 m catch slope
 		float upBaseX = lipX + gapM;                            // mound starts after the clear-air gap
 		float crestX = upBaseX + Run( upLen, moundH );
 
@@ -398,9 +422,9 @@ public static class PlaygroundBuilder
 	/// <summary>Two equal kickers back-to-back: the +X face's lip and the −X face's lip land on the same
 	/// crest line at <paramref name="crestM"/>, so the mound's only surfaces are the two tangent-based
 	/// curved faces — no vertical face anywhere.</summary>
-	static void DoubleMound( Vector2 crestM, float heightM )
+	static void DoubleMound( Vector2 crestM, float heightM, float designSpeedMs = 0f )
 	{
-		float len = RampKicker.LengthFor( heightM );
+		float len = RampKicker.LengthFor( heightM, designSpeedMs );
 		float run = Run( len, heightM );   // easement run: the lips must still MEET at the crest
 		var col = HeightColor( heightM );
 		// west face: launches +X, lip at the crest
@@ -752,8 +776,10 @@ public static class PlaygroundBuilder
 	/// curvature law (RampKicker.LengthFor, so a law change flows through). Colour-coded by height.
 	/// The freeform-scatter form of the orientation law - each faces its own way for multi-directional
 	/// coverage; its full-bore landing corridor is validated clear in BuildProtoStuntZones' audit.</summary>
+	/// <summary>Proto-park coverage single, speed-rated at <see cref="ScatterDesignSpeedMs"/>
+	/// (interior arrivals; see the FACE-LOAD paragraph in the class doc).</summary>
 	static void Scatter( Vector2 baseAtM, float yawDeg, float heightM, float widthM = 8f )
-		=> Kicker( baseAtM, yawDeg, RampKicker.LengthFor( heightM ), widthM, heightM, HeightColor( heightM ) );
+		=> Kicker( baseAtM, yawDeg, RampKicker.LengthFor( heightM, ScatterDesignSpeedMs ), widthM, heightM, HeightColor( heightM ) );
 
 	/// <summary>Place a curved solid launch kicker (base tangent to grade → no lip; collision follows
 	/// the curved face; closed underside → no drive-under gap).</summary>
