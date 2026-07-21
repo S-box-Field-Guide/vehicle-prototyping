@@ -108,7 +108,12 @@ public sealed class VehicleWheel : Component
 			// owner's Sim-mode discriminator will NOT kill the hitch (the cascade is
 			// assist-independent); result to be recorded next to this comment either way.
 			IntegrateWheelSpin( dt, 0f, brakeTorque, 0f );
-			AngularVelocity *= 1f - 0.5f * dt; // free-spinning wheels wind down in the air
+			// Airborne wind-down is bearing drag only: 2%/s. The previous 0.5f here was 50%/s
+			// (documented in round 4 as "0.5%/s", a 100x misread of its own constant): after a
+			// 1.2 s flight the wheels arrived at ~55% of road speed and braked the car while
+			// spinning back up (flight recorder 2026-07-21: ~2 m/s of the touchdown loss plus
+			// the landing skid chirp came from exactly this). Real free wheels barely slow.
+			AngularVelocity *= 1f - 0.02f * dt;
 			return;
 		}
 
