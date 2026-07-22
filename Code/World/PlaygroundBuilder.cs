@@ -386,15 +386,15 @@ public static class PlaygroundBuilder
 		float lipX = baseAtM.x + Run( launchLen, launchH );     // launch edge (REAL easement run)
 		float upLen = RampKicker.LengthFor( moundH, BigAirDesignSpeedMs );       // authored ≈ 46 m catch slope
 		float upBaseX = lipX + gapM;                            // mound starts after the clear-air gap
-		float crestX = upBaseX + Run( upLen, moundH );
 
 		// launch (car flies off this, +X)
 		Kicker( baseAtM, 0f, launchLen, w, launchH, HeightColor( launchH ) );
-		// landing mound: up-face and down-face lips COINCIDE at the crest (no exposed vertical faces).
-		// The down side runs longer than the curvature law asks so fast overshoots still
-		// meet falling ground instead of flat (full-bore intercepts it near its foot).
-		Kicker( new Vector2( upBaseX, baseAtM.y ), 0f, upLen, w, moundH, HeightColor( moundH ) );
-		Kicker( new Vector2( crestX + Run( downLenM, moundH ), baseAtM.y ), 180f, downLenM, w, moundH, HeightColor( moundH ) );
+		// landing mound as ONE merged solid (asymmetric crest: the down side runs longer than the
+		// curvature law asks so fast overshoots still meet falling ground instead of flat).
+		// Formerly two crest-mated kickers - buried-lip sunken-belly hazard, see DoubleMound's doc.
+		RampKicker.BuildCrested( _scene, _root, new Vector3( upBaseX, baseAtM.y, 0f ), 0f,
+			upLen, w, moundH, HeightColor( moundH ), StuntProfile, downLengthM: downLenM );
+		_ramps += 2;
 	}
 
 	// ---------------------------------------------------------------- double-sided mounds (bidirectional)
@@ -423,18 +423,20 @@ public static class PlaygroundBuilder
 			DoubleMound( new Vector2( p.cx, p.cy ), p.h );
 	}
 
-	/// <summary>Two equal kickers back-to-back: the +X face's lip and the −X face's lip land on the same
-	/// crest line at <paramref name="crestM"/>, so the mound's only surfaces are the two tangent-based
-	/// curved faces — no vertical face anywhere.</summary>
+	/// <summary>Two equal faces meeting at a crest, built as ONE merged solid
+	/// (<see cref="RampKicker.BuildCrested"/>). Formerly two back-to-back kickers whose buried
+	/// vertical lip faces met at the crest: a bottomed (regime-B) car's sunken belly caught the
+	/// opposing lip wall there — flight-recorder verdict 2026-07-21, 39.7→9.9 m/s in one tick,
+	/// contact normal (-1,0,0), on this builder's (1050,120) mound. The merged solid has no
+	/// internal faces for the belly to catch.</summary>
 	static void DoubleMound( Vector2 crestM, float heightM, float designSpeedMs = 0f )
 	{
 		float len = RampKicker.LengthFor( heightM, designSpeedMs );
-		float run = Run( len, heightM );   // easement run: the lips must still MEET at the crest
+		float run = Run( len, heightM );   // easement run: the faces must still MEET at the crest
 		var col = HeightColor( heightM );
-		// west face: launches +X, lip at the crest
-		Kicker( new Vector2( crestM.x - run, crestM.y ), 0f, len, 7f, heightM, col );
-		// east face: launches −X (yaw 180), lip at the crest (base = crest + run further east)
-		Kicker( new Vector2( crestM.x + run, crestM.y ), 180f, len, 7f, heightM, col );
+		RampKicker.BuildCrested( _scene, _root, new Vector3( crestM.x - run, crestM.y, 0f ), 0f,
+			len, 7f, heightM, col, StuntProfile );
+		_ramps += 2;
 	}
 
 	// ---------------------------------------------------------------- jump onto a box
@@ -567,14 +569,17 @@ public static class PlaygroundBuilder
 	/// deck seam flush because the lip height still equals deckTop.</summary>
 	static void BuildTabletop( Vector2 centreM )
 	{
+		// ONE merged solid (up-face + deck + down-face) since 2026-07-21: the old up-kicker +
+		// deck Block + down-kicker trio buried two vertical lip faces at the deck seams, the
+		// same sunken-belly wall-stop hazard as DoubleMound's crest (see that builder's doc).
 		const float deckHalf = 7f, deckTop = 1.4f, w = 9f;
 		float kickLen = RampKicker.LengthFor( deckTop );
 		float kickRun = Run( kickLen, deckTop );   // easement run keeps the deck seams flush
-		Kicker( new Vector2( centreM.x - deckHalf - kickRun, centreM.y ), 0f, kickLen, w, deckTop, RampGrey );
-		Block( new Vector3( centreM.x, centreM.y, deckTop * 0.5f ) * M,
-			new Vector3( deckHalf * 2f, w, deckTop ), RampGrey, name: "TabletopDeck" );
+		RampKicker.BuildCrested( _scene, _root,
+			new Vector3( centreM.x - deckHalf - kickRun, centreM.y, 0f ), 0f,
+			kickLen, w, deckTop, RampGrey, StuntProfile, deckM: deckHalf * 2f );
+		_ramps += 2;
 		_boxes++;
-		Kicker( new Vector2( centreM.x + deckHalf + kickRun, centreM.y ), 180f, kickLen, w, deckTop, RampGrey );
 	}
 
 	/// <summary>A staircase with a centre RIDE BOARD: the 0.5 m steps themselves are NOT climbable at

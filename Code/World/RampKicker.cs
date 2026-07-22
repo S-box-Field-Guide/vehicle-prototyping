@@ -264,6 +264,67 @@ public static class RampKicker
 		return go;
 	}
 
+	/// <summary>A CRESTED feature as ONE closed solid: up-face, optional flat deck, mirrored
+	/// down-face, meshed and collided as a single AddCollisionMesh body (deckM 0 = a mound whose
+	/// faces meet at the crest; deckM &gt; 0 = a tabletop). WHY (2026-07-21 late, flight-recorder
+	/// verified): crest-mated PAIRS of kickers each carry a vertical back-lip face buried at the
+	/// seam. A bottomed car (regime B) rides with its belly SUNK below the drive surface, and that
+	/// sunken belly sweeps into the opposing kicker's buried lip wall: recorded wall-stop 39.7 to
+	/// 9.9 m/s in one tick, contact normal (-1,0,0) against the twin's lip, on the (1050,120)
+	/// double mound. The old segment-box ratchet used to bleed 40-70% of approach speed and
+	/// accidentally masked this; the SolidMesh integration fix exposed it. One merged solid has NO
+	/// internal faces anywhere, same law as the SolidMesh default above.</summary>
+	public static GameObject BuildCrested( Scene scene, GameObject parent, Vector3 atM, float yawDeg,
+		float lengthM, float widthM, float heightM, Color color,
+		RampProfile profile = RampProfile.Arc, float deckM = 0f, int segments = 16,
+		float downLengthM = 0f )
+	{
+		Vector2[] FaceProfile( float faceLen )
+		{
+			if ( profile == RampProfile.Easement )
+			{
+				float approxRun = faceLen / (1f - EasementBlend * 0.5f);
+				int esegs = System.Math.Clamp( (int)MathF.Ceiling( approxRun / EasementSegmentMeters ), 16, MaxSegments );
+				return EasementCore( faceLen, heightM, esegs ).prof;
+			}
+			return Profile( faceLen, heightM, System.Math.Max( 3, segments ) );
+		}
+
+		var up = FaceProfile( lengthM );
+		// downLengthM > 0 = asymmetric crest (e.g. the big-air landing mound's long run-out);
+		// 0 = mirror the up face.
+		var down = downLengthM > 0f ? FaceProfile( downLengthM ) : up;
+
+		int n = up.Length;
+		float run = up[n - 1].x;
+		float runDown = down[down.Length - 1].x;
+		var full = new List<Vector2>( n + down.Length + 1 );
+		full.AddRange( up );
+		if ( deckM > 0f )
+			full.Add( new Vector2( run + deckM, heightM ) );
+		for ( int i = down.Length - 2; i >= 0; i-- )   // mirrored descent; seam-exact by construction
+			full.Add( new Vector2( run + deckM + (runDown - down[i].x), down[i].y ) );
+
+		var model = BuildRenderModel( full.ToArray(), widthM, withCollision: true );
+
+		var go = scene.CreateObject();
+		go.Name = deckM > 0f ? "Tabletop (mesh)" : "Mound (mesh)";
+		go.SetParent( parent, true );
+		go.WorldPosition = atM * M;
+		go.WorldRotation = Rotation.FromYaw( yawDeg );
+
+		var renderer = go.Components.Create<ModelRenderer>();
+		renderer.Model = model;
+		renderer.Tint = color;
+
+		var collider = go.Components.Create<ModelCollider>();
+		collider.Model = model;
+		collider.Static = true;
+
+		go.Tags.Add( "road" );
+		return go;
+	}
+
 	/// <summary>The clothoid-blended easement profile: curvature k(s) rises linearly from 0 to
 	/// k_max = 1/R over the first <see cref="EasementBlend"/> of the arc length, then holds to the
 	/// lip. R and the exit angle come from the authored (L,H) pair exactly as the arc law derives
@@ -411,11 +472,15 @@ public static class RampKicker
 				new Vector3( p1.x, hw, p1.y ), new Vector3( p0.x, hw, p0.y ), new Vector3( 0f, 1f, 0f ) );
 		}
 
-		// UNDERSIDE (flat on grade) and BACK LIP (vertical face at x=L) — seal the solid
+		// UNDERSIDE (flat on grade) and BACK LIP (vertical face at x=L) — seal the solid.
+		// Crested profiles (BuildCrested) end back at grade: H ~ 0 would make the lip quad a
+		// degenerate sliver (bad triangles in the collision mesh), so it is skipped — the top
+		// surface itself meets the underside edge there and the solid stays closed.
 		Quad( new Vector3( 0f, -hw, 0f ), new Vector3( L, -hw, 0f ),
 			new Vector3( L, hw, 0f ), new Vector3( 0f, hw, 0f ), new Vector3( 0f, 0f, -1f ) );
-		Quad( new Vector3( L, -hw, 0f ), new Vector3( L, hw, 0f ),
-			new Vector3( L, hw, H ), new Vector3( L, -hw, H ), new Vector3( 1f, 0f, 0f ) );
+		if ( H > 0.01f )
+			Quad( new Vector3( L, -hw, 0f ), new Vector3( L, hw, 0f ),
+				new Vector3( L, hw, H ), new Vector3( L, -hw, H ), new Vector3( 1f, 0f, 0f ) );
 
 		var idx = new int[indices.Count];
 		for ( int k = 0; k < idx.Length; k++ ) idx[k] = indices[k];
