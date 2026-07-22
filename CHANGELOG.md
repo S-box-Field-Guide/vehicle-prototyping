@@ -7,28 +7,23 @@ in-game) is bumped by hand alongside it — minor per content publish, patch per
 display-only (see `Code/Game/VpBuild.cs` for the full policy).
 
 ## build 14 - 2026-07-21 (v0.5.0)
-- FIX the big one: cars no longer stutter or "stick" going over ramps. The ramp collision was built
-  from stacks of overlapping boxes, and the physics engine silently clamped the car against their
-  hidden internal seams - the car could lose most of its forward motion crossing a face while its
-  speed readout stayed clean. Every ramp is now one continuous welded collision surface, and the
-  flight recorder shows perfect motion over the faces where it used to ratchet.
-- FIX no more invisible wall at the top of mounds and tabletops. At high speed the suspension could
-  bottom and the chassis would catch a buried vertical face where two ramp halves met - a dead stop
-  from 90 mph. Crested features are now built as one solid piece with nothing to catch.
-- NEW the stunt park moved to the city's doorstep: the first ramps are now about 60 m from the east
-  gate (they were a 235 m drive), and you spawn in town one block from the exit avenue, pointed
-  straight at the park.
-- NEW the park got a full layout pass: rows of ramps aligned to every driving direction (west-east,
-  north-south, diagonal) with clear lanes between them, flat ground everywhere (the sunken edges
-  where you could drop off the map are filled), a ball field to plow through, cone slaloms and
-  clusters, and ball clusters on the landing flats. Balls and cones are real physics props - hit
-  them and they fly.
-- NEW cones can never trap you: a cone knocked under the car gets flung out the side instead of
-  wedging underneath and chocking a wheel (that really happened, we have the telemetry).
-- NEW balls look like proper red rubber kickballs now, molded seams and all.
-- NEW everything is faster: about 20 percent more power and top speed across the whole roster, and
-  reverse is finally fun - 40+ mph backwards on the road cars instead of the old 10 mph crawl.
+- NEW THE STUNT PLAYGROUND. This build's headline: jump ramps exist in the game for the first
+  time, and they debut inside a full play space at the city's east gate. Rows of kickers aligned
+  to every driving direction (west-east, north-south, diagonal) with clear lanes between them, a
+  five-height kicker ladder, a big-air launch with a landing mound, a banked bowl, a wall ride,
+  mounds and tabletops. Held back until the physics earned it: every ramp is one continuous
+  welded collision surface (no seams to catch), crested features are single solids (no buried
+  faces to wall-stop a bottomed chassis), and the park ground is flat to every edge. The
+  telemetry that gated the release lives in tools/ and .claude/learnings/.
+- NEW interactive props: a ball field to plow through, red rubber kickballs (molded seams and
+  all), cone slaloms and cone clusters. Everything is a real physics prop that flies when hit,
+  and a cone knocked under the car gets flung out the side instead of wedging and chocking a
+  wheel (caught on the flight recorder during test loops).
 - NEW flipped on your roof? After a few seconds a prompt points you at R to reset.
+- NEW everything is faster: about 20 percent more power and top speed across the whole roster,
+  and reverse is finally fun - 40+ mph backwards on the road cars instead of the old 10 mph
+  crawl (kart and pickup stay lower by gearing character).
+- NEW you spawn one block from the exit avenue, pointed straight at the playground.
 - FIX the H key row in the bottom-right hotkey legend lines up with the rest of the column.
 
 ## build 12 — 2026-07-18 (v0.3.1)
