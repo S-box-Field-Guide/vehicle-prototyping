@@ -112,7 +112,7 @@ softer suspension, offroad-leaning tires, 0.35 m wheels. Reasoning per field (Ca
 | BrakeTorque / Bias | 4200 N·m / 0.65 | scaled from hatch by mass × radius then shaved ~7% so 100–0 reads "a bit longer than hatch" at equal pedal; front-heavy bias (unladen truck bed = light rear axle) |
 | HandbrakeTorque | 5000 N·m | proportional to rear-axle load |
 | MaxSteerAngle / HighSpeed / RateScale | 27° / 7° / 0.9 | slow-truck steering; long wheelbase already stabilizes |
-| ReverseSpeedCap | 4.0 m/s | trucks reverse deliberately |
+| ReverseSpeedCap | inherits kit default 20 m/s (override removed, +20% speed pass 2026-07-21) | tall reverse gear + low redline self-limit the truck to ~12 m/s (~26 mph) reverse; slowest in roster by gearing character, not an artificial clamp |
 | DefaultAssists | Casual | fleet default |
 
 Signature strength: **hill grade**. Required force at 45% grade ≈ 8.0 kN; gear-1 drive
