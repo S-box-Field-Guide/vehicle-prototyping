@@ -43,6 +43,14 @@ public sealed class RampTraceRecorder : Component
 	[ConVar( "vp_ramptrace" )]
 	public static bool Armed { get; set; }
 
+	/// <summary>TESTING MODE (owner order 2026-07-21): auto-arm a capture at play start and
+	/// re-arm after every dump, so EVERY owner run is recorded without touching the convar
+	/// (the green-kicker "acted like a collision" report arrived with no telemetry because the
+	/// recorder was off). Captures chain in 120 s segments; play-stop still teardown-dumps.
+	/// ⚠ PRE-DEPLOY: set this back to FALSE before the next publish (tracked in
+	/// docs/PRE-DEPLOY-NOTES.md).</summary>
+	public const bool TestingAutoArm = true;
+
 	public VehicleController Target { get; set; }
 
 	const int MaxFixedSamples = 120 * 50;   // 120 s at 50 Hz
@@ -75,6 +83,9 @@ public sealed class RampTraceRecorder : Component
 
 	protected override void OnFixedUpdate()
 	{
+		if ( TestingAutoArm && !Armed )
+			Armed = true;   // testing mode: every run records; convar 0 still forces a dump (then re-arms)
+
 		if ( Armed && !_capturing )
 			Begin();
 		else if ( !Armed && _capturing )

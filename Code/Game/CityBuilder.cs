@@ -141,7 +141,11 @@ public static class CityBuilder
 		// 700 m drive from the park). Identity faces +X = east, straight at the north band.
 		// Owner-tuned same day: 30 m back (west) and 30 m right (south) of the first pick,
 		// which puts the car directly in front of a ramp.
-		layout.SpawnPosition = new Vector3( 700f, 170f, 0f );
+		// TESTING SPAWN (owner order 2026-07-21 evening): 100 m further west (toward the town)
+		// for the ramp-collider test loop. ⚠ PRE-DEPLOY: reset spawn into the town before the
+		// next release (owner's words; see docs/PRE-DEPLOY-NOTES.md — the park-entry value was
+		// 700,170).
+		layout.SpawnPosition = new Vector3( 600f, 170f, 0f );
 		layout.SpawnFacing = Rotation.Identity;
 
 		Log.Info( $"[vp] city built: {GridBlocks}x{GridBlocks} blocks, {Total:F0}m span" );
