@@ -128,27 +128,24 @@ def ladder(name,bx,by):
 def north_band():
     rect("BankedCurve",1277,197,52,60)           # collidable arc wall, NE corner (x1251-1303,y167-227)
     rect("BigAirChain",870,300,240,18)           # my big-air set-piece strip along y300 (x750-990)
-    ladder("Lad",735,132)                          # calibrated lane, tucked W edge, faces +X
-    # --- multi-directional scatter (clusters + fans + bidirectional mounds) ---
-    # west-center fan (angular coverage N / NE / E)
-    K("fanA_N",905,175,90,1.0,vdes=VD_SCATTER)
-    K("fanA_NE",915,150,55,1.2,vdes=VD_SCATTER)
-    K("fanA_E",905,120,10,1.0,vdes=VD_SCATTER)
-    # bidirectional mounds (each gives two opposite headings)
-    DM("dmMid",1050,120,1.5,vdes=VD_SCATTER)
-    DM("dmHi",1080,235,1.2,vdes=VD_SCATTER)
-    # east fan (S-of-curve headings E / SE / NW)
-    K("fanB_E",1150,150,0,1.0,vdes=VD_SCATTER)
-    K("fanB_SE",1160,120,315,1.0,vdes=VD_SCATTER)
-    K("fanB_NW",1140,175,105,1.2,vdes=VD_SCATTER)
-    # north-edge low pop facing N (kept low so it lands short of slab edge)
-    K("nEdge",1165,225,90,0.6,vdes=VD_SCATTER)
-    # south pop landing on the open drag flat
-    K("sPop",1000,108,270,1.0,vdes=VD_SCATTER)
-    # extra coverage singles in open pockets
-    K("scNE",1210,265,180,1.0,vdes=VD_SCATTER)    # NE corner, faces W back across the field
-    K("scN2",980,272,315,0.6,vdes=VD_SCATTER)     # N-centre, small SE pop
-    K("scSE",1205,92,0,1.0,vdes=VD_SCATTER)       # SE of band, faces E (open, S of banked curve)
+    ladder("Lad",735,132)                          # WE row 1 (ladder), tucked W edge, faces +X
+    # --- directional ramp ROWS (rows+props+flatness pass): each a lateral line facing one drive
+    #     direction with clear lanes between; low heights keep footprints short and lanes wide ---
+    # WEST-EAST row 2 (drive +X / east): 3 kickers spread in Y, faces east
+    K("we2_a",905,105,0,0.8,vdes=VD_SCATTER)
+    K("we2_b",905,150,0,1.0,vdes=VD_SCATTER)
+    K("we2_c",905,195,0,0.8,vdes=VD_SCATTER)
+    # NORTH-SOUTH row (drive +Y / north): 3 kickers spread in X, faces north
+    K("ns_a",1035,110,90,0.8,vdes=VD_SCATTER)
+    K("ns_b",1095,110,90,1.0,vdes=VD_SCATTER)
+    K("ns_c",1155,110,90,0.8,vdes=VD_SCATTER)
+    # DIAGONAL row (drive SE / top-left to bottom-right, yaw 315): 3 kickers on a clean NE-SW line
+    K("dg_a",995,205,315,0.8,vdes=VD_SCATTER)
+    K("dg_b",1030,240,315,1.0,vdes=VD_SCATTER)
+    K("dg_c",1065,275,315,0.8,vdes=VD_SCATTER)
+    # bidirectional mounds, open east pocket (E/W travel through the east half also meets a face)
+    DM("dmA",1200,255,1.2,vdes=VD_SCATTER)
+    DM("dmB",1205,140,1.0,vdes=VD_SCATTER)
 
 NB_ZONE=[("north",720,1240,80,318)]
 

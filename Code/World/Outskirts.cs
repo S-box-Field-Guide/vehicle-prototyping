@@ -16,11 +16,15 @@ namespace VehicleProto;
 /// BATTERY SAFETY (the reason this file looks the way it does): the proto world is also the
 /// measurement instrument, and nothing here may move a station or change a maneuver's outcome.
 /// Two rules follow. (1) No new geometry inside the station footprint (world x 610-1500 on the
-/// hardpack) except non-colliding paint that ends at x 560. (2) The track ground's CLIFF EDGES are
+/// hardpack) except non-colliding paint that ends at x 560. (2) The EAST track-ground CLIFF EDGE is
 /// PRESERVED: TopSpeedManeuver ends when the car runs off the east edge of the hardpack into &gt;0.3 s
-/// of freefall, so the surround beyond those edges is a SUNKEN RUN-OFF APRON 3 m below grade — a
-/// car still falls off the edge exactly as before, but lands in a sealed basin with return ramps
-/// instead of the void. The outer wall stands at the apron rim.
+/// of freefall, so the surround beyond the EAST edge is a SUNKEN RUN-OFF APRON 3 m below grade, and a
+/// car still falls off the east edge exactly as before, into a sealed basin with a return ramp.
+/// The NORTH and SOUTH run-offs were sunken basins too, but the stunt park abuts both (north band to
+/// y 318, SE/SW zones to y -278) and the owner drove off those cliffs; PLAYGROUND FLATNESS LAW
+/// (2026-07-21): they are now GRADE fills flush with the hardpack (no maneuver uses the N/S edges,
+/// stations sit 100+ m inside them), so the park has no edge to fall off. The outer wall stands at
+/// the fill/apron rim.
 ///
 /// Deterministic: fixed layout, no RNG. All positions authored in SI metres; the Block/Panel
 /// helpers are the only unit-conversion sites (house convention).
@@ -97,16 +101,25 @@ public static class Outskirts
 	static void Fill( float x0, float x1, float y0, float y1, string name )
 		=> Slab( x0, x1, y0, y1, FillTop, Scrub, name );
 
-	// ---------------------------------------------------------------- run-off aprons (sunken)
+	// ---------------------------------------------------------------- run-off aprons
 
 	static void BuildAprons()
 	{
-		// Sunken basins wrapping the track ground's north, south and east CLIFF edges (preserved —
-		// see class doc). The three connect into one basin ring, so any car that sails off any edge
-		// can drive to a return ramp. Tucked 2-4 m under the track slab / east fill at the seams.
-		Slab( 498f, 1498f, TrackNorth - 4f, 332f, ApronTop, ApronGrey, "Runoff Apron N" );
-		Slab( 498f, 1498f, -332f, TrackSouth + 4f, ApronTop, ApronGrey, "Runoff Apron S" );
-		Slab( 1498f, 1560f, -332f, 332f, ApronTop, ApronGrey, "Runoff Apron E" );
+		// The EAST cliff is LOAD-BEARING: TopSpeedManeuver ends on the contact-loss of running off
+		// the east edge (TestTrack.BuildGround doc), so the east run-off stays a SUNKEN basin with a
+		// climb-out ramp. The NORTH and SOUTH edges are used by NO maneuver (every station sits in
+		// y[-170,220], 100+ m inside both edges), and they ABUT the stunt park: the north band reaches
+		// y 318 and the SE/SW zones reach y -278, both within ~2 m of the old 3 m cliffs. The owner
+		// drove off the north edge into the empty basin ("towards the end of the playground I fall off
+		// an edge and the terrain is clear there"). PLAYGROUND FLATNESS LAW (2026-07-21): no elevation
+		// change inside the drivable park envelope, so the N and S run-offs are now GRADE fills flush
+		// with the hardpack (5 mm under it, the Fill convention) - a car drives out flat to the outer
+		// wall, there is no edge to fall off and no sunken "clear" terrain to reach. The only residual
+		// step is where these grade fills meet the still-sunken EAST basin (x >= 1498, east of the
+		// hardpack, hard against the intended east cliff), outside every stunt zone.
+		Fill( 498f, 1498f, TrackNorth - 4f, 332f, "Runoff Fill N" );    // was sunken apron; now grade
+		Fill( 498f, 1498f, -332f, TrackSouth + 4f, "Runoff Fill S" );   // was sunken apron; now grade
+		Slab( 1498f, 1560f, -332f, 332f, ApronTop, ApronGrey, "Runoff Apron E" );  // KEEP sunken (east cliff)
 	}
 
 	// ---------------------------------------------------------------- ring road (paint)
@@ -208,11 +221,9 @@ public static class Outskirts
 
 	static void BuildReturnRamps()
 	{
-		// gentle wedges from the apron floor back up to the track edges, wide and shallow, their top
-		// edges flush with the cliff lines. One per basin side; the basins interconnect.
+		// Only the EAST basin remains sunken (see BuildAprons: N and S are now grade fills), so only
+		// it needs a climb-out wedge. The former north/south return ramps are gone with their basins.
 		ReturnRampX( edgeX: TrackEast, atY: -200f, run: 20f );     // east basin → up the east cliff
-		ReturnRampY( edgeY: TrackNorth, atX: 700f, run: 11f );     // north basin → up the north cliff
-		ReturnRampY( edgeY: TrackSouth, atX: 700f, run: -20f );    // south basin → up the south cliff
 	}
 
 	/// <summary>Wedge in the east basin: top edge on the cliff line x = <paramref name="edgeX"/> at
@@ -231,24 +242,7 @@ public static class Outskirts
 		go.Tags.Add( "road" );
 	}
 
-	/// <summary>Wedge in a north/south basin: top edge on the cliff line y = <paramref name="edgeY"/>
-	/// at grade, descending away from the track (sign of <paramref name="run"/>) to the floor.</summary>
-	static void ReturnRampY( float edgeY, float atX, float run )
-	{
-		float drop = -ApronTop;
-		float slopeLen = MathF.Sqrt( run * run + drop * drop );
-		float rollDeg = MathF.Atan2( drop, MathF.Abs( run ) ).RadianToDegree();
-		const float thick = 0.5f, w = 12f;
-		// surface rises toward the track side; wall-ride-apron convention (yaw 90 + roll, length on
-		// local Y → world X). Negative roll rises toward −Y, so flip by which side the track is on.
-		float signToTrack = run > 0f ? -1f : 1f;                       // run>0 descends toward +Y
-		float nY = MathF.Sign( run ) * MathF.Sin( rollDeg.DegreeToRadian() );
-		float nZ = MathF.Cos( rollDeg.DegreeToRadian() );
-		var go = Block( new Vector3( atX, edgeY + run * 0.5f - nY * thick * 0.5f, ApronTop * 0.5f - nZ * thick * 0.5f ),
-			new Vector3( slopeLen, w, thick ), ApronGrey, collide: true, name: "Return Ramp" );
-		go.WorldRotation = Rotation.FromYaw( 90f ) * Rotation.FromRoll( signToTrack * rollDeg );
-		go.Tags.Add( "road" );
-	}
+	// (ReturnRampY removed with the north/south sunken basins; those run-offs are now grade fills.)
 
 	// ---------------------------------------------------------------- outer perimeter
 
