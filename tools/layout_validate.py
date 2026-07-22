@@ -62,7 +62,7 @@ def seg_rect_hit(p0,p1,w,rc):
         if x0-w/2<=x<=x1+w/2 and y0-w/2<=y<=y1+w/2: return True
     return False
 
-def analyze(zone_rects=None, report=True):
+def analyze(zone_rects=None, report=True, stations=None):
     issues=[]
     info={}
     for (name,bx,by,yaw,h,w,vd) in kickers:
@@ -79,6 +79,15 @@ def analyze(zone_rects=None, report=True):
             # kicker BODY (base->lip) must not sit in an obstacle / keep-clear rect
             if seg_rect_hit((bx,by),lip,w,rc):
                 issues.append(f"BODY {name} (h{h}) overlaps obstacle {rc[0]}")
+        # STATION KEEP-CLEAR (battery law, town-adjacency shift 2026-07-21): the shifted north band's
+        # west edge nears the fixed skidpad/drag stations. These are DRIVABLE PAINT (non-colliding ring
+        # markers / lane paint), so a corridor may legitimately fly OVER them - only a SOLID kicker BODY
+        # is forbidden in a maneuver footprint. Body-only check, distinct from the collidable-obstacle
+        # sweep above.
+        if stations:
+            for sr in stations:
+                if seg_rect_hit((bx,by),lip,w,sr):
+                    issues.append(f"BODY {name}(h{h}) sits in station {sr[0]}")
         # full-bore landing must stay on the drivable slab
         lx,ly=land_full
         if not (SLAB[0]<=lx<=SLAB[1] and SLAB[2]<=ly<=SLAB[3]):
@@ -126,28 +135,37 @@ def ladder(name,bx,by):
 
 # obstacle: model my own big-air chain footprint + external banked curve
 def north_band():
-    rect("BankedCurve",1277,197,52,60)           # collidable arc wall, NE corner (x1251-1303,y167-227)
-    rect("BigAirChain",870,300,240,18)           # my big-air set-piece strip along y300 (x750-990)
-    ladder("Lad",735,132)                          # WE row 1 (ladder), tucked W edge, faces +X
+    # TOWN-ADJACENCY SHIFT (owner 2026-07-21): the whole north band is translated -175 m in X so the
+    # first ramp sits ~60 m from the hardpack west edge (was ~220 m). PURE X translation - relative
+    # geometry, corridors, and speed ratings unchanged. The banked-curve wall is a FIXED station
+    # (unmoved), so the shifted band clears it by a wider margin than before.
+    rect("BankedCurve",1277,197,52,60)           # collidable arc wall, NE corner (x1251-1303,y167-227) - FIXED
+    rect("BigAirChain",695,300,240,18)           # big-air set-piece strip along y300 (x575-815), shifted -175
+    ladder("Lad",560,132)                          # WE row 1 (ladder), tucked W edge, faces +X
     # --- directional ramp ROWS (rows+props+flatness pass): each a lateral line facing one drive
     #     direction with clear lanes between; low heights keep footprints short and lanes wide ---
     # WEST-EAST row 2 (drive +X / east): 3 kickers spread in Y, faces east
-    K("we2_a",905,105,0,0.8,vdes=VD_SCATTER)
-    K("we2_b",905,150,0,1.0,vdes=VD_SCATTER)
-    K("we2_c",905,195,0,0.8,vdes=VD_SCATTER)
+    K("we2_a",730,105,0,0.8,vdes=VD_SCATTER)
+    K("we2_b",730,150,0,1.0,vdes=VD_SCATTER)
+    K("we2_c",730,195,0,0.8,vdes=VD_SCATTER)
     # NORTH-SOUTH row (drive +Y / north): 3 kickers spread in X, faces north
-    K("ns_a",1035,110,90,0.8,vdes=VD_SCATTER)
-    K("ns_b",1095,110,90,1.0,vdes=VD_SCATTER)
-    K("ns_c",1155,110,90,0.8,vdes=VD_SCATTER)
+    K("ns_a",860,110,90,0.8,vdes=VD_SCATTER)
+    K("ns_b",920,110,90,1.0,vdes=VD_SCATTER)
+    K("ns_c",980,110,90,0.8,vdes=VD_SCATTER)
     # DIAGONAL row (drive SE / top-left to bottom-right, yaw 315): 3 kickers on a clean NE-SW line
-    K("dg_a",995,205,315,0.8,vdes=VD_SCATTER)
-    K("dg_b",1030,240,315,1.0,vdes=VD_SCATTER)
-    K("dg_c",1065,275,315,0.8,vdes=VD_SCATTER)
+    K("dg_a",820,205,315,0.8,vdes=VD_SCATTER)
+    K("dg_b",855,240,315,1.0,vdes=VD_SCATTER)
+    K("dg_c",890,275,315,0.8,vdes=VD_SCATTER)
     # bidirectional mounds, open east pocket (E/W travel through the east half also meets a face)
-    DM("dmA",1200,255,1.2,vdes=VD_SCATTER)
-    DM("dmB",1205,140,1.0,vdes=VD_SCATTER)
+    DM("dmA",1025,255,1.2,vdes=VD_SCATTER)
+    DM("dmB",1030,140,1.0,vdes=VD_SCATTER)
 
-NB_ZONE=[("north",720,1240,80,318)]
+NB_ZONE=[("north",545,1065,80,318)]
+# fixed maneuver stations the shifted band's west edge nears (world coords, keep-clear rects inflated
+# ~5 m for margin). Format (name,x0,x1,y0,y1) for the body-only station_clear check in analyze().
+# Skidpad: TestTrack world circle centre (660,150) r20 -> x640-680,y130-170. Drag pad: x750-1250 lane
+# at y40 (width 14) -> y33-47. Both are non-colliding paint; only solid BODIES are forbidden inside.
+NB_STATIONS=[("Skidpad",635,685,125,175),("DragPad",750,1250,31,49)]
 
 def se_zone():
     # KEPT features as obstacles/keep-clear:
@@ -183,6 +201,6 @@ def sw_zone():
 
 SW_ZONE=[("sw",505,625,-270,-75)]
 if __name__=="__main__":
-    print("=== NORTH BAND ==="); load_layout(north_band); analyze(NB_ZONE)
+    print("=== NORTH BAND ==="); load_layout(north_band); analyze(NB_ZONE, stations=NB_STATIONS)
     print("\n=== SE ZONE ==="); load_layout(se_zone); analyze(SE_ZONE)
     print("\n=== SW ZONE ==="); load_layout(sw_zone); analyze(SW_ZONE)

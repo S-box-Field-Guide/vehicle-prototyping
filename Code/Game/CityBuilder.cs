@@ -136,16 +136,15 @@ public static class CityBuilder
 		BuildCrosswalks();
 		BuildStreetlights();
 
-		// spawn: the stunt park's west entry on the hardpack, facing east into the scatter
-		// (owner 2026-07-21: spawn near the ramps; the old central-intersection spawn was a
-		// 700 m drive from the park). Identity faces +X = east, straight at the north band.
-		// Owner-tuned same day: 30 m back (west) and 30 m right (south) of the first pick,
-		// which puts the car directly in front of a ramp.
-		// TESTING SPAWN (owner order 2026-07-21 evening): 100 m further west (toward the town)
-		// for the ramp-collider test loop. ⚠ PRE-DEPLOY: reset spawn into the town before the
-		// next release (owner's words; see docs/PRE-DEPLOY-NOTES.md — the park-entry value was
-		// 700,170).
-		layout.SpawnPosition = new Vector3( 600f, 170f, 0f );
+		// RELEASE SPAWN (owner 2026-07-21 late: "spawn in the town but one block closer to the stunt
+		// park than the central intersection, facing the park, so the natural first drive is straight
+		// into it"). The two main avenues cross at the origin (the central intersection: i=5 gives
+		// x = Origin + i*Cell + RoadWidth*0.5 = -235 + 5*46 + 5 = 0). One block east toward the park is
+		// i=6 -> x = -235 + 6*46 + 5 = +Cell = 46 m. So the car sits on the E-W avenue one block east of
+		// centre, Identity facing +X = east, pointed straight down the avenue at the east gate and the
+		// stunt park beyond. This REPLACES the (600,170) ramp-test spawn and clears the old "reset spawn
+		// into the town" pre-deploy item (docs/PRE-DEPLOY-NOTES.md item 2).
+		layout.SpawnPosition = new Vector3( Origin + 6f * Cell + RoadWidth * 0.5f, 0f, 0f );
 		layout.SpawnFacing = Rotation.Identity;
 
 		Log.Info( $"[vp] city built: {GridBlocks}x{GridBlocks} blocks, {Total:F0}m span" );
