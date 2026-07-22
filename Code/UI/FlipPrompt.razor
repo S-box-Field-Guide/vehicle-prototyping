@@ -1,0 +1,57 @@
+@using Sandbox;
+@using Sandbox.UI;
+@inherits PanelComponent
+@namespace VehicleProto
+
+@* Flipped-car rescue prompt (owner request 2026-07-21): when the car has been upside down for
+   more than FlipSecondsToPrompt, show a small top-centre pill pointing at the existing R bind
+   (VehicleController reads Input.Pressed("Reload") -> Respawn; Help lists "R = Reset / unflip").
+   Glyph-corruption discipline per HelpOverlay: every text in a <span>, no bare text beside
+   element children, no letter-spacing. *@
+
+<root>
+	@if ( Visible )
+	{
+		<div class="pill">
+			<span class="key">R</span>
+			<span class="d">Flipped? Press R to reset</span>
+		</div>
+	}
+</root>
+
+@code {
+	public VehicleController Target { get; set; }
+
+	const float FlipSecondsToPrompt = 3f;
+	// hysteresis: below -0.35 counts as upside down, above +0.2 counts as recovered; the dead
+	// band between them neither starts nor clears the timer, so a rocking car does not flicker.
+	const float UpsideDownUpZ = -0.35f;
+	const float RecoveredUpZ = 0.2f;
+
+	TimeSince _sinceFlipped;
+	bool _flipped;
+
+	public bool Visible => _flipped && _sinceFlipped > FlipSecondsToPrompt;
+
+	protected override int BuildHash() => System.HashCode.Combine( Visible );
+
+	protected override void OnUpdate()
+	{
+		if ( Target is null || !Target.IsValid() )
+		{
+			_flipped = false;
+			return;
+		}
+
+		float upZ = Target.GameObject.WorldRotation.Up.z;
+		if ( !_flipped && upZ < UpsideDownUpZ )
+		{
+			_flipped = true;
+			_sinceFlipped = 0;
+		}
+		else if ( _flipped && upZ > RecoveredUpZ )
+		{
+			_flipped = false;
+		}
+	}
+}

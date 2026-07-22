@@ -1,0 +1,38 @@
+// Flipped-car rescue prompt. Tokens inlined from _tokens.scss (import is not build-safe, see the
+// note there). Glyph law: no letter-spacing, font-size only on the key chip.
+
+FlipPrompt {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	font-family: Poppins, sans-serif;
+
+	.pill {
+		position: absolute;
+		top: 10%;
+		left: 50%;
+		transform: translateX( -50% );
+		flex-direction: row;
+		align-items: center;
+		gap: 10px;
+		padding: 10px 18px;
+		background-color: rgba( 15, 17, 21, 0.94 );
+		border: 1px solid rgba( 255, 255, 255, 0.10 );
+		border-radius: 12px;
+		box-shadow: 0 10px 30px rgba( 0, 0, 0, 0.5 );
+
+		.key {
+			padding: 2px 10px;
+			font-size: 18px;
+			color: #0A161A;
+			background-color: #4AD9F2;
+			border-radius: 6px;
+			font-weight: 700;
+		}
+
+		.d {
+			color: #FFFFFF;
+			font-weight: 600;
+		}
+	}
+}

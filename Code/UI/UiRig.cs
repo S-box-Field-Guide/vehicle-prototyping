@@ -48,6 +48,11 @@ public static class UiRig
 		var ejector = hudGo.Components.Create<PropEjector>();
 		ejector.Target = target;
 
+		// Flipped-car rescue prompt: upside down for 3 s -> top-centre "press R" pill. Follows
+		// Retarget below.
+		var flip = hudGo.Components.Create<FlipPrompt>();
+		flip.Target = target;
+
 		var tuning = hudGo.Components.Create<TuningPanel>();
 		tuning.Car = target;
 
@@ -97,6 +102,8 @@ public static class UiRig
 			rt.Target = target;
 		foreach ( var pe in scene.GetAllComponents<PropEjector>() )
 			pe.Target = target;
+		foreach ( var fp in scene.GetAllComponents<FlipPrompt>() )
+			fp.Target = target;
 		foreach ( var tun in scene.GetAllComponents<TuningPanel>() )
 			tun.Car = target;
 		foreach ( var ses in scene.GetAllComponents<SessionMenu>() )
