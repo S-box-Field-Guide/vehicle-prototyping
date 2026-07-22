@@ -114,7 +114,8 @@ public static class PlaygroundBuilder
 	/// (skidpad, drag/brake/topspeed lane, slalom, ramps/washboard/hill lane, lowgrip, jturn,
 	/// banked curve, crash lane, spur entry). BATTERY LAW: nothing may be placed outside these
 	/// rectangles, no station moves, TestTrack.cs untouched.
-	///   NORTH BAND      x 720-1240, y 80..318   (ladder + big-air set-pieces, directional ramp rows)
+	///   NORTH BAND      x 545-1065, y 80..318   (ladder + big-air set-pieces, directional ramp rows;
+	///                   translated -175 m W of the audited x 720-1240 layout, town-adjacency shift below)
 	///   SOUTH-EAST      x 1060-1300, y -278..-85 (bowl, wall-ride, loose ball field, smooth entry mound)
 	///   SOUTH-WEST      x 505-625,  y -270..-75  (welcome zone off the spur: jumpbox, tabletop, mounds)
 	///
@@ -125,7 +126,7 @@ public static class PlaygroundBuilder
 	///  1. NORTH BAND RE-ORGANISED INTO DIRECTIONAL ROWS. The freeform fans/singles are replaced by
 	///     three deliberate rows plus the ladder, so most headings meet a hittable ramp LINE with
 	///     documented CLEAR LANES between kickers: the west-edge LADDER (west-east), a second WEST-EAST
-	///     row at x905 (3 kickers spread in Y, faces +X), a NORTH-SOUTH row at y110 (3 kickers spread
+	///     row at x730 (3 kickers spread in Y, faces +X), a NORTH-SOUTH row at y110 (3 kickers spread
 	///     in X, faces +Y), and a DIAGONAL row on a NE-SW line (3 kickers, faces SE / top-left to
 	///     bottom-right). Two bidirectional mounds fill the east pocket. Rows are low (h0.6-1.0) so
 	///     footprints stay short and the clear lanes stay wide; each row's lanes are named in the
@@ -158,14 +159,20 @@ public static class PlaygroundBuilder
 	/// banked-curve wall, the external hill-ladder ramps, and the drivable-slab bounds). RESULT:
 	/// zero corridor-into-obstacle, zero corridor-into-kicker-body, zero footprint-out-of-zone
 	/// across the 20 north-band + 3 SE kickers.
-	///   NORTH BAND (re-audited after the row re-organisation; tools/layout_validate.py north_band(),
-	///     still 0 issues): the ONLY external collidable obstacle in reach is the banked-curve ring
-	///     wall (x 1251-1303, y 167-227); every row corridor stays south or west of it on open flat.
-	///     Ladder lanes (exit 4.7-11.3 deg under the 46 rating) land x 792-887 each on its own lane's
-	///     flat. WE-row-2 lands x 975-984, NS-row lands y 180-189, the diagonal row lands SE inside
-	///     the slab, and the two east mounds throw E/W to open hardpack - none crosses another
+	///   NORTH BAND (re-audited after the -175 m town-adjacency shift; tools/layout_validate.py
+	///     north_band(), still 0 issues): the ONLY external collidable obstacle in reach is the
+	///     banked-curve ring wall (x 1251-1303, y 167-227, a FIXED station - unmoved by the shift, so
+	///     the shifted band clears it by a wider margin than before); every row corridor stays west of
+	///     it on open flat. Ladder lanes (exit 4.7-11.3 deg under the 46 rating) land x 617-712 each on
+	///     its own lane's flat. WE-row-2 lands x 800-809, NS-row lands y 180-189, the diagonal row lands
+	///     SE inside the slab, and the two east mounds throw E/W to open hardpack - none crosses another
 	///     kicker's body or the banked wall. Interior arrivals land on open hardpack (props sit ON
-	///     that flat and are dynamic, so they are not obstacles for the corridor sweep).
+	///     that flat and are dynamic, so they are not obstacles for the corridor sweep). STATION
+	///     KEEP-CLEAR (added with the shift): the skidpad (world circle x640-680, y130-170) and the
+	///     drag pad (x750-1250, y33-47) are now near the band's SW; the validator's station_clear()
+	///     check confirms no kicker BODY sits in either. The h2.0 ladder lane's 46 m/s worst-case
+	///     landing (x663, y132) touches the skidpad's non-colliding ring paint - cosmetic, not a
+	///     battery conflict (no geometry there, and the skidpad maneuver never runs during free drive).
 	///   SE ZONE: the entry mound (crest 1100,-108, h1.2) throws E to (1170,-108) and W to
 	///     (1030,-108), both north of the bowl (y -166), the bowl-mouth drive-in lane (y < -120),
 	///     the wall-ride (x 1223-1257) and the external hill ramps (x 1026-1054, y < -145). The E
@@ -208,13 +215,25 @@ public static class PlaygroundBuilder
 		_terrain = false;
 		_ramps = _bowlSegs = _balls = _boxes = _cones = 0;
 
-		// ---- NORTH BAND (x 720-1240, y 80..318): two directional set-pieces + freeform scatter ----
+		// ---- NORTH BAND (x 545-1065, y 80..318): two directional set-pieces + freeform scatter ----
+		// TOWN-ADJACENCY SHIFT (owner 2026-07-21 late: "move that stuff a little closer to the city so
+		// you don't have to drive so far; I want people encouraged to just drive straight in there").
+		// The ENTIRE north band is translated -175 m in X from the audited layout (ladder base 735->560),
+		// so the first ramp now sits ~60 m from the hardpack west edge (x500) / ~40 m from the proving
+		// gantry at x520 - was ~220 m. It is a PURE X translation: every internal corridor, clear lane,
+		// and speed rating is identical to the validated layout, just moved west (re-audited 0-conflict,
+		// tools/layout_validate.py north_band()). WEST-MARGIN / BATTERY: the band's new west edge threads
+		// the fixed skidpad station (world circle x640-680, y130-170) - every ladder BODY clears it by
+		// 38+ m to the west (validator station_clear() check), and the only overlap is the h2.0 lane's
+		// 46 m/s worst-case landing touching the skidpad's NON-colliding ring paint (cosmetic; the
+		// skidpad maneuver never runs while a player free-drives the ladder). The eastbound cone slalom
+		// is nudged east into the skidpad->WE-row gap so no dynamic prop sits in the station circle.
 		// calibrated instrument: the five-height ladder, tucked along the WEST edge, its own +X lane
-		Runway( new Vector2( 690f, 132f ), new Vector2( 730f, 132f ), 14f );
-		BuildKickerLadder( new Vector2( 735f, 132f ) );
+		Runway( new Vector2( 515f, 132f ), new Vector2( 555f, 132f ), 14f );
+		BuildKickerLadder( new Vector2( 560f, 132f ) );
 		// directional set-piece: big-air down its own runway along the north strip
-		Runway( new Vector2( 718f, 300f ), new Vector2( 758f, 300f ), 12f );
-		BuildBigAir( new Vector2( 760f, 300f ) );
+		Runway( new Vector2( 543f, 300f ), new Vector2( 583f, 300f ), 12f );
+		BuildBigAir( new Vector2( 585f, 300f ) );
 		// ---- multi-direction RAMP ROWS (owner 2026-07-21: "whatever way you're driving, top-left to
 		// bottom-right, up and down, or across, there's a row of ramps to hit, but still some clear
 		// lanes to drive through"). Each row is a LATERAL line of kickers facing ONE drive direction
@@ -224,35 +243,36 @@ public static class PlaygroundBuilder
 		//
 		// WEST-EAST row 2 (drive +X, east): three kickers spread in Y, faces east. CLEAR LANES: the Y
 		// gaps centred y~128 and y~172 (~37 m wide), plus open field north of y200 and south of y100.
-		Scatter( new Vector2( 905f, 105f ), 0f, 0.8f );
-		Scatter( new Vector2( 905f, 150f ), 0f, 1.0f );
-		Scatter( new Vector2( 905f, 195f ), 0f, 0.8f );
+		Scatter( new Vector2( 730f, 105f ), 0f, 0.8f );
+		Scatter( new Vector2( 730f, 150f ), 0f, 1.0f );
+		Scatter( new Vector2( 730f, 195f ), 0f, 0.8f );
 		// NORTH-SOUTH row (drive +Y, north): three kickers spread in X, faces north. CLEAR LANES: the X
-		// gaps centred x~1065 and x~1125 (~52 m wide); a northbound car threads a gap or hits a face.
-		Scatter( new Vector2( 1035f, 110f ), 90f, 0.8f );
-		Scatter( new Vector2( 1095f, 110f ), 90f, 1.0f );
-		Scatter( new Vector2( 1155f, 110f ), 90f, 0.8f );
+		// gaps centred x~890 and x~950 (~52 m wide); a northbound car threads a gap or hits a face.
+		Scatter( new Vector2( 860f, 110f ), 90f, 0.8f );
+		Scatter( new Vector2( 920f, 110f ), 90f, 1.0f );
+		Scatter( new Vector2( 980f, 110f ), 90f, 0.8f );
 		// DIAGONAL row (drive SE, top-left to bottom-right, yaw 315): three kickers on a clean NE-SW
 		// line, each faces SE. CLEAR LANES: the ~49 m perpendicular gaps between them.
-		Scatter( new Vector2( 995f, 205f ), 315f, 0.8f );
-		Scatter( new Vector2( 1030f, 240f ), 315f, 1.0f );
-		Scatter( new Vector2( 1065f, 275f ), 315f, 0.8f );
+		Scatter( new Vector2( 820f, 205f ), 315f, 0.8f );
+		Scatter( new Vector2( 855f, 240f ), 315f, 1.0f );
+		Scatter( new Vector2( 890f, 275f ), 315f, 0.8f );
 		// bidirectional mounds in the open east pocket: each launches from two opposite headings with
 		// no vertical face, so E/W travel through the east half also meets a face.
-		DoubleMound( new Vector2( 1200f, 255f ), 1.2f, ScatterDesignSpeedMs );
-		DoubleMound( new Vector2( 1205f, 140f ), 1.0f, ScatterDesignSpeedMs );
+		DoubleMound( new Vector2( 1025f, 255f ), 1.2f, ScatterDesignSpeedMs );
+		DoubleMound( new Vector2( 1030f, 140f ), 1.0f, ScatterDesignSpeedMs );
 
 		// ---- interactive props threaded through the CLEAR LANES (owner: "more stuff to do") ----
-		// a cone slalom down the eastbound clear lane (y~128) WEST of WE row 2: weave the cones, then
-		// hit the ramps. Cones are light dynamic bodies, so a clipped cone just flies out of the lane.
-		ConeSlalom( new Vector2( 815f, 128f ), new Vector2( 892f, 128f ), 6 );
+		// a cone slalom in the eastbound clear lane (y~128) just WEST of WE row 2: weave the cones, then
+		// hit the ramps. Nudged east (x690-722) vs the raw -175 translation so it sits in the gap EAST of
+		// the skidpad circle (x640-680) - no dynamic prop in the station. Cones are light dynamic bodies.
+		ConeSlalom( new Vector2( 690f, 128f ), new Vector2( 722f, 128f ), 5 );
 		// ball clusters on the open flat just past each row's landing zone: a launched car showers them.
-		BallCluster( new Vector2( 985f, 150f ), 5 );    // WE row 2 landing
-		BallCluster( new Vector2( 1095f, 205f ), 5 );   // NS row landing
-		BallCluster( new Vector2( 1120f, 200f ), 4 );   // diagonal row landing
+		BallCluster( new Vector2( 810f, 150f ), 5 );    // WE row 2 landing
+		BallCluster( new Vector2( 920f, 205f ), 5 );    // NS row landing
+		BallCluster( new Vector2( 945f, 200f ), 4 );    // diagonal row landing
 		// a couple of cone clusters at row edges for extra tumble targets
-		ConeCluster( new Vector2( 1230f, 200f ), 5 );   // east pocket, between the mounds
-		ConeCluster( new Vector2( 900f, 250f ), 4 );    // N-centre open flat
+		ConeCluster( new Vector2( 1055f, 200f ), 5 );   // east pocket, between the mounds
+		ConeCluster( new Vector2( 725f, 250f ), 4 );    // N-centre open flat
 
 		// ---- SOUTH-EAST ZONE (x 1060-1300, y -278..-85): bowl, wall-ride, ball pit + smooth entry ----
 		BuildBankedBowl( new Vector2( 1150f, -200f ), radiusM: 34f, bankDeg: 26f );
