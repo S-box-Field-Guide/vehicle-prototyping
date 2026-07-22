@@ -676,6 +676,7 @@ public static class PlaygroundBuilder
 		rb.MassOverride = ConeMassKg;
 		rb.LinearDamping = 0.5f;
 		rb.AngularDamping = 0.5f;
+		go.Tags.Add( "cone" );   // PropEjector's query tag: cones fling out of the car's danger volume
 		_cones++;
 	}
 

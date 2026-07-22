@@ -43,6 +43,11 @@ public static class UiRig
 		var rampTrace = hudGo.Components.Create<RampTraceRecorder>();
 		rampTrace.Target = target;
 
+		// Arcade cone ejector: flings cones out of the car's danger volume so a wedged cone can
+		// never chock the car (telemetry-verified failure, 2026-07-21). Follows Retarget below.
+		var ejector = hudGo.Components.Create<PropEjector>();
+		ejector.Target = target;
+
 		var tuning = hudGo.Components.Create<TuningPanel>();
 		tuning.Car = target;
 
@@ -90,6 +95,8 @@ public static class UiRig
 			dp.Target = target;
 		foreach ( var rt in scene.GetAllComponents<RampTraceRecorder>() )
 			rt.Target = target;
+		foreach ( var pe in scene.GetAllComponents<PropEjector>() )
+			pe.Target = target;
 		foreach ( var tun in scene.GetAllComponents<TuningPanel>() )
 			tun.Car = target;
 		foreach ( var ses in scene.GetAllComponents<SessionMenu>() )
