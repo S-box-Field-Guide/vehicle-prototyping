@@ -61,9 +61,11 @@ public class CarDefinition
 
 	// Drivetrain
 	public DriveLayout Layout { get; set; } = DriveLayout.FWD;
-	public float PeakTorque { get; set; } = 150f;
+	// +20% speed pass 2026-07-21: baseline PeakTorque 150->180 and RedlineRpm 6500->7800 so a bare
+	// kit consumer starts from the new faster baseline (the demo roster below overrides both per car).
+	public float PeakTorque { get; set; } = 180f;
 	public float IdleRpm { get; set; } = 900f;
-	public float RedlineRpm { get; set; } = 6500f;
+	public float RedlineRpm { get; set; } = 7800f;
 	public float EngineInertia { get; set; } = 0.25f; // kg m^2 at crank
 	public float EngineBrakeTorque { get; set; } = 40f;
 	public float[] GearRatios { get; set; } = { 3.6f, 2.1f, 1.4f, 1.05f, 0.85f };
@@ -109,7 +111,13 @@ public class CarDefinition
 
 	// Arcade feel dials (defaults = the original sim-leaning behavior)
 	public float SteerRateScale { get; set; } = 1f;    // multiplies how fast steering ramps
-	public float ReverseSpeedCap { get; set; } = 4.5f; // m/s before reverse throttle cuts
+	// Reverse speed pass 2026-07-21 (owner feel): raised 4.5 -> 20.0 m/s (~10 -> ~45 mph). This is the
+	// ACTUAL reverse cap mechanism (VehicleController cuts reverse throttle above this speed), and the
+	// game roster inherits it (only the pickup used to override it). Each car is still additionally
+	// limited by its reverse-gear redline-equivalent wheel speed (RedlineRpm/ReverseRatio/FinalDrive/
+	// WheelRadius via Drivetrain.RedlineWheelSpeed), so torquey-but-tall reverse gears self-limit below
+	// this cap (kart ~8 m/s, pickup ~12 m/s) while the cars reach the high-30s/40s mph.
+	public float ReverseSpeedCap { get; set; } = 20.0f; // m/s before reverse throttle cuts
 	public float LaunchBoost { get; set; } = 1f;       // torque multiplier at standstill, fades out by ~54 km/h
 	public float BrakeAssist { get; set; } = 0f;       // extra chassis-level decel while braking (m/s²)
 	// Spin-recovery assist: after a handbrake spin the car keeps rolling BACKWARDS (old travel
@@ -179,8 +187,9 @@ public static class CarDefinitions
 		TrackWidth = 1.50f,
 		WheelRadius = 0.30f,
 		Layout = DriveLayout.FWD,
-		PeakTorque = 162f,
-		RedlineRpm = 6300f,
+		// +20% speed pass 2026-07-21: PeakTorque 162->194.4, RedlineRpm 6300->7560 (top-gear top speed +20%).
+		PeakTorque = 194.4f,
+		RedlineRpm = 7560f,
 		// Real recorded car set: deep muscle idle crossfaded up to a revving high layer.
 		EngineSoundEvent = "sounds/engine/engine_real_low.sound",
 		EngineSoundEventHigh = "sounds/engine/engine_real_high.sound",
@@ -216,9 +225,10 @@ public static class CarDefinitions
 		LateralCurve = new TireCurve( 0.15f, 1.22f, 0.60f, 1.06f ),
 		LoadSensitivity = 0.07f,
 		Layout = DriveLayout.RWD,
-		PeakTorque = 320f,           // torquey: >2× hatch; strong hills
+		// +20% speed pass 2026-07-21: PeakTorque 320->384, RedlineRpm 3900->4680 (top-gear top speed +20%).
+		PeakTorque = 384f,           // torquey: >2× hatch; strong hills
 		IdleRpm = 650f,
-		RedlineRpm = 3900f,          // lowest redline in roster — low-rev truck character
+		RedlineRpm = 4680f,          // lowest redline in roster; low-rev truck character (was 3900, +20% pass)
 		EngineInertia = 0.5f,
 		EngineBrakeTorque = 90f,     // strong engine braking downhill
 		// Real recorded truck set: deeper truck idle + revving high layer; base pitch dropped.
@@ -236,7 +246,9 @@ public static class CarDefinitions
 		MaxSteerAngle = 27f,         // slow truck steering; long wheelbase stabilizes
 		HighSpeedSteerAngle = 8f,
 		SteerRateScale = 0.9f,
-		ReverseSpeedCap = 4.0f,
+		// Reverse cap override removed 2026-07-21: inherits the new 20 m/s default; the pickup's tall reverse
+		// gear + low redline self-limit it to ~12 m/s (~26 mph) reverse, so it stays the roster's slowest
+		// reverse by gearing character rather than an artificial ~9 mph clamp.
 		HandbrakeGripScale = 0.45f,  // deepest rear cut in the roster — 1900 kg + 3.4 m wheelbase needs real help
 		SpinRecoveryAssist = 7.0f,
 		SportTcSlipTarget = 0.30f,   // Sport keeps the torquey RWD truck from lighting the rears to redline
@@ -263,9 +275,10 @@ public static class CarDefinitions
 		SpringRate = 24000f,
 		DamperRate = 1600f,
 		Layout = DriveLayout.RWD,
-		PeakTorque = 52f, // punchy launch, still shifts out of wheelspin quickly
+		// +20% speed pass 2026-07-21: PeakTorque 52->62.4, RedlineRpm 9000->10800 (top-gear top speed +20%).
+		PeakTorque = 62.4f, // punchy launch, still shifts out of wheelspin quickly
 		IdleRpm = 1400f,
-		RedlineRpm = 9000f,
+		RedlineRpm = 10800f,
 		EngineInertia = 0.05f,
 		EngineBrakeTorque = 8f,
 		// The kart keeps the buzzier single loop; base pitch >1 preserves its whine, while the narrowed
@@ -305,8 +318,11 @@ public static class CarDefinitions
 		Wheelbase = 2.7f,
 		TrackWidth = 1.60f,
 		Layout = DriveLayout.RWD,
-		PeakTorque = 340f,
-		RedlineRpm = 7200f,
+		// +20% speed pass 2026-07-21: PeakTorque 340->408, RedlineRpm 7200->8640 (top-gear top speed +20%).
+		// ShiftUpRpm left at 6600 (unchanged) so the shift ladder holds in ground-speed terms; only the
+		// top gear extends to the new redline.
+		PeakTorque = 408f,
+		RedlineRpm = 8640f,
 		ShiftUpRpm = 6600f,
 		// Real recorded car set (shared with the hatch): deep muscle idle crossfaded up to a
 		// revving high layer; base pitch neutral so it sweeps the band cleanly.
