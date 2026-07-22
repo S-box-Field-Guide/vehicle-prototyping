@@ -47,9 +47,9 @@ public sealed class RampTraceRecorder : Component
 	/// re-arm after every dump, so EVERY owner run is recorded without touching the convar
 	/// (the green-kicker "acted like a collision" report arrived with no telemetry because the
 	/// recorder was off). Captures chain in 120 s segments; play-stop still teardown-dumps.
-	/// ⚠ PRE-DEPLOY: set this back to FALSE before the next publish (tracked in
-	/// docs/PRE-DEPLOY-NOTES.md).</summary>
-	public const bool TestingAutoArm = true;
+	/// Set back to FALSE for release builds (players must not write 500 KB CSVs every two
+	/// minutes); flip to true for owner test loops.</summary>
+	public const bool TestingAutoArm = false;
 
 	public VehicleController Target { get; set; }
 

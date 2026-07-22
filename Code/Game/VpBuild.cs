@@ -14,12 +14,12 @@ public static class VpBuild
 {
 	/// <summary>Monotonically increasing publish counter. Bumped by tools/bump_publish_stamp.py before each
 	/// publish. Starts at 1 (the first published build, which predated the stamp).</summary>
-	public const int PublishStamp = 13;
+	public const int PublishStamp = 14;
 
 	/// <summary>Human note for the current stamp (date + gist). Updated alongside the bump. Keep the
 	/// --note gist SHORT — this renders verbatim in the Help overlay footer (design-locked panel);
 	/// the full story of each build lives in CHANGELOG.md.</summary>
-	public const string PublishStampNote = "2026-07-19 - 0.4.1 hotfix: kit wheel-spin direction + standstill creep fixes (build 13)";
+	public const string PublishStampNote = "2026-07-21 - 0.5.0 content: ramp physics fixed, park redesign, +20% speed (build 14)";
 
 	/// <summary>PUBLIC DISPLAY VERSION — the player-facing "vX.Y.Z" shown beside the build stamp.
 	/// Policy: 0.1.0 = the first public release (2026-07-17). Bump MINOR (0.2.0, …) with each content
@@ -27,5 +27,5 @@ public static class VpBuild
 	/// 1.0.0 is reserved for feature-complete. DISPLAY ONLY — it never gates compatibility
 	/// (<see cref="PublishStamp"/> keeps that job). Bumps are deliberate manual edits to this line,
 	/// never automated: tools/bump_publish_stamp.py touches only the stamp and note lines above.</summary>
-	public const string Version = "0.4.1";
+	public const string Version = "0.5.0";
 }
