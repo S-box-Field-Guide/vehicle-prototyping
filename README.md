@@ -100,6 +100,13 @@ and detach-on-impact.
   It's in rework right now while we sort out the ramp/jump physics, so it's disabled this build.
 - **In-game world switching** - a live switch between the Town and the Stunt Track returns alongside
   the Stunt Track in a future build.
+- **Traction control pass** - a deeper TC tune across the drive modes: better slip targets per car,
+  and coverage in places the current pass skips (reverse, loose-surface launches).
+- **City art pass** - the town gets a real art treatment: building variety, materials, street
+  dressing that reads as a place instead of a blockout.
+- **Knockable lamp posts** - streetlights become physics props that topple when you clip them
+  instead of stopping you dead.
+- **Bigger town** - the city grid grows so there's more to cruise between the park runs.
 
 ---
 
