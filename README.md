@@ -97,9 +97,19 @@ and detach-on-impact.
 ## Roadmap
 
 - **Stunt Track** - a dedicated jump-park world (kicker ladders, rhythm lines, big-air set-pieces).
-  It's in rework right now while we sort out the ramp/jump physics, so it's disabled this build.
+  The ramp/jump physics rework that held it back has landed; the dedicated world returns in a
+  future build (meanwhile the Town's stunt park carries the jump content).
 - **In-game world switching** - a live switch between the Town and the Stunt Track returns alongside
   the Stunt Track in a future build.
+- **UI cleanup pass** - a lighter, flatter look for the panels: fewer borders, less chrome, cleaner
+  layout.
+- **Traction control pass** - a deeper TC tune across the drive modes: better slip targets per car,
+  and coverage in places the current pass skips (reverse, loose-surface launches).
+- **City art pass** - the town gets a real art treatment: building variety, materials, street
+  dressing that reads as a place instead of a blockout.
+- **Knockable lamp posts** - streetlights become physics props that topple when you clip them
+  instead of stopping you dead.
+- **Bigger town** - the city grid grows so there's more to cruise between the park runs.
 
 ---
 

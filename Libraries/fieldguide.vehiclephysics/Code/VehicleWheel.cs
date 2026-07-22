@@ -91,8 +91,29 @@ public sealed class VehicleWheel : Component
 			SlipRatio = 0f;
 			SlipAngle = 0f;
 			SuspensionLength = SuspensionTravel;
-			IntegrateWheelSpin( dt, driveTorque, brakeTorque, 0f );
-			AngularVelocity *= 1f - 0.5f * dt; // free-spinning wheels wind down in the air
+			// AIRBORNE DRIVE GATE (ramp lip-cluster fix 2026-07-21, LIVE-UNVERIFIED): a driven wheel
+			// with no valid contact gets ZERO drive torque - it freewheels (brakes still act). With
+			// drive torque passed through, an unloaded driven wheel flared to redline-equivalent
+			// within ~3 ticks of leaving a kicker lip, the engine pinned at 94-98% redline for the
+			// whole flight (live capture: rpm 6008-6010 at the lip), the drivetrain's limiter-camp
+			// escape upshifted MID-AIR ~0.27 s into every full-throttle flight at 20-30 m/s, and the
+			// car touched down at the flared surface speed: slip +0.4..+0.5, a 10-12 kN (~1 g) tire
+			// spike for ~2 ticks, the skid chirp, and a landing one gear too tall (post-landing drive
+			// force -26..-37% vs pre-lip) - the felt "hitch going off the ramps" at any speed
+			// (offline quantification: tools/ramp_lip_drivetrain_port.py). Zeroing drive here starves
+			// that whole cascade: omega holds ~rolling speed, rpm stays steady, the escape shift
+			// never arms in air, and touchdown slip is ~0. Flat-ground behavior is byte-identical BY
+			// CONSTRUCTION (this branch never runs with valid ground contact; grounded-tick A/B in
+			// the port asserts bit-identical trajectories). Registered prediction at commit time: the
+			// owner's Sim-mode discriminator will NOT kill the hitch (the cascade is
+			// assist-independent); result to be recorded next to this comment either way.
+			IntegrateWheelSpin( dt, 0f, brakeTorque, 0f );
+			// Airborne wind-down is bearing drag only: 2%/s. The previous 0.5f here was 50%/s
+			// (documented in round 4 as "0.5%/s", a 100x misread of its own constant): after a
+			// 1.2 s flight the wheels arrived at ~55% of road speed and braked the car while
+			// spinning back up (flight recorder 2026-07-21: ~2 m/s of the touchdown loss plus
+			// the landing skid chirp came from exactly this). Real free wheels barely slow.
+			AngularVelocity *= 1f - 0.02f * dt;
 			return;
 		}
 

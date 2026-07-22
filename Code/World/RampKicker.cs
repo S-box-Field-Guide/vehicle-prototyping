@@ -40,7 +40,7 @@ public static class RampKicker
 	/// <see cref="EasementBlend"/> of the run, then holds, so the suspension load onset is ~30x
 	/// gentler at the base (0.007 deg/segment vs the arc's 0.21 deg) - it kills the base JERK the
 	/// owner feels as a "hitch". MEASURED (2026-07-20 A/B, hatch jump, 2.0 ladder face): under the
-	/// current R(H)=max(90,52H) law both profiles already retain ~98% of NET face speed at 38-45 m/s
+	/// R(H)=max(MinRadiusM,52H) law both profiles already retain ~98% of NET face speed at 38-45 m/s
 	/// (the R>=90 floor made the pure-arc step small enough that the dampers absorb it), so the
 	/// easement's win is the smoother onset feel, not net speed - and its uniform-scale tightens the
 	/// effective radius ~3.6% (scale 0.964), a hair MORE sustained face load. BATTERY LAW: Easement
@@ -52,6 +52,25 @@ public static class RampKicker
 	/// clean at full bore (2.0 ladder, 38-45 m/s: no flips, ~11-15 deg landing pitch, seams flush,
 	/// footprints in-zone). Higher = smoother onset but longer/tighter tail; 0.5 is the kept value.</summary>
 	public const float EasementBlend = 0.5f;
+
+	/// <summary>Collider architecture selection (ramp-hitch hunt round 6, 2026-07-21, A/B
+	/// instrument). SegmentBoxes = the shipped stack of overlapping convex boxes. SolidMesh = ONE
+	/// closed triangle-mesh collider built from the SAME closed solid as the render mesh (top,
+	/// skirts, underside, lip — not the historical open thin SHELL that motivated the boxes).
+	/// WHY: flight-recorder v2 telemetry shows the physics body's per-tick advance RATCHETING on
+	/// the face (0.63/0.23 m alternation at 35 m/s, 40-70% displacement deficit vs velocity·dt,
+	/// stall events spatially locked to the ~0.7 m segment pitch) with velocity glassy-smooth and
+	/// ZERO collision events on any car collider — the signature of event-silent speculative
+	/// contact clamping against the segment boxes' internal faces. A single mesh has no internal
+	/// faces along the drivable surface; the map terrain already drives clean on AddCollisionMesh
+	/// (flat-ground integration is exact to 1 mm in the same captures).
+	/// A/B VERDICT (live, 2026-07-21 21:17 capture, owner-driven): mesh twin at 33 m/s integrated
+	/// at ratio 1.00 mean / 1.00 min over the full face; a segment-box kicker at 44 m/s ratio 0.31
+	/// mean / 0.11 min (the felt hitch). SolidMesh is now the DEFAULT and shipped architecture;
+	/// SegmentBoxes is retained for reference/regression only. NOTE: the box architecture's own
+	/// doc (below) fixed the 2026-07 thin-SHELL failures, which this closed solid does not share
+	/// (owner-driven twin run: shapecast suspension smooth through the climb, clean launch).</summary>
+	public enum ColliderMode { SegmentBoxes, SolidMesh }
 
 	/// <summary>Collider/facet resolution for easement kickers: one segment per ~this many metres
 	/// of run (finer facets matter at 46 m/s, where an arc-16 facet joint arrives every ~28 ms),
@@ -73,38 +92,123 @@ public static class RampKicker
 	}
 
 	/// <summary>
-	/// MINIMUM-RADIUS LAW, full-bore revision (stunt-merge regression 2026-07-19). The arc radius
-	/// R = (L²+H²)/(2H) is what the suspension feels: riding the face at speed v costs a sustained
-	/// centripetal load v²/R on top of gravity, and a bottomed wheel's resolution impulse on a slope
-	/// points backward: arrest + nose pitch + flip. The previous law R(H) = 14·H + 9 (floor 18) was
-	/// verified at 21-30 m/s test entries, but the merged open map gives unlimited runup and the
-	/// hatch reaches 46 m/s. MEASURED survival boundary (hatch, jump maneuver, entry = maxSpeedMs):
-	///   R 37 / exit 19°: clean at 25.0 (33 G), marginal at 28.4 (52 G), FLIP+ARREST from 31.0
-	///     (108 G) through 44.7 (233 G, the owner-reported wall-stop).
-	///   R 72 / exit 20°: 44.8 entry, NO arrest, drives on; 70 G flat-landing slam.
-	///   R 93 / exit 21°: 45.1 entry, NO arrest; 60 G flat-landing slam.
-	///   R 87.5 / exit 7.9° and R 115 / exit 5.0° (proving ramps): 42+ entry, 3-5 G, pristine.
-	/// Two separate mechanisms, two dials:
-	///   1. FACE ARREST separates on R itself, not on v²/R alone (R 37 arrested at 26 m/s² while
-	///      R 72 survived 28 m/s² at the same exit angle). Smallest radius proven safe at 45 m/s
-	///      is 72; the floor is set at 90 (25% above it, face load 2.2 g at 46 m/s).
-	///   2. LANDING SLAM scales with exit angle + lip height (landing vz 10.5 measured 33 G,
-	///      11.3 measured 52 G, 18-20 measured 60-70 G). The slope 52·H caps every exit at ~11.3°,
-	///      which holds full-bore landing vz near 11 m/s for the 2 m class. High speed does not
-	///      need steep exits: a 3 m kicker at 11° still gives ~1.7 s of air at 40 m/s; trading
-	///      exit angle for survivability is the design intent, stated here with the numbers.
+	/// RADIUS LAW, round-2 revision (2026-07-21 evening; LIVE-UNVERIFIED). The arc radius
+	/// R = (L²+H²)/(2H) is what the suspension feels on the face: riding at speed v needs a normal
+	/// force N = m(g·cosθ + v²/R). THREE distinct failure mechanisms are now known, and only the
+	/// first two are radius-law concerns; the third is a LAYOUT (spacing) concern that a bigger
+	/// radius makes WORSE:
+	///
+	///   A. FACE ARREST + FLIP (small radii; measured 2026-07-19). A bottomed wheel's resolution
+	///      impulse on a steep slope points backward: arrest + nose pitch + flip. Measured boundary
+	///      (hatch, jump maneuver): R 37/exit 19° arrests from 31 m/s (233 G at 44.7); R 72 and up
+	///      never arrested to 45 m/s. The 90 m floor (25% over the proven 72) clears regime A.
+	///
+	///   B. SUSPENSION-BOTTOMING FACE DIVE (high speed only; offline port 2026-07-21 morning). The
+	///      suspension's sustained normal-force ceiling is 4·SpringRate·SuspensionTravel; net of
+	///      weight that is a centripetal capacity a_avail = (4·SpringRate·SuspensionTravel − m·g)/m
+	///      = 12.9 m/s² for the hatch at 1.1 g (the binding car). Above v = √(a_avail·R) the springs
+	///      bottom and the chassis sinks into the face (offline sink at R 104, H 2.0: 13 mm at
+	///      25 m/s, 242 mm at 53), then the loaded springs unload off the lip. Forward speed keeps
+	///      ~99% so net-speed telemetry never sees it. Fix: SPEED-RATE the radius via
+	///      <see cref="RadiusFor"/> with a per-feature design speed. This mechanism only matters on
+	///      features that realistically take 35+ m/s entries.
+	///
+	///   C. CHAIN FLIGHT-vs-GAP OVERSHOOT (the round-2 finding, and the DOMINANT felt hitch). A car
+	///      launching a chained kicker lands range = v·cosθ·t past the lip (t from H + v·sinθ·t −
+	///      g/2·t² = 0). When that range exceeds the flat gap to the next kicker (base spacing minus
+	///      ground run), the car lands ON the next FACE: a 4x-clamp slam into rising ground, the
+	///      visible "stuck on the ramp, slows, then launches like crazy" as that face re-launches
+	///      it. Kinematic audit, hatch: OLD law (floor 90) chains failed from 20-23 m/s (the
+	///      original "only when going really fast"); the R 240 blanket floor lengthened every run
+	///      25-60%, shrank the gaps, and moved failure DOWN to 9-15 m/s (the owner's round-2 "any
+	///      speed over about 40 mph"). A blanket radius floor CANNOT fix this: bigger R means longer
+	///      runs, smaller gaps, earlier failure. The fix is the SPACING law
+	///      <see cref="MinChainSpacingM"/>, owned by the layout.
+	///
+	///   Exonerated offline (round 2, 2-axle pitch-DOF port, facet-vs-smooth A/B): the segmented
+	///   box collider. At the real facet sizes (0.7-1.05 m) facet loads differ under 3% from a
+	///   perfectly smooth face and cause no contact loss; a clean single-kicker easement climb is
+	///   smooth at every sub-bottoming speed (loads 1.1-1.3x, rears never lift, pitch tracks the
+	///   slope). The live porpoise captures (alternating axle slams, z bobbing 0.9-1.4 m at 21 m/s)
+	///   are chain-landing events, not single-face physics.
+	///
+	///   Separate open issue (collision path, not radius): a car arriving airborne/sideways can
+	///   catch the kicker back lip / side skirt / segment-box edge (the only kicker surfaces with
+	///   |n.z| under 0.5) with its chassis box: rigid wall-stop, logged by WallGlanceAssist (live:
+	///   81 to 13 km/h, and 39 to 6 km/h straddling a side edge). Longer faces mean MORE side-wall
+	///   area, another reason not to blanket-lengthen.
+	///
+	/// The 90 m floor is restored below; the 240 m blanket floor (round-1 fix, live-FALSIFIED as a
+	/// feel fix because mechanism C dominated) is retired in favor of the per-feature design-speed
+	/// rating. 52·H keeps every default exit at or under ~11.3° (landing-slam dial, regime A data).
 	/// </summary>
 	public const float MinRadiusM = 90f;
 
-	/// <summary>Speed-safe ground run for a kicker of lip height <paramref name="heightM"/>: the length
-	/// that yields the design radius R(H) = max(<see cref="MinRadiusM"/>, 52·H) (see the law above;
-	/// increasing in H, exit angle capped ~11.3°). Never shorter than the legacy 5·H (inert with the
-	/// 90 m floor, kept as a guard). From R = (L²+H²)/(2H):  L = √(H·(2R − H)).</summary>
-	public static float LengthFor( float heightM )
+	/// <summary>Sustained centripetal capacity (m/s²) of the binding roster car (hatch: combined
+	/// spring ceiling 4·34000·0.20 N minus weight at 1.1 g, over mass; see the law above). Used to
+	/// speed-rate a face radius against regime-B bottoming.</summary>
+	public const float BottomingCentripetalCapacity = 12.9f;
+
+	/// <summary>Dynamic margin over the analytic no-bottom radius v²/a_avail: the damper transient
+	/// overshoots the static bound; the offline port needed ~1.1x for zero bottomed ticks.</summary>
+	public const float BottomingRadiusMargin = 1.1f;
+
+	/// <summary>Design radius for a kicker of lip height <paramref name="heightM"/>. Base law
+	/// max(<see cref="MinRadiusM"/>, 52·H) (arrest floor + exit-angle cap). Pass a positive
+	/// <paramref name="designSpeedMs"/> (the fastest REALISTIC entry for this specific feature) to
+	/// also clear regime-B bottoming at that speed: R at least
+	/// <see cref="BottomingRadiusMargin"/>·v²/<see cref="BottomingCentripetalCapacity"/>
+	/// (53 m/s gives ~240 m, the round-1 full-bore figure). Leave it 0 for rhythm/chain kickers,
+	/// whose entries are link-speed bound and whose spacing needs the short run.</summary>
+	public static float RadiusFor( float heightM, float designSpeedMs = 0f )
 	{
 		float r = MathF.Max( MinRadiusM, 52f * heightM );
+		if ( designSpeedMs > 0f )
+			r = MathF.Max( r, BottomingRadiusMargin * designSpeedMs * designSpeedMs / BottomingCentripetalCapacity );
+		return r;
+	}
+
+	/// <summary>Speed-safe ground run for a kicker of lip height <paramref name="heightM"/>: the length
+	/// that yields the design radius <see cref="RadiusFor"/>(H, designSpeedMs). Never shorter than the
+	/// legacy 5·H (inert with the 90 m floor, kept as a guard). From R = (L²+H²)/(2H):
+	/// L = √(H·(2R − H)). The optional <paramref name="designSpeedMs"/> is regime-B speed rating;
+	/// existing single-argument call sites get the pre-2026-07-21 geometry back (floor 90).</summary>
+	public static float LengthFor( float heightM, float designSpeedMs = 0f )
+	{
+		float r = RadiusFor( heightM, designSpeedMs );
 		float lawLen = MathF.Sqrt( heightM * (2f * r - heightM) );
 		return MathF.Max( 5f * heightM, lawLen );
+	}
+
+	/// <summary>Flat-ground flight range (m) past the lip for a car leaving a kicker of height
+	/// <paramref name="heightM"/> built by <see cref="LengthFor"/>(H, designSpeedMs) at
+	/// <paramref name="exitSpeedMs"/>: ballistic from lip height H at the face exit angle
+	/// asin(L/R), landing back on grade, under the live 1.1 g scene gravity. The building block of
+	/// <see cref="MinChainSpacingM"/>.</summary>
+	public static float FlightRangeM( float heightM, float exitSpeedMs, float designSpeedMs = 0f )
+	{
+		const float g = 9.81f * 1.1f;   // GameBootstrap scene gravity
+		float r = RadiusFor( heightM, designSpeedMs );
+		float len = LengthFor( heightM, designSpeedMs );
+		float exitAngle = MathF.Asin( System.Math.Clamp( len / r, 0f, 1f ) );
+		float vz = exitSpeedMs * MathF.Sin( exitAngle );
+		float vx = exitSpeedMs * MathF.Cos( exitAngle );
+		float t = (vz + MathF.Sqrt( vz * vz + 2f * g * heightM )) / g;
+		return vx * t;
+	}
+
+	/// <summary>Minimum base-to-base spacing (m) for CHAINED same-height kickers so a car linking
+	/// them at up to <paramref name="maxLinkSpeedMs"/> lands on the FLAT between them, never on the
+	/// next face (failure mechanism C in the law above): easement ground run + flight range at the
+	/// link speed + <paramref name="marginM"/>. Entries above the link speed will still overshoot
+	/// onto the next face; the link speed is the chain's protected envelope and belongs in the
+	/// layout's comment for the line. LIVE-UNVERIFIED: derived from the offline kinematic audit
+	/// that matched both owner failure-threshold reports (20-23 m/s on floor-90 geometry,
+	/// 9-15 m/s on the retired floor-240 geometry).</summary>
+	public static float MinChainSpacingM( float heightM, float maxLinkSpeedMs, float designSpeedMs = 0f, float marginM = 4f )
+	{
+		float run = GroundRunFor( LengthFor( heightM, designSpeedMs ), heightM, RampProfile.Easement );
+		return run + FlightRangeM( heightM, maxLinkSpeedMs, designSpeedMs ) + marginM;
 	}
 
 	/// <summary>Place a curved solid kicker under <paramref name="parent"/>. <paramref name="lengthM"/>
@@ -112,7 +216,8 @@ public static class RampKicker
 	/// Returns the placed GameObject.</summary>
 	public static GameObject Build( Scene scene, GameObject parent, Vector3 atM, float yawDeg,
 		float lengthM, float widthM, float heightM, Color color,
-		RampProfile profile = RampProfile.Arc, int segments = 16 )
+		RampProfile profile = RampProfile.Arc, int segments = 16,
+		ColliderMode colliderMode = ColliderMode.SolidMesh )
 	{
 		Vector2[] prof;
 		if ( profile == RampProfile.Easement )
@@ -128,10 +233,10 @@ public static class RampKicker
 			int segs = System.Math.Max( 3, segments );
 			prof = Profile( lengthM, heightM, segs );
 		}
-		var model = BuildRenderModel( prof, widthM );
+		var model = BuildRenderModel( prof, widthM, withCollision: colliderMode == ColliderMode.SolidMesh );
 
 		var go = scene.CreateObject();
-		go.Name = "Kicker";
+		go.Name = colliderMode == ColliderMode.SolidMesh ? "Kicker (mesh)" : "Kicker";
 		go.SetParent( parent, true );
 		go.WorldPosition = atM * M;
 		go.WorldRotation = Rotation.FromYaw( yawDeg );
@@ -140,9 +245,83 @@ public static class RampKicker
 		renderer.Model = model;
 		renderer.Tint = color;
 
-		BuildSegmentColliders( go, prof, widthM );
+		if ( colliderMode == ColliderMode.SolidMesh )
+		{
+			// ONE closed solid mesh collider: no internal faces anywhere near the drivable
+			// surface, so there is nothing for speculative narrowphase to clamp against. Built
+			// from the exact same closed geometry the renderer shows (top + skirts + underside +
+			// lip), NOT the historical open shell.
+			var collider = go.Components.Create<ModelCollider>();
+			collider.Model = model;
+			collider.Static = true;
+		}
+		else
+		{
+			BuildSegmentColliders( go, prof, widthM );
+		}
 
 		go.Tags.Add( "road" );   // wheels treat the curved face as drivable ground
+		return go;
+	}
+
+	/// <summary>A CRESTED feature as ONE closed solid: up-face, optional flat deck, mirrored
+	/// down-face, meshed and collided as a single AddCollisionMesh body (deckM 0 = a mound whose
+	/// faces meet at the crest; deckM &gt; 0 = a tabletop). WHY (2026-07-21 late, flight-recorder
+	/// verified): crest-mated PAIRS of kickers each carry a vertical back-lip face buried at the
+	/// seam. A bottomed car (regime B) rides with its belly SUNK below the drive surface, and that
+	/// sunken belly sweeps into the opposing kicker's buried lip wall: recorded wall-stop 39.7 to
+	/// 9.9 m/s in one tick, contact normal (-1,0,0) against the twin's lip, on the (1050,120)
+	/// double mound. The old segment-box ratchet used to bleed 40-70% of approach speed and
+	/// accidentally masked this; the SolidMesh integration fix exposed it. One merged solid has NO
+	/// internal faces anywhere, same law as the SolidMesh default above.</summary>
+	public static GameObject BuildCrested( Scene scene, GameObject parent, Vector3 atM, float yawDeg,
+		float lengthM, float widthM, float heightM, Color color,
+		RampProfile profile = RampProfile.Arc, float deckM = 0f, int segments = 16,
+		float downLengthM = 0f )
+	{
+		Vector2[] FaceProfile( float faceLen )
+		{
+			if ( profile == RampProfile.Easement )
+			{
+				float approxRun = faceLen / (1f - EasementBlend * 0.5f);
+				int esegs = System.Math.Clamp( (int)MathF.Ceiling( approxRun / EasementSegmentMeters ), 16, MaxSegments );
+				return EasementCore( faceLen, heightM, esegs ).prof;
+			}
+			return Profile( faceLen, heightM, System.Math.Max( 3, segments ) );
+		}
+
+		var up = FaceProfile( lengthM );
+		// downLengthM > 0 = asymmetric crest (e.g. the big-air landing mound's long run-out);
+		// 0 = mirror the up face.
+		var down = downLengthM > 0f ? FaceProfile( downLengthM ) : up;
+
+		int n = up.Length;
+		float run = up[n - 1].x;
+		float runDown = down[down.Length - 1].x;
+		var full = new List<Vector2>( n + down.Length + 1 );
+		full.AddRange( up );
+		if ( deckM > 0f )
+			full.Add( new Vector2( run + deckM, heightM ) );
+		for ( int i = down.Length - 2; i >= 0; i-- )   // mirrored descent; seam-exact by construction
+			full.Add( new Vector2( run + deckM + (runDown - down[i].x), down[i].y ) );
+
+		var model = BuildRenderModel( full.ToArray(), widthM, withCollision: true );
+
+		var go = scene.CreateObject();
+		go.Name = deckM > 0f ? "Tabletop (mesh)" : "Mound (mesh)";
+		go.SetParent( parent, true );
+		go.WorldPosition = atM * M;
+		go.WorldRotation = Rotation.FromYaw( yawDeg );
+
+		var renderer = go.Components.Create<ModelRenderer>();
+		renderer.Model = model;
+		renderer.Tint = color;
+
+		var collider = go.Components.Create<ModelCollider>();
+		collider.Model = model;
+		collider.Static = true;
+
+		go.Tags.Add( "road" );
 		return go;
 	}
 
@@ -243,10 +422,12 @@ public static class RampKicker
 
 	// ---------------------------------------------------------------- render mesh (visual only)
 
-	/// <summary>Mesh the closed curved-kicker solid for RENDER (no collision — see
-	/// <see cref="BuildSegmentColliders"/>). Top curved surface, two side skirts down to grade, a flat
-	/// underside and the vertical back lip, wound so every face points outward via the self-check.</summary>
-	static Model BuildRenderModel( Vector2[] prof, float W )
+	/// <summary>Mesh the closed curved-kicker solid. Top curved surface, two side skirts down to
+	/// grade, a flat underside and the vertical back lip, wound so every face points outward via the
+	/// self-check. <paramref name="withCollision"/> additionally bakes the SAME closed solid as a
+	/// triangle collision mesh (<see cref="ColliderMode.SolidMesh"/>); false = render-only, collision
+	/// comes from <see cref="BuildSegmentColliders"/>.</summary>
+	static Model BuildRenderModel( Vector2[] prof, float W, bool withCollision = false )
 	{
 		int segs = prof.Length - 1;
 		float hw = W * 0.5f;
@@ -291,11 +472,15 @@ public static class RampKicker
 				new Vector3( p1.x, hw, p1.y ), new Vector3( p0.x, hw, p0.y ), new Vector3( 0f, 1f, 0f ) );
 		}
 
-		// UNDERSIDE (flat on grade) and BACK LIP (vertical face at x=L) — seal the solid
+		// UNDERSIDE (flat on grade) and BACK LIP (vertical face at x=L) — seal the solid.
+		// Crested profiles (BuildCrested) end back at grade: H ~ 0 would make the lip quad a
+		// degenerate sliver (bad triangles in the collision mesh), so it is skipped — the top
+		// surface itself meets the underside edge there and the solid stays closed.
 		Quad( new Vector3( 0f, -hw, 0f ), new Vector3( L, -hw, 0f ),
 			new Vector3( L, hw, 0f ), new Vector3( 0f, hw, 0f ), new Vector3( 0f, 0f, -1f ) );
-		Quad( new Vector3( L, -hw, 0f ), new Vector3( L, hw, 0f ),
-			new Vector3( L, hw, H ), new Vector3( L, -hw, H ), new Vector3( 1f, 0f, 0f ) );
+		if ( H > 0.01f )
+			Quad( new Vector3( L, -hw, 0f ), new Vector3( L, hw, 0f ),
+				new Vector3( L, hw, H ), new Vector3( L, -hw, H ), new Vector3( 1f, 0f, 0f ) );
 
 		var idx = new int[indices.Count];
 		for ( int k = 0; k < idx.Length; k++ ) idx[k] = indices[k];
@@ -305,6 +490,9 @@ public static class RampKicker
 		mesh.CreateIndexBuffer( idx.Length, idx );
 		mesh.Bounds = BBox.FromPoints( positions );
 
-		return Model.Builder.AddMesh( mesh ).Create();
+		var builder = Model.Builder.AddMesh( mesh );
+		if ( withCollision )
+			builder = builder.AddCollisionMesh( positions.ToArray(), idx );
+		return builder.Create();
 	}
 }

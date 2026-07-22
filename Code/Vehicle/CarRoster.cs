@@ -34,9 +34,41 @@ public static class CarDefinitions
 		TrackWidth = 1.50f,  // kit spec
 		WheelRadius = 0.30f, // kit spec
 		Layout = DriveLayout.FWD,
-		// tuning iter 2b: 150→162 for the 8-10 s 0-100 band (+8% mid-range; topspeed stays in band)
-		PeakTorque = 162f,
-		RedlineRpm = 6300f,
+		// +20% SPEED PASS (2026-07-21, owner feel: "all cars ~20% faster, both accel and top speed"):
+		//   - PeakTorque 210 -> 252 (+20% on the current hand-bumped value; the 162->210 owner feel call
+		//     stands, this stacks on top). EngineTorqueAt scales this flat across the rev band, so every
+		//     gear pulls ~+20% harder (grip permitting), which is the acceleration half of the request.
+		//   - RedlineRpm 6300 -> 7560 (+20%) is the TOP-SPEED half. RedlineWheelSpeed (Drivetrain.cs) sets
+		//     the redline-equivalent top-gear wheel speed = RedlineRpm/(topGearRatio*FinalDrive)*WheelRadius;
+		//     with no aero-drag term (VehicleWheel never integrates one) the terminal speed is gearing-set,
+		//     so +20% redline = +20% gearing ceiling (hatch top-gear ceiling ~59.7 -> ~71.6 m/s).
+		//   Why RedlineRpm and NOT FinalDrive for the top-speed lever: FinalDrive is inverse on wheel force,
+		//   so lowering it for +20% top speed would erode the PeakTorque-driven +20% acceleration (they
+		//   cancel) AND drop reverse top speed (reverse uses FinalDrive), fighting both goals. RedlineRpm
+		//   raises the top-gear ceiling and the reverse redline together while leaving wheel force intact.
+		//   ShiftUpRpm/ShiftDownRpm are DELIBERATELY left unchanged (hatch uses the kit defaults): the
+		//   auto box shifts on GROUND-speed rpm, so a fixed shift point keeps the shift ladder at the same
+		//   ground speeds (familiar launch/wheelspin character, no extra time held in the wheelspin-prone
+		//   1st gear) while only the top gear (which never upshifts) extends to the new redline. The
+		//   mild cost is intermediate gears now short-shift relative to redline (~74% vs ~92%), giving a
+		//   slightly-under-20% mid-band torque bump (~+14-17%) that PeakTorque still carries net-positive.
+		// Safety (unchanged, still verified in code):
+		//   - per-substep drive-omega clamp (VehicleWheel.cs IntegrateWheelSpin): drive torque can never
+		//     push a driven wheel past DriveOmegaCap (redline-equivalent for the current gear) within one
+		//     substep; the backstop the kit's high-PeakTorque wobble-class fix targeted. It scales with
+		//     the new redline, so the higher ceiling is enforced the same way.
+		//   - smoothstep torque rolloff (VehicleWheel.cs, DriveRolloffOnset=0.90f): drive torque fades to
+		//     zero as a wheel's own spin approaches 90% of DriveOmegaCap, so more torque can't camp a
+		//     wheel at the cap and blow the slip ratio past the tire's tail.
+		// TC sanity check: hatch is FWD, no Sport TC opt-in (Sport is raw "ABS only"). Casual TC targets
+		// slip 0.14 by cutting THROTTLE proportionally against MEASURED slip, so +20% torque doesn't
+		// overwhelm it; TC just clamps throttle harder to hold the same target.
+		// Battery bands this pass will shift (owner sign-off required before re-anchoring; NOT touched here):
+		//   - specs/maneuvers/topspeed.json (hatch): maxSpeedMs (47.22-54.17) shifts UP ~20%.
+		//   - specs/maneuvers/launch.json (hatch): zeroToHundredS (8.0-10.0 s) IMPROVES (drops).
+		//   - specs/maneuvers/launch.json (hatch): wheelspinS (<=0.5 s) roughly FLAT (TC target unchanged).
+		PeakTorque = 252f,
+		RedlineRpm = 7560f,
 		// Real recorded car set: deep muscle idle crossfaded up to a revving high layer.
 		EngineSoundEvent = "sounds/engine/engine_real_low.sound",
 		EngineSoundEventHigh = "sounds/engine/engine_real_high.sound",
@@ -100,12 +132,15 @@ public static class CarDefinitions
 		LateralCurve = new TireCurve( 0.15f, 1.22f, 0.60f, 1.06f ),
 		LoadSensitivity = 0.07f,
 		Layout = DriveLayout.RWD,
-		PeakTorque = 320f,           // torquey: >2× hatch; gear-1 drive force ~13 kN = traction-limited launch, strong hills
+		// +20% speed pass 2026-07-21: PeakTorque 320->384 (+20% accel, keeps the signature torquey launch).
+		PeakTorque = 384f,           // torquey: >2× hatch; gear-1 drive force = traction-limited launch, strong hills
 		IdleRpm = 650f,
-		// tuning iter 2a: RedlineRpm 4700→3900 + ShiftUpRpm 4100→3500 pull top speed 51.5→~43 m/s into
-		// the 140-165 km/h band via the rev ceiling (no aero drag in the model), leaving the
-		// gear-1 launch torque — the signature hill-climb strength — untouched.
-		RedlineRpm = 3900f,          // lowest redline in roster — low-rev truck character
+		// +20% speed pass 2026-07-21: RedlineRpm 3900->4680 (+20% top-gear top speed via the rev ceiling,
+		// the same lever the earlier iter-2a change used in the other direction). The pickup is redline-
+		// limited (it reaches its gearing ceiling: measured 43.1 m/s == computed ceiling), so this moves
+		// its real top speed ~43 -> ~51.7 m/s. ShiftUpRpm 3500 left unchanged (shift ladder holds; only
+		// top gear extends). The gear-1 launch torque (the hill-climb strength) is untouched.
+		RedlineRpm = 4680f,          // lowest redline in roster; low-rev truck character (was 3900, +20% pass)
 		EngineInertia = 0.5f,
 		EngineBrakeTorque = 90f,     // strong engine braking downhill
 		// Real recorded truck set: deeper truck idle + revving high layer; base pitch dropped so it
@@ -127,11 +162,19 @@ public static class CarDefinitions
 		// and the 22 m/s blend point unchanged.
 		HighSpeedSteerAngle = 8f,
 		SteerRateScale = 0.9f,
-		ReverseSpeedCap = 4.0f,
+		// Reverse cap override removed 2026-07-21 (+reverse speed pass): inherits the new 20 m/s kit
+		// default. The pickup's tall reverse gear (3.8) + low redline (4680) self-limit it to ~11.6 m/s
+		// (~26 mph) reverse, so it stays the roster's slowest reverse by gearing character, not by the
+		// old artificial ~9 mph clamp.
 		// tuning iter 2b drift button: deepest rear cut in the roster — 1900 kg + 3.4 m wheelbase
 		// never broke loose at 1.0 (J-turn no-180 through runs 1-3); the truck needs real help.
 		HandbrakeGripScale = 0.45f,
 		SpinRecoveryAssist = 7.0f, // spin-recovery default (tested 2026-07-15 on hatch, 6→7; other cars inherit as a starting point); tunable dial
+		// Sport-mode posture (owner call 2026-07-21) — same exposure as the coupe: torquey 320 N-m RWD
+		// truck lights the rears to redline in raw Sport. Reduced-authority Sport TC + yaw damp; slightly
+		// tighter TC than the coupe (heavier, less playful). LIVE-UNVERIFIED; owner to feel/tune.
+		SportTcSlipTarget = 0.30f,
+		SportStabilityScale = 0.5f,
 		DefaultAssists = AssistLevel.Casual,
 		Tint = new Color( 0.55f, 0.13f, 0.11f ), // matches kit body_red
 	};
@@ -159,9 +202,12 @@ public static class CarDefinitions
 		SpringRate = 24000f,
 		DamperRate = 1600f,
 		Layout = DriveLayout.RWD,
-		PeakTorque = 52f, // punchy launch, still shifts out of wheelspin quickly
+		// +20% speed pass 2026-07-21: PeakTorque 52->62.4 (+20% accel), RedlineRpm 9000->10800 (+20% top
+		// speed; kart top-gear ceiling ~21.8 -> ~26.1 m/s, extending the "literal race car" character the
+		// owner asked for). FinalDrive/GearRatios/ShiftUp unchanged, so launch/wheelspin behavior holds.
+		PeakTorque = 62.4f, // punchy launch, still shifts out of wheelspin quickly
 		IdleRpm = 1400f,
-		RedlineRpm = 9000f,
+		RedlineRpm = 10800f,
 		EngineInertia = 0.05f,
 		EngineBrakeTorque = 8f,
 		// The kart keeps the buzzier high loop (the v1 high-pitched character "could suit the
@@ -169,8 +215,9 @@ public static class CarDefinitions
 		EngineSoundEvent = "sounds/engine/engine_b_sport_purr.sound",
 		EnginePitchBase = 1.2f,
 		// short kart gearing: telemetry showed gear 1 topping ~50 km/h = permanent wheelspin.
-		// tuning iter 2a: FinalDrive 5.0→6.3 pulls top speed 21.6→~17 m/s into the 15.3-19.4 band
-		// while keeping the high-rev kart character (redline unchanged).
+		// tuning iter 2a: FinalDrive 5.0→6.3 pulls top speed 21.6→~17 m/s into the (then) 15.3-19.4 band
+		// while keeping the high-rev kart character (redline unchanged AT THAT TIME; the +20% speed pass
+		// 2026-07-21 later raised redline 9000->10800, lifting the top-gear ceiling to ~26 m/s).
 		// Feel session 2026-07-13: "could be faster in general — it's a
 		// literal race car design". Telemetry showed the ceiling was GEARING-capped (gear 4 pinned at
 		// redline 9000 holding 62 km/h), not power/grip/drag. Added a taller 5th gear (1.1) leaving
@@ -200,6 +247,11 @@ public static class CarDefinitions
 		// J-turn quick without making the tame pointless.
 		HandbrakeGripScale = 0.70f,
 		SpinRecoveryAssist = 7.0f, // spin-recovery default (tested 2026-07-15 on hatch, 6→7; other cars inherit as a starting point); tunable dial
+		// Sport-mode posture (owner call 2026-07-21) — same exposure as the coupe: light RWD kart spins
+		// its rears freely in raw Sport. Loosest Sport TC in the roster + gentle yaw damp (the kart already
+		// rotates easily, keep it playful). LIVE-UNVERIFIED; owner to feel/tune.
+		SportTcSlipTarget = 0.40f,
+		SportStabilityScale = 0.45f,
 		// Feel session 2026-07-13: drift-exit soft-lock. Baseline (full lock)
 		// measured driftexit speedRetention 0.415, peakSlip 77.6° — the "lose too much momentum"
 		// complaint. Cap the handbrake-induced rear slip so the rears keep rotating mid-slide.
@@ -227,8 +279,10 @@ public static class CarDefinitions
 		Wheelbase = 2.7f,
 		TrackWidth = 1.60f,
 		Layout = DriveLayout.RWD,
-		PeakTorque = 340f,
-		RedlineRpm = 7200f,
+		// +20% speed pass 2026-07-21: PeakTorque 340->408 (+20% accel), RedlineRpm 7200->8640 (+20% top-gear
+		// top speed). ShiftUpRpm 6600 left unchanged (shift ladder holds; only top gear extends to redline).
+		PeakTorque = 408f,
+		RedlineRpm = 8640f,
 		ShiftUpRpm = 6600f,
 		// Real recorded car set (shared with the hatch): deep muscle idle crossfaded up to a
 		// revving high layer; base pitch neutral so it sweeps the band cleanly.
@@ -255,6 +309,13 @@ public static class CarDefinitions
 		BrakeTorque = 6200f,
 		WheelRadius = 0.33f,
 		SpinRecoveryAssist = 7.0f, // spin-recovery default (tested 2026-07-15 on hatch, 6→7; other cars inherit as a starting point); tunable dial
+		// Sport-mode posture (owner call 2026-07-21: "Sport mode spins out all over the place"). Sport ran
+		// with NO traction control and NO yaw damping (both Casual-only), so full throttle spun the 340 N-m
+		// RWD rears to redline (telemetry rearK ~11 at 10 km/h in gear 2) and the counter-steer pendulum
+		// went divergent. These add a reduced-authority Sport TC + yaw damp that keep the tail lively and
+		// drift-capable but recoverable. Starting values — LIVE-UNVERIFIED; owner to feel/tune.
+		SportTcSlipTarget = 0.35f,
+		SportStabilityScale = 0.5f,
 		MaxSteerAngle = 30f,
 		// steer-forgiveness pass 2026-07-17: sportiest car gets the most high-speed turn-in — 8→10
 		// (+25%, top of the roster: pickup 8 < hatch 9.5 < coupe 10). Low-speed lock 30 and the

@@ -32,6 +32,27 @@ public static class UiRig
 		var playerTiming = hudGo.Components.Create<PlayerTiming>();
 		playerTiming.Target = target;
 
+		// Drive-mode session persistence (owner request 2026-07-21): watches Target.Assists and
+		// mirrors any change into UserSettings.AssistLevel. Same always-on Component pattern as
+		// PlayerTiming above (not a panel); follows the active car via Retarget below.
+		var drivePersist = hudGo.Components.Create<DriveModePersister>();
+		drivePersist.Target = target;
+
+		// Ramp-hitch flight recorder (debug instrument, inert unless vp_ramptrace is set).
+		// Same always-on Component pattern; follows the active car via Retarget below.
+		var rampTrace = hudGo.Components.Create<RampTraceRecorder>();
+		rampTrace.Target = target;
+
+		// Arcade cone ejector: flings cones out of the car's danger volume so a wedged cone can
+		// never chock the car (telemetry-verified failure, 2026-07-21). Follows Retarget below.
+		var ejector = hudGo.Components.Create<PropEjector>();
+		ejector.Target = target;
+
+		// Flipped-car rescue prompt: upside down for 3 s -> top-centre "press R" pill. Follows
+		// Retarget below.
+		var flip = hudGo.Components.Create<FlipPrompt>();
+		flip.Target = target;
+
 		var tuning = hudGo.Components.Create<TuningPanel>();
 		tuning.Car = target;
 
@@ -75,6 +96,14 @@ public static class UiRig
 			tel.Target = target;
 		foreach ( var pt in scene.GetAllComponents<PlayerTiming>() )
 			pt.Target = target;
+		foreach ( var dp in scene.GetAllComponents<DriveModePersister>() )
+			dp.Target = target;
+		foreach ( var rt in scene.GetAllComponents<RampTraceRecorder>() )
+			rt.Target = target;
+		foreach ( var pe in scene.GetAllComponents<PropEjector>() )
+			pe.Target = target;
+		foreach ( var fp in scene.GetAllComponents<FlipPrompt>() )
+			fp.Target = target;
 		foreach ( var tun in scene.GetAllComponents<TuningPanel>() )
 			tun.Car = target;
 		foreach ( var ses in scene.GetAllComponents<SessionMenu>() )

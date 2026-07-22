@@ -173,6 +173,7 @@ public sealed class VehicleController : Component, Component.ICollisionListener
 		ApplySpinRecoveryAssist();
 		ApplyStabilityAssist();
 		ApplyWallGlanceAssist();
+		ApplyAirAttitudeAssist();
 
 		// dense driving telemetry: 2 Hz while moving or on input — parseable for analysis
 		if ( _telemetry > 0.5f && (SpeedMs > 0.5f || Throttle > 0f || Brake > 0f) )
@@ -516,16 +517,27 @@ public sealed class VehicleController : Component, Component.ICollisionListener
 	float ApplyTractionControl( float throttle, List<VehicleWheel> driven )
 	{
 		// drifting is throttle-steered — TC clamping wheelspin would kill the slide
-		if ( Handbrake || Assists != AssistLevel.Casual || throttle <= 0f )
+		if ( Handbrake || Assists == AssistLevel.Sim || throttle <= 0f )
 			return throttle;
 
-		// proportional: hold driven-wheel slip near the grip PEAK, not past it. The longitudinal
-		// tire-curve peaks sit at slip 0.09-0.14; a 0.25 target parks the tire in the post-peak slide
-		// — slower (less grip than the peak) AND permanently over the wheelspin threshold. 0.14
-		// targets the peak: more launch grip and slip under the counter.
-		const float TcSlipTarget = 0.14f;
+		// proportional: hold driven-wheel slip near a target. Casual holds the grip PEAK; Sport (when the
+		// car opts in via SportTcSlipTarget) holds a LOOSER target well past the peak so the rears still
+		// break into a throttle-steerable slide, but bounded so they can't free-spin to redline and torch
+		// rear lateral grip (the Sport spin-out, owner 2026-07-21). The longitudinal tire-curve peaks sit
+		// at slip 0.09-0.14; a 0.25 target parks the tire in the post-peak slide — slower (less grip than
+		// the peak) AND permanently over the wheelspin threshold. Casual 0.14 targets the peak: more launch
+		// grip and slip under the counter. Sport, not opted in (target 0), returns raw throttle — the old
+		// "ABS only" behavior, byte-identical.
+		float slipTarget;
+		if ( Assists == AssistLevel.Casual )
+			slipTarget = 0.14f;
+		else if ( Definition.SportTcSlipTarget > 0f )
+			slipTarget = Definition.SportTcSlipTarget;
+		else
+			return throttle;
+
 		float worstSlip = driven.Where( w => w.IsGrounded ).Select( w => w.SlipRatio ).DefaultIfEmpty( 0f ).Max();
-		if ( worstSlip <= TcSlipTarget )
+		if ( worstSlip <= slipTarget )
 			return throttle;
 
 		// TC floor relaxation (kart cap-camping fix 2026-07-18): the flat 0.2 throttle floor still fed
@@ -542,13 +554,60 @@ public sealed class VehicleController : Component, Component.ICollisionListener
 		if ( worstSlip > TcFloorRelaxStart )
 			floor *= Math.Clamp( (TcFloorRelaxEnd - worstSlip) / (TcFloorRelaxEnd - TcFloorRelaxStart), 0f, 1f );
 
-		return throttle * Math.Clamp( TcSlipTarget / worstSlip, floor, 1f );
+		return throttle * Math.Clamp( slipTarget / worstSlip, floor, 1f );
+	}
+
+	/// <summary>
+	/// Airborne pitch-rate damping time constant, seconds. Leaving a ramp lip pivots the car over
+	/// its rear axle, so every launch departs rotating nose-down (19-46 deg/s measured); with no
+	/// air management the car rotates through the whole flight and lands nose-first, digging in.
+	/// Flight-recorder capture (2026-07-21, Lad2 at 35.5 m/s): launch attitude 8.6 deg nose-UP,
+	/// landing attitude 17.8 deg nose-DOWN, touchdown 35.5 to 31.7 m/s in 40 ms (a ~5 g spike)
+	/// then pitch slammed level in 100 ms - the owner's "hitch going off the ramps", reported
+	/// identically at every speed because the lip pivot exists at every speed. Damping the
+	/// car-local pitch rate while fully airborne holds the launch attitude so the car lands
+	/// wheels-matched (slightly tail-first). 0 or negative disables. LIVE-UNVERIFIED.
+	/// </summary>
+	[Property] public float AirPitchDampTau { get; set; } = 0.30f;
+
+	void ApplyAirAttitudeAssist()
+	{
+		if ( AirPitchDampTau <= 0f )
+			return;
+
+		// fully airborne only: any grounded wheel means suspension owns attitude and this
+		// assist is inert, so grounded driving is byte-identical by construction
+		foreach ( var w in Wheels )
+			if ( w.IsGrounded )
+				return;
+		if ( Wheels.Count == 0 )
+			return;
+
+		// the drift button doubles as "let me rotate" in the air: deliberate flips stay possible
+		if ( Handbrake )
+			return;
+
+		var local = WorldRotation.Inverse * _rigidbody.AngularVelocity;
+		local.y *= MathF.Exp( -Time.Delta / AirPitchDampTau );
+		_rigidbody.AngularVelocity = WorldRotation * local;
 	}
 
 	void ApplyStabilityAssist()
 	{
 		// the drift button asks for yaw — don't damp it away while held
-		if ( Handbrake || Assists != AssistLevel.Casual )
+		if ( Handbrake )
+			return;
+
+		// Casual damps at full authority; Sport (when the car opts in via SportStabilityScale) damps at a
+		// FRACTION so the counter-steer pendulum snap (rear regains grip and flings the car the other way,
+		// uncatchable — owner 2026-07-21) is bled off while deliberate rotation survives. Sim, and Sport
+		// with no opt-in, get nothing. Casual multiplies by exactly 1f so its behavior is byte-identical.
+		float authority;
+		if ( Assists == AssistLevel.Casual )
+			authority = 1f;
+		else if ( Assists == AssistLevel.Sport && Definition.SportStabilityScale > 0f )
+			authority = Definition.SportStabilityScale;
+		else
 			return;
 
 		// small corrective action when the rear steps out — damp yaw so slides are catchable
@@ -563,7 +622,7 @@ public sealed class VehicleController : Component, Component.ICollisionListener
 
 		// scales up with speed: the flat 3f cap let a 115 km/h lift-off flick go full 360
 		float speedScale = 3f + 3f * Math.Clamp( SpeedMs / 30f, 0f, 1f );
-		float strength = Math.Clamp( (rearAlpha - 0.07f) * 8f, 0f, 1f ) * speedScale;
+		float strength = Math.Clamp( (rearAlpha - 0.07f) * 8f, 0f, 1f ) * speedScale * authority;
 		var angular = _rigidbody.AngularVelocity;
 		angular.z *= MathF.Max( 0f, 1f - strength * Time.Delta );
 		_rigidbody.AngularVelocity = angular;

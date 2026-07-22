@@ -512,7 +512,9 @@
 				Get = () => def.LaunchBoost, Set = v => def.LaunchBoost = v },
 			new() { Group = "engine", Name = "Engine brake", Suffix = " Nm", Step = 5f, Min = 0f, Max = 60f,
 				Get = () => def.EngineBrakeTorque, Set = v => def.EngineBrakeTorque = v },
-			new() { Group = "engine", Name = "Redline", Suffix = " rpm", Step = 100f, Min = 5000f, Max = 9500f,
+			// Range widened 2026-07-21 with the +20% speed pass: kart redline is now 10800 and the
+			// pickup's 4680; the old 5000-9500 range silently clamped both on first drag.
+			new() { Group = "engine", Name = "Redline", Suffix = " rpm", Step = 100f, Min = 4000f, Max = 11500f,
 				Get = () => def.RedlineRpm, Set = v => { def.RedlineRpm = v; ScaleShiftPoints( def, v ); } },
 
 			// --- tires / brakes ---
@@ -544,7 +546,8 @@
 				Get = () => def.MaxSteerAngle, Set = v => def.MaxSteerAngle = v },
 			new() { Group = "assists", Name = "Steer lock (high speed)", Suffix = "°", Step = 1f, Min = 6f, Max = 20f,
 				Get = () => def.HighSpeedSteerAngle, Set = v => def.HighSpeedSteerAngle = v },
-			new() { Group = "assists", Name = "Reverse speed cap", Fmt = "F1", Suffix = " m/s", Step = 0.5f, Min = 3f, Max = 15f,
+			// Max raised 2026-07-21: the fun-first reverse cap default is now 20 m/s (~45 mph).
+			new() { Group = "assists", Name = "Reverse speed cap", Fmt = "F1", Suffix = " m/s", Step = 0.5f, Min = 3f, Max = 22f,
 				Get = () => def.ReverseSpeedCap, Set = v => def.ReverseSpeedCap = v },
 			new() { Group = "assists", Name = "Spin recovery", Fmt = "F1", Suffix = " m/s²", Step = 0.5f, Min = 0f, Max = 12f,
 				Get = () => def.SpinRecoveryAssist, Set = v => def.SpinRecoveryAssist = v },

@@ -70,6 +70,14 @@ public static class VehicleFactory
 		var collider = root.Components.Create<BoxCollider>();
 		collider.Scale = new Vector3( def.BodySize.x, def.BodySize.y, colliderHeight ) * m;
 		collider.Center = Vector3.Up * (colliderBottom + colliderHeight * 0.5f) * m;
+		// SLICK UNDERBODY (2026-07-21 landing-arrest fix, LIVE-UNVERIFIED): when a hard landing
+		// or face hit bottoms the suspension, this chassis box makes rigid contact and the
+		// engine's Coulomb friction on that huge normal impulse eats FORWARD momentum (flight
+		// recorder: a flat 35.6 m/s landing lost 7.1 m/s in 3 ticks through exactly this path;
+		// the historical 233 G ramp wall-stops are the same mechanism). A car's underbody is
+		// smooth; tire grip lives in the wheel model, not this box. Low but nonzero so scraping
+		// still scrubs a little.
+		collider.Friction = 0.1f;
 
 		// Custom body seam: a consumer can plug in a body builder. Null (default) or a false return
 		// falls back to the primitive blockout path so a failed custom build never bricks a spawn.

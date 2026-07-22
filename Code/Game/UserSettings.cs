@@ -21,6 +21,12 @@ public class UserSettingsData
 	// Master audio volume as a 0–100 percent. Defaults to 25 — a comfortable out-of-the-box level;
 	// the Session (Tab) menu slider adjusts and persists it.
 	public int MasterVolume { get; set; } = 25;
+
+	// LIVE-UNVERIFIED (2026-07-21): the player's chosen drive mode / assist level (owner: "I want the
+	// drive mode you set to save between sessions"). ONE global value, not per-car — whichever mode
+	// the player leaves the session on greets them next boot, on whichever car they spawn into.
+	// Default Casual (existing/never-touched players keep current byte-identical behaviour).
+	public AssistLevel AssistLevel { get; set; } = AssistLevel.Casual;
 }
 
 /// <summary>
@@ -52,6 +58,13 @@ public static class UserSettings
 				try
 				{
 					_data = Json.Deserialize<UserSettingsData>( FileSystem.Data.ReadAllText( FileName ) );
+
+					// A stored AssistLevel that no longer names a real enum value (e.g. a future kit
+					// rename/removal) falls back to the default silently rather than surfacing a bogus
+					// mode — a plain int-backed enum deserializes ANY int without throwing, so this
+					// can't rely on the catch below.
+					if ( _data is not null && !Enum.IsDefined( typeof( AssistLevel ), _data.AssistLevel ) )
+						_data.AssistLevel = AssistLevel.Casual;
 				}
 				catch ( Exception e )
 				{
@@ -119,6 +132,25 @@ public static class UserSettings
 	/// 0–1 output scale). Call once at boot to apply the persisted setting, and on every change.</summary>
 	public static void ApplyMasterVolume()
 		=> Sandbox.Audio.Mixer.Master.Volume = Data.MasterVolume / 100f;
+
+	/// <summary>LIVE-UNVERIFIED (2026-07-21): the persisted global drive mode (Casual/Sport/Sim).
+	/// Set persists immediately and is a no-op if unchanged (same idiom as <see cref="SpeedUnit"/>).
+	/// <see cref="DriveModePersister"/> writes this on every live change (SessionMenu segbar or the
+	/// kit's own D-pad-up/B cycle); <see cref="GameBootstrap"/> reads it once at boot to seed the
+	/// spawned car, and <see cref="CarSwitcher"/> separately carries the LIVE session value across a
+	/// car switch (Target.Assists), so the two mechanisms stay in sync without either depending on
+	/// the other.</summary>
+	public static AssistLevel AssistLevel
+	{
+		get => Data.AssistLevel;
+		set
+		{
+			if ( Data.AssistLevel == value )
+				return;
+			Data.AssistLevel = value;
+			Flush();
+		}
+	}
 
 	/// <summary>Convert an SI speed (m/s) to the player's chosen display unit. Formatting only —
 	/// callers pass the same m/s value they'd have shown as km/h; the internal number is untouched.</summary>

@@ -11,7 +11,7 @@ public sealed class PlaygroundLayout
 /// The PLAYGROUND world: a pure STUNT PARK (build 9 redesign; jump-physics rework pass 3, 2026-07-19).
 /// No town, no buildings, no city road network — just a big flat playfield MAXED OUT with jumps of
 /// every size (small pops up to huge-air), chained rhythm lines, double-sided mound jumps, a big-air
-/// launch, a jump-onto-box, a ball pit, and a few blockout stunt extras, so it reads as a distinct map
+/// launch, a jump-onto-box, a loose ball field, and a few blockout stunt extras, so it reads as a distinct map
 /// from the proving-grounds measurement scene. Kept from the old layout: the flat ground core + outer
 /// rolling-hills terrain (<see cref="PlaygroundTerrain"/>), the banked bowl, and the perimeter wall.
 ///
@@ -60,7 +60,7 @@ public static class PlaygroundBuilder
 	static bool _terrain;
 
 	// running census (reported at the end)
-	static int _ramps, _bowlSegs, _balls, _boxes;
+	static int _ramps, _bowlSegs, _balls, _boxes, _cones;
 
 	/// <summary>Build the playground. <paramref name="terrain"/> = W4 Option B: replace the flat pad
 	/// with a gentle heightfield (structures still sit on its flat core). Default false = Option A
@@ -71,7 +71,7 @@ public static class PlaygroundBuilder
 		_root = scene.CreateObject();
 		_root.Name = "Playground";
 		_terrain = terrain;
-		_ramps = _bowlSegs = _balls = _boxes = 0;
+		_ramps = _bowlSegs = _balls = _boxes = _cones = 0;
 
 		BuildGround();
 
@@ -88,7 +88,7 @@ public static class PlaygroundBuilder
 		BuildDoubleMounds();                            // double-sided mound jumps (bidirectional)
 		BuildScatterSingles();                          // more coverage singles across the open field
 		BuildJumpOntoBox( new Vector2( 40f, -25f ) );   // launch → land on an elevated box → ramp down
-		BuildBallPit( new Vector2( 110f, 85f ) );
+		BallField( new Vector2( 110f, 85f ) );          // loose physics balls (former ball pit)
 		BuildStuntExtras();                             // tabletop, step-stairs, wall-ride
 
 		BuildBankedBowl( new Vector2( -125f, -125f ), radiusM: 34f, bankDeg: 26f );  // SW corner, clear of the ladder lanes
@@ -102,38 +102,109 @@ public static class PlaygroundBuilder
 		};
 
 		Log.Info( $"[vp] playground (stunt park) built: {_ramps} kickers, {_boxes} boxes/platforms, " +
-			$"banked bowl {_bowlSegs} segs, {_balls} balls" );
+			$"banked bowl {_bowlSegs} segs, {_balls} balls, {_cones} cones" );
 		return layout;
 	}
 
 	/// <summary>
 	/// Build the stunt content INTO the proto world (owner intent 2026-07-19: players load into the
 	/// town, drive east through the gate and spur onto the hardpack, and the stunt park is just
-	/// THERE - no world switch). Re-hosts the EXISTING feature builders (zero geometry changes,
-	/// re-layout only) in three zones on the proving-grounds hardpack (world x 500-1500,
+	/// THERE - no world switch). Three zones on the proving-grounds hardpack (world x 500-1500,
 	/// y -280..320), each zone rectangle authored with 15+ m margins from every station corridor
 	/// (skidpad, drag/brake/topspeed lane, slalom, ramps/washboard/hill lane, lowgrip, jturn,
 	/// banked curve, crash lane, spur entry). BATTERY LAW: nothing may be placed outside these
 	/// rectangles, no station moves, TestTrack.cs untouched.
-	///   NORTH BAND      x 720-1240, y 80..318   (ladder, big-air, rhythm lines, mounds)
-	///   SOUTH-EAST      x 1060-1300, y -278..-85 (bowl, wall-ride, stairs, ball pit)
+	///   NORTH BAND      x 545-1065, y 80..318   (ladder + big-air set-pieces, directional ramp rows;
+	///                   translated -175 m W of the audited x 720-1240 layout, town-adjacency shift below)
+	///   SOUTH-EAST      x 1060-1300, y -278..-85 (bowl, wall-ride, loose ball field, smooth entry mound)
 	///   SOUTH-WEST      x 505-625,  y -270..-75  (welcome zone off the spur: jumpbox, tabletop, mounds)
-	/// Footprint audit, easement revision (extents = RampKicker.GroundRunFor easement runs, ~29%
-	/// past the R(H) = max(90, 52H) law lengths at blend 0.5): every feature stays inside its
-	/// zone. Extremes: north band max x ~1226 (2.0 mound) vs 1240, big-air chain ends ~1049; SE
-	/// max x 1266 (ball pit); SW max x ~613 (jumpbox down-ramp) vs 625. Tightest spot: the (760,120) 1.0 mound's north edge
-	/// (y 123.5) is 0.5 m from the ladder 0.6-lane kicker corridor (lane y 128, width 8, edge
-	/// 124) - clear, and the lane centreline misses it by 3.6 m. FULL-BORE (46 m/s) LANDING
-	/// CORRIDORS verified clear: ladder lanes land x 860-939 on their own lanes' flat; big-air
-	/// intercepts its lengthened down-slope ~x 984; chains land flat or on the next kicker's low
-	/// face (the 11-degree faces are rollable at any landing height); mound overshoots land on
-	/// open pad (the (1200,120) east launch lands ~x 1284, off-zone but on flat hardpack clear of
-	/// the banked-curve corridor at y 175+); jumpbox/tabletop full-bore overshoots land flat
-	/// inside/just east of the SW zone at y -110/-180, feature-free rows. Rhythm spacings kept:
-	/// at the ~21.4 m/s link speed the flatter exits land 1-6 m short of the next base (better
-	/// than the old geometry, which landed on the next low face).
-	/// The playground WORLD (Build above) stays dev-only (vp_world/vp_setworld); its big-air
-	/// moved west so the law-lengthened set-piece stays inside the perimeter wall.
+	///
+	/// ROWS + PROPS + FLATNESS PASS 2026-07-21 (owner: "whatever way you're driving, top-left to
+	/// bottom-right, up and down, or across, there's a row of ramps to hit, but still some clear lanes
+	/// to drive through"; "more stuff to do"; "towards the end of the playground I fall off an edge and
+	/// the terrain is clear there"; the ball pit was "taken too literally"). Four changes:
+	///  1. NORTH BAND RE-ORGANISED INTO DIRECTIONAL ROWS. The freeform fans/singles are replaced by
+	///     three deliberate rows plus the ladder, so most headings meet a hittable ramp LINE with
+	///     documented CLEAR LANES between kickers: the west-edge LADDER (west-east), a second WEST-EAST
+	///     row at x730 (3 kickers spread in Y, faces +X), a NORTH-SOUTH row at y110 (3 kickers spread
+	///     in X, faces +Y), and a DIAGONAL row on a NE-SW line (3 kickers, faces SE / top-left to
+	///     bottom-right). Two bidirectional mounds fill the east pocket. Rows are low (h0.6-1.0) so
+	///     footprints stay short and the clear lanes stay wide; each row's lanes are named in the
+	///     BuildProtoStuntZones body. Re-audited 0-conflict (tools/layout_validate.py north_band()).
+	///  2. INTERACTIVE PROPS. Loose dynamic balls and light traffic cones (light Rigidbody bodies that
+	///     fly/tumble/bounce when hit, mass/restitution tuned for fun, sleep-enabled) are threaded
+	///     through the clear lanes: a cone slalom in the eastbound lane, ball clusters on each row's
+	///     landing flat, cone clusters at the row edges. See the props section for the perf budget.
+	///  3. BALL "PIT" -> LOOSE BALL FIELD. There was never any container geometry (BuildBallPit only
+	///     ever scattered spheres); it is now a wider, sparse sunflower scatter (BallField) a car
+	///     drives into and knocks around, plus cones. BALL ASSET CONTRACT: DynamicBall renders the
+	///     delivered models/props/kickball.vmdl when present, else the procedural red sphere.
+	///  4. FLATNESS. The "edge I fall off, terrain clear there" was the hardpack NORTH cliff (y 320)
+	///     dropping 3 m into the sunken Outskirts run-off apron right at the north band's edge (and the
+	///     symmetric SOUTH cliff behind the SE/SW zones). Fixed in Outskirts.BuildAprons: the N and S
+	///     run-offs are now GRADE fills flush with the hardpack, so the park has no edge to fall off.
+	///     The EAST cliff (TopSpeedManeuver-load-bearing) stays, 200+ m east of all stunt content.
+	///     KEPT (earned live-verification): bowl (with its NE entry-mouth escape route), wall-ride
+	///     quarter-pipe, big-air + landing mound, jumpbox, tabletop, mounds, and the five-height
+	///     calibrated LADDER (the ramp-physics measurement instrument) along the band's west edge.
+	///
+	/// GEOMETRY LAW: every kicker length comes from RampKicker.LengthFor(h) (restored MinRadiusM 90,
+	/// the "poppy" default of branch ramp-highspeed-hitch); footprints/seams use the easement run
+	/// RampKicker.GroundRunFor (~28% past the authored length at blend 0.5). No length is hardcoded,
+	/// so a future radius-law change flows through untouched.
+	///
+	/// FULL-BORE (46 m/s) LANDING-CORRIDOR + OVERLAP AUDIT (offline, tools/layout_validate.py, the
+	/// exact LengthFor/EasementCore/FlightRangeM port; every corridor = lip -> ballistic landing at
+	/// 46 m/s under 1.1 g, swept at kicker width, tested against every other feature footprint, the
+	/// banked-curve wall, the external hill-ladder ramps, and the drivable-slab bounds). RESULT:
+	/// zero corridor-into-obstacle, zero corridor-into-kicker-body, zero footprint-out-of-zone
+	/// across the 20 north-band + 3 SE kickers.
+	///   NORTH BAND (re-audited after the -175 m town-adjacency shift; tools/layout_validate.py
+	///     north_band(), still 0 issues): the ONLY external collidable obstacle in reach is the
+	///     banked-curve ring wall (x 1251-1303, y 167-227, a FIXED station - unmoved by the shift, so
+	///     the shifted band clears it by a wider margin than before); every row corridor stays west of
+	///     it on open flat. Ladder lanes (exit 4.7-11.3 deg under the 46 rating) land x 617-712 each on
+	///     its own lane's flat. WE-row-2 lands x 800-809, NS-row lands y 180-189, the diagonal row lands
+	///     SE inside the slab, and the two east mounds throw E/W to open hardpack - none crosses another
+	///     kicker's body or the banked wall. Interior arrivals land on open hardpack (props sit ON
+	///     that flat and are dynamic, so they are not obstacles for the corridor sweep). STATION
+	///     KEEP-CLEAR (added with the shift): the skidpad (world circle x640-680, y130-170) and the
+	///     drag pad (x750-1250, y33-47) are now near the band's SW; the validator's station_clear()
+	///     check confirms no kicker BODY sits in either. The h2.0 ladder lane's 46 m/s worst-case
+	///     landing (x663, y132) touches the skidpad's non-colliding ring paint - cosmetic, not a
+	///     battery conflict (no geometry there, and the skidpad maneuver never runs during free drive).
+	///   SE ZONE: the entry mound (crest 1100,-108, h1.2) throws E to (1170,-108) and W to
+	///     (1030,-108), both north of the bowl (y -166), the bowl-mouth drive-in lane (y < -120),
+	///     the wall-ride (x 1223-1257) and the external hill ramps (x 1026-1054, y < -145). The E
+	///     pop (1280,-110, N) lands (1280,-29) on open flat east of the wall-ride. Bowl NE mouth
+	///     and wall-ride ride-face approaches left clear.
+	///   SW ZONE: unchanged (owner: keep). Re-verified under floor-90: the shorter runs fit with
+	///     seams auto-flush (LengthFor/Run drive every seam), and the only launches that leave the
+	///     slab are the west-edge ones (jumpbox base + m1 east face) landing onto the DRIVABLE spur
+	///     road west of x 505, as before.
+	/// REGIME-B / FACE-LOAD SPEED RATING (round-3 feel pass, 2026-07-21 evening; LIVE-UNVERIFIED).
+	/// The owner reproduced the ramp hitch at 32 m/s WITH fps capped to the tick rate, proving the
+	/// residual is REAL rendered motion. Offline quantification (tools/ramp_bottoming_port.py) at a
+	/// 32 m/s entry on the floor-90 faces: NO bottoming anywhere (sink 36-45 mm, zero bottomed
+	/// ticks); the felt jolt is the CENTRIPETAL CROUCH - v^2/R = 11.4 m/s^2 (1.06 g on top of
+	/// gravity, about 2.1x static axle load) held for the face crossing. The only dial that lowers
+	/// face load at speed is the radius, so the fast-approach features carry a per-feature
+	/// designSpeedMs (RampKicker.RadiusFor rating):
+	///   LADDER lanes (runway-fed, the full-bore instrument): 46 m/s -> R 180, face load at 32 m/s
+	///     drops 11.4 -> 5.7 m/s^2 (sink 15-19 mm), at 46 stays inside the law margin (11.8).
+	///   BIG-AIR (runway marquee): 53 m/s -> H6 launch unchanged (52H already 312), H4.5 catch
+	///     234 -> 240 (+2.4%): near-free correctness.
+	///   SCATTER / MOUNDS / SE POP (interior arrivals): 35 m/s -> R 104. Honest note: this trims
+	///     the 32 m/s crouch only ~15% (sink 38-45 -> 32-35 mm); interior pop is kept on purpose.
+	///     If the owner still reports hitch on a specific scatter face at 70+ mph, the next notch
+	///     is 46 on that call site (one line).
+	///   SW welcome zone: unrated (0, poppy default) - spur-road approach speeds, owner: keep.
+	/// A ramp still pitches and crouches BY DESIGN at speed; the target of this rating is no harsh
+	/// jolt (load spike + deep sink), not zero motion.
+	/// LIVE-UNVERIFIED: geometry math only. An editor pass must drive the rows from several headings
+	/// (across / up-down / diagonal), confirm the clear lanes read, check that props fly/bounce and
+	/// settle, confirm the north/south park edges are now flat (no fall-off), and re-check the ladder
+	/// + big-air at full bore. The dev-only Build() world is unchanged except its ball field.
 	/// Both entries reset the shared statics, so either can run in a session without stale state.
 	/// </summary>
 	public static void BuildProtoStuntZones( Scene scene )
@@ -142,39 +213,88 @@ public static class PlaygroundBuilder
 		_root = scene.CreateObject();
 		_root.Name = "Stunt Zones";
 		_terrain = false;
-		_ramps = _bowlSegs = _balls = _boxes = 0;
+		_ramps = _bowlSegs = _balls = _boxes = _cones = 0;
 
-		// ---- north band (x 720-1240, y 80..318) ----
-		Runway( new Vector2( 730f, 176f ), new Vector2( 795f, 176f ), 14f );   // feed to the ladder lanes
-		BuildKickerLadder( new Vector2( 800f, 176f ) );
-		Runway( new Vector2( 745f, 290f ), new Vector2( 828f, 290f ), 12f );   // big-air runway
-		BuildBigAir( new Vector2( 830f, 290f ) );
-		ChainLine( new Vector2( 950f, 130f ), 1.0f, count: 4, spacingM: 36f, widthM: 7f );
-		ChainLine( new Vector2( 950f, 160f ), 0.6f, count: 3, spacingM: 25f, widthM: 7f );
-		ChainLine( new Vector2( 950f, 250f ), 2.5f, count: 3, spacingM: 56f, widthM: 9f );
-		DoubleMound( new Vector2( 760f, 120f ), 1.0f );
-		DoubleMound( new Vector2( 760f, 250f ), 1.2f );
-		DoubleMound( new Vector2( 1150f, 200f ), 1.5f );
-		DoubleMound( new Vector2( 1200f, 120f ), 2.0f );
+		// ---- NORTH BAND (x 545-1065, y 80..318): two directional set-pieces + freeform scatter ----
+		// TOWN-ADJACENCY SHIFT (owner 2026-07-21 late: "move that stuff a little closer to the city so
+		// you don't have to drive so far; I want people encouraged to just drive straight in there").
+		// The ENTIRE north band is translated -175 m in X from the audited layout (ladder base 735->560),
+		// so the first ramp now sits ~60 m from the hardpack west edge (x500) / ~40 m from the proving
+		// gantry at x520 - was ~220 m. It is a PURE X translation: every internal corridor, clear lane,
+		// and speed rating is identical to the validated layout, just moved west (re-audited 0-conflict,
+		// tools/layout_validate.py north_band()). WEST-MARGIN / BATTERY: the band's new west edge threads
+		// the fixed skidpad station (world circle x640-680, y130-170) - every ladder BODY clears it by
+		// 38+ m to the west (validator station_clear() check), and the only overlap is the h2.0 lane's
+		// 46 m/s worst-case landing touching the skidpad's NON-colliding ring paint (cosmetic; the
+		// skidpad maneuver never runs while a player free-drives the ladder). The eastbound cone slalom
+		// is nudged east into the skidpad->WE-row gap so no dynamic prop sits in the station circle.
+		// calibrated instrument: the five-height ladder, tucked along the WEST edge, its own +X lane
+		Runway( new Vector2( 515f, 132f ), new Vector2( 555f, 132f ), 14f );
+		BuildKickerLadder( new Vector2( 560f, 132f ) );
+		// directional set-piece: big-air down its own runway along the north strip
+		Runway( new Vector2( 543f, 300f ), new Vector2( 583f, 300f ), 12f );
+		BuildBigAir( new Vector2( 585f, 300f ) );
+		// ---- multi-direction RAMP ROWS (owner 2026-07-21: "whatever way you're driving, top-left to
+		// bottom-right, up and down, or across, there's a row of ramps to hit, but still some clear
+		// lanes to drive through"). Each row is a LATERAL line of kickers facing ONE drive direction
+		// with named CLEAR LANES between them; the west-edge LADDER above is the fourth row (a
+		// west-east line you meet driving east out of spawn). All ScatterDesignSpeedMs (35) rated and
+		// validated 0-conflict at full bore by tools/layout_validate.py (north_band()).
+		//
+		// WEST-EAST row 2 (drive +X, east): three kickers spread in Y, faces east. CLEAR LANES: the Y
+		// gaps centred y~128 and y~172 (~37 m wide), plus open field north of y200 and south of y100.
+		Scatter( new Vector2( 730f, 105f ), 0f, 0.8f );
+		Scatter( new Vector2( 730f, 150f ), 0f, 1.0f );
+		Scatter( new Vector2( 730f, 195f ), 0f, 0.8f );
+		// NORTH-SOUTH row (drive +Y, north): three kickers spread in X, faces north. CLEAR LANES: the X
+		// gaps centred x~890 and x~950 (~52 m wide); a northbound car threads a gap or hits a face.
+		Scatter( new Vector2( 860f, 110f ), 90f, 0.8f );
+		Scatter( new Vector2( 920f, 110f ), 90f, 1.0f );
+		Scatter( new Vector2( 980f, 110f ), 90f, 0.8f );
+		// DIAGONAL row (drive SE, top-left to bottom-right, yaw 315): three kickers on a clean NE-SW
+		// line, each faces SE. CLEAR LANES: the ~49 m perpendicular gaps between them.
+		Scatter( new Vector2( 820f, 205f ), 315f, 0.8f );
+		Scatter( new Vector2( 855f, 240f ), 315f, 1.0f );
+		Scatter( new Vector2( 890f, 275f ), 315f, 0.8f );
+		// bidirectional mounds in the open east pocket: each launches from two opposite headings with
+		// no vertical face, so E/W travel through the east half also meets a face.
+		DoubleMound( new Vector2( 1025f, 255f ), 1.2f, ScatterDesignSpeedMs );
+		DoubleMound( new Vector2( 1030f, 140f ), 1.0f, ScatterDesignSpeedMs );
 
-		// ---- south-east zone (x 1060-1300, y -278..-85) ----
+		// ---- interactive props threaded through the CLEAR LANES (owner: "more stuff to do") ----
+		// a cone slalom in the eastbound clear lane (y~128) just WEST of WE row 2: weave the cones, then
+		// hit the ramps. Nudged east (x690-722) vs the raw -175 translation so it sits in the gap EAST of
+		// the skidpad circle (x640-680) - no dynamic prop in the station. Cones are light dynamic bodies.
+		ConeSlalom( new Vector2( 690f, 128f ), new Vector2( 722f, 128f ), 5 );
+		// ball clusters on the open flat just past each row's landing zone: a launched car showers them.
+		BallCluster( new Vector2( 810f, 150f ), 5 );    // WE row 2 landing
+		BallCluster( new Vector2( 920f, 205f ), 5 );    // NS row landing
+		BallCluster( new Vector2( 945f, 200f ), 4 );    // diagonal row landing
+		// a couple of cone clusters at row edges for extra tumble targets
+		ConeCluster( new Vector2( 1055f, 200f ), 5 );   // east pocket, between the mounds
+		ConeCluster( new Vector2( 725f, 250f ), 4 );    // N-centre open flat
+
+		// ---- SOUTH-EAST ZONE (x 1060-1300, y -278..-85): bowl, wall-ride, ball pit + smooth entry ----
 		BuildBankedBowl( new Vector2( 1150f, -200f ), radiusM: 34f, bankDeg: 26f );
 		BuildWallRide( new Vector2( 1240f, -120f ) );
-		// stairs y -120 -> -95 (full-bore law pass): at -120 the stairs' eastward roll-out corridor
-		// ran dead into the wall-ride's vertical WEST END FACE 80 m on (its ride face is entered
-		// from the north, its back wedge from the south; the x-end faces are walls). At -95 the
-		// roll-out passes 14 m north of the wall-ride footprint (y -132.5..-108.8) on open pad.
-		BuildStepStairs( new Vector2( 1100f, -95f ) );
-		BuildBallPit( new Vector2( 1240f, -220f ) );
+		// step-stairs REMOVED here (the hard-angle cluster the owner flagged; see the summary). A
+		// smooth bidirectional mound takes their place at the entry; a low pop sits in the open
+		// pocket east of the wall-ride so the corner reads varied without a wall a car can meet.
+		DoubleMound( new Vector2( 1100f, -108f ), 1.2f, ScatterDesignSpeedMs );
+		Scatter( new Vector2( 1280f, -110f ), 90f, 1.0f );
+		// loose physics balls on the flat east of the bowl (former "ball pit", owner: taken too
+		// literally - no container, just balls a car punts around), plus cones for extra tumble.
+		BallField( new Vector2( 1240f, -220f ) );
+		ConeCluster( new Vector2( 1240f, -155f ), 6 );
 
-		// ---- south-west welcome zone (x 505-625, y -270..-75) ----
+		// ---- SOUTH-WEST WELCOME ZONE (x 505-625, y -270..-75): unchanged (owner: keep) ----
 		BuildJumpOntoBox( new Vector2( 505f, -110f ) );
 		BuildTabletop( new Vector2( 560f, -180f ) );
 		DoubleMound( new Vector2( 540f, -140f ), 1.0f );
 		DoubleMound( new Vector2( 600f, -230f ), 1.2f );
 
 		Log.Info( $"[vp] stunt zones built: {_ramps} kickers, {_boxes} boxes/platforms, " +
-			$"banked bowl {_bowlSegs} segs, {_balls} balls" );
+			$"banked bowl {_bowlSegs} segs, {_balls} balls, {_cones} cones" );
 	}
 
 	// ---------------------------------------------------------------- ground
@@ -208,6 +328,13 @@ public static class PlaygroundBuilder
 	/// <summary>The FIVE distinct heights laid out side by side, all launching +X, colour-coded by
 	/// height with a matching marker pylon — the "pick your height" showcase. Long open runup west of
 	/// it (the spawn apron + runway) so a car arrives with speed on any lane.</summary>
+	/// <summary>Per-feature face-load speed ratings (see the REGIME-B / FACE-LOAD paragraph in the
+	/// class doc): the fastest realistic arrival each feature class must stay smooth at. Passed to
+	/// RampKicker.LengthFor as designSpeedMs.</summary>
+	const float LadderDesignSpeedMs = 46f;   // runway-fed full-bore instrument
+	const float BigAirDesignSpeedMs = 53f;   // runway marquee; near no-op on its big radii
+	const float ScatterDesignSpeedMs = 35f;  // interior arrivals; keeps pop
+
 	static void BuildKickerLadder( Vector2 baseAtM )
 	{
 		float laneGap = 24f;                       // lateral spacing between the five lanes
@@ -216,10 +343,14 @@ public static class PlaygroundBuilder
 		{
 			float h = LadderHeights[i];
 			var at = new Vector2( baseAtM.x, baseAtM.y + y0 + i * laneGap );
-			Kicker( at, 0f, lenM: RampKicker.LengthFor( h ), widthM: 8f, heightM: h, HeightColor( h ) );
+			Kicker( at, 0f, lenM: RampKicker.LengthFor( h, LadderDesignSpeedMs ), widthM: 8f, heightM: h, HeightColor( h ) );
 			// marker pylon off to the +Y side of the lane (out of the drive path)
 			MarkerPost( new Vector2( at.x, at.y + 5.5f ), h );
 		}
+
+		// (Round-6 A/B mesh twin removed 2026-07-21: verdict landed — mesh integ ratio 1.00 vs
+		// boxes 0.31 on owner-driven runs — and ColliderMode.SolidMesh is now the RampKicker
+		// default for every kicker, so the twin was redundant. History in RampKicker's docs.)
 	}
 
 	// ---------------------------------------------------------------- chained rhythm lines
@@ -299,19 +430,21 @@ public static class PlaygroundBuilder
 		// With the 11.3-degree exit and the longer down-slope, the full-bore trajectory intercepts
 		// the falling board (~35-45 G effective); mid-speed (~26 m/s) still lands on the up-face.
 		const float launchH = 6f, moundH = 4.5f, gapM = 11f, downLenM = 55f, w = 12f;
-		float launchLen = RampKicker.LengthFor( launchH );      // authored ≈ 61 m, easement run ≈ 72 m
+		// speed-rated at 53 (BigAirDesignSpeedMs): H6 launch unchanged (52H = 312 already exceeds the
+		// rating), H4.5 catch mound 234 -> 240 (+0.6 m authored). Seams flow through Run() as always.
+		float launchLen = RampKicker.LengthFor( launchH, BigAirDesignSpeedMs );  // authored ≈ 61 m, easement run ≈ 72 m
 		float lipX = baseAtM.x + Run( launchLen, launchH );     // launch edge (REAL easement run)
-		float upLen = RampKicker.LengthFor( moundH );           // authored ≈ 46 m catch slope
+		float upLen = RampKicker.LengthFor( moundH, BigAirDesignSpeedMs );       // authored ≈ 46 m catch slope
 		float upBaseX = lipX + gapM;                            // mound starts after the clear-air gap
-		float crestX = upBaseX + Run( upLen, moundH );
 
 		// launch (car flies off this, +X)
 		Kicker( baseAtM, 0f, launchLen, w, launchH, HeightColor( launchH ) );
-		// landing mound: up-face and down-face lips COINCIDE at the crest (no exposed vertical faces).
-		// The down side runs longer than the curvature law asks so fast overshoots still
-		// meet falling ground instead of flat (full-bore intercepts it near its foot).
-		Kicker( new Vector2( upBaseX, baseAtM.y ), 0f, upLen, w, moundH, HeightColor( moundH ) );
-		Kicker( new Vector2( crestX + Run( downLenM, moundH ), baseAtM.y ), 180f, downLenM, w, moundH, HeightColor( moundH ) );
+		// landing mound as ONE merged solid (asymmetric crest: the down side runs longer than the
+		// curvature law asks so fast overshoots still meet falling ground instead of flat).
+		// Formerly two crest-mated kickers - buried-lip sunken-belly hazard, see DoubleMound's doc.
+		RampKicker.BuildCrested( _scene, _root, new Vector3( upBaseX, baseAtM.y, 0f ), 0f,
+			upLen, w, moundH, HeightColor( moundH ), StuntProfile, downLengthM: downLenM );
+		_ramps += 2;
 	}
 
 	// ---------------------------------------------------------------- double-sided mounds (bidirectional)
@@ -340,18 +473,20 @@ public static class PlaygroundBuilder
 			DoubleMound( new Vector2( p.cx, p.cy ), p.h );
 	}
 
-	/// <summary>Two equal kickers back-to-back: the +X face's lip and the −X face's lip land on the same
-	/// crest line at <paramref name="crestM"/>, so the mound's only surfaces are the two tangent-based
-	/// curved faces — no vertical face anywhere.</summary>
-	static void DoubleMound( Vector2 crestM, float heightM )
+	/// <summary>Two equal faces meeting at a crest, built as ONE merged solid
+	/// (<see cref="RampKicker.BuildCrested"/>). Formerly two back-to-back kickers whose buried
+	/// vertical lip faces met at the crest: a bottomed (regime-B) car's sunken belly caught the
+	/// opposing lip wall there — flight-recorder verdict 2026-07-21, 39.7→9.9 m/s in one tick,
+	/// contact normal (-1,0,0), on this builder's (1050,120) mound. The merged solid has no
+	/// internal faces for the belly to catch.</summary>
+	static void DoubleMound( Vector2 crestM, float heightM, float designSpeedMs = 0f )
 	{
-		float len = RampKicker.LengthFor( heightM );
-		float run = Run( len, heightM );   // easement run: the lips must still MEET at the crest
+		float len = RampKicker.LengthFor( heightM, designSpeedMs );
+		float run = Run( len, heightM );   // easement run: the faces must still MEET at the crest
 		var col = HeightColor( heightM );
-		// west face: launches +X, lip at the crest
-		Kicker( new Vector2( crestM.x - run, crestM.y ), 0f, len, 7f, heightM, col );
-		// east face: launches −X (yaw 180), lip at the crest (base = crest + run further east)
-		Kicker( new Vector2( crestM.x + run, crestM.y ), 180f, len, 7f, heightM, col );
+		RampKicker.BuildCrested( _scene, _root, new Vector3( crestM.x - run, crestM.y, 0f ), 0f,
+			len, 7f, heightM, col, StuntProfile );
+		_ramps += 2;
 	}
 
 	// ---------------------------------------------------------------- jump onto a box
@@ -421,50 +556,157 @@ public static class PlaygroundBuilder
 		Kicker( new Vector2( boxBackX + Run( downLen, boxTop ), baseAtM.y ), 180f, downLen, boxWidth, boxTop, BoxGrey );
 	}
 
-	// ---------------------------------------------------------------- ball pit
+	// ---------------------------------------------------------------- interactive props (balls + cones)
 
-	/// <summary>A scatter of large dynamic spheres in a designated field — cars punt them around. Two
-	/// sizes/colours, masses tuned so a ~1.2 t car visibly launches them (light enough to fly) without
-	/// them jittering on the ground (heavy enough to settle). Fixed table = deterministic. 12 balls.</summary>
-	static void BuildBallPit( Vector2 centreM )
+	// Prop palette + tuning. These are DYNAMIC Rigidbody props (mass-placeable perf law: budgeted
+	// count, sleep-enabled). Masses are deliberately light so a ~1.2 t car sends them flying/tumbling;
+	// a bouncy rubber surface (when the engine resolves it) gives the balls their bounce. Damping lets
+	// a punted prop settle and the physics body SLEEP when idle (default s&box sleep is not disabled).
+	static readonly Color BallRed = new( 0.85f, 0.35f, 0.30f );      // procedural-fallback ball tint (kept)
+	static readonly Color ConeOrange = new( 0.90f, 0.45f, 0.12f );   // procedural-fallback cone tint
+	const float BallBigDiaM = 2.4f, BallSmallDiaM = 1.4f;
+	const float BallBigMassKg = 40f, BallSmallMassKg = 18f;          // lighter than the old pit (45/20): more launch
+	const float ConeMassKg = 3.5f;                                    // a real-cone weight - any hit flies it
+	const float GoldenAngle = 2.39996323f;                           // deterministic sunflower scatter, no RNG
+
+	/// <summary>Loose physics balls scattered on FLAT ground - the former "ball pit" (owner 2026-07-21:
+	/// "taken too literally"; there was never any container geometry, just clustered balls). Now a wide,
+	/// sparse sunflower scatter a car drives INTO and knocks around. Deterministic (golden-angle
+	/// spiral, pure function of index). Count/spacing sized so the field reads loose, not a pile.</summary>
+	static void BallField( Vector2 centreM, int count = 14, float spacingM = 8.5f )
 	{
-		// (dx, dy) offsets in metres, big? , within a ~±26 m field
-		var slots = new (float dx, float dy, bool big)[]
+		for ( int i = 0; i < count; i++ )
 		{
-			( -22f, -14f, true ),  (  -8f,  -20f, false ), (   6f, -12f, true ),
-			(  20f, -18f, false ), (  24f,   2f, true ),   (  10f,   8f, false ),
-			(  -4f,  16f, true ),  ( -18f,   6f, false ),  ( -26f,  18f, true ),
-			(  16f,  20f, false ), (   0f,  -2f, false ),  ( -12f,  -4f, true ),
-		};
-		foreach ( var s in slots )
-		{
-			float dia = s.big ? 2.4f : 1.4f;
-			float mass = s.big ? 45f : 20f;
-			var col = s.big ? new Color( 0.85f, 0.35f, 0.30f ) : new Color( 0.30f, 0.55f, 0.80f );
-			DynamicBall( new Vector2( centreM.x + s.dx, centreM.y + s.dy ), dia, mass, col );
+			float r = spacingM * MathF.Sqrt( i + 0.5f );
+			float a = i * GoldenAngle;
+			bool big = (i % 3) == 0;
+			DynamicBall( new Vector2( centreM.x + r * MathF.Cos( a ), centreM.y + r * MathF.Sin( a ) ),
+				big ? BallBigDiaM : BallSmallDiaM, big ? BallBigMassKg : BallSmallMassKg );
 		}
 	}
 
-	static void DynamicBall( Vector2 atM, float diamM, float massKg, Color color )
+	/// <summary>A small tight cluster of balls dropped near a ramp landing zone: a launched car showers
+	/// them on touchdown, and a grounded car just plows through. Deterministic sunflower spiral.</summary>
+	static void BallCluster( Vector2 centreM, int count, float spacingM = 3.0f )
+	{
+		for ( int i = 0; i < count; i++ )
+		{
+			float r = spacingM * MathF.Sqrt( i + 0.5f );
+			float a = i * GoldenAngle;
+			bool big = (i % 3) == 0;
+			DynamicBall( new Vector2( centreM.x + r * MathF.Cos( a ), centreM.y + r * MathF.Sin( a ) ),
+				big ? BallBigDiaM : BallSmallDiaM, big ? BallBigMassKg : BallSmallMassKg );
+		}
+	}
+
+	/// <summary>BALL ASSET CONTRACT (owner 2026-07-21): render with the delivered kickball model when
+	/// present at models/props/kickball.vmdl (another agent may drop it - NOT built here), else fall
+	/// back to the procedural dev sphere with the red tint (the previous behaviour). A null/invalid
+	/// load falls straight through. Dynamic Rigidbody + rubber surface for bounce.</summary>
+	static void DynamicBall( Vector2 atM, float diamM, float massKg )
 	{
 		float radiusM = diamM * 0.5f;
 		var go = Child( "Ball" );
-		go.WorldPosition = new Vector3( atM.x, atM.y, radiusM ) * M;   // rest on the ground
-		go.LocalScale = Vector3.One * (diamM * M / 100f);             // sphere.vmdl is 100 u dia at scale 1
 
 		var renderer = go.Components.Create<ModelRenderer>();
-		renderer.MaterialOverride = Material.Load( "materials/default.vmat" );
-		renderer.Model = Model.Load( "models/dev/sphere.vmdl" );
-		renderer.Tint = color;
+		var kickball = Model.Load( "models/props/kickball.vmdl" );
+		bool hasKickball = kickball != null && !kickball.IsError && kickball.Bounds.Size.z > 0.01f;
 
 		var collider = go.Components.Create<SphereCollider>();
-		collider.Radius = 50f;   // base sphere radius in units; scales with LocalScale → radiusM
+		if ( hasKickball )
+		{
+			float scale = diamM * M / kickball.Bounds.Size.z;   // fit the model to the authored diameter
+			renderer.Model = kickball;                          // kickball vmdl carries its own material
+			go.WorldPosition = new Vector3( atM.x * M, atM.y * M, radiusM * M );
+			go.LocalScale = Vector3.One * scale;
+			collider.Radius = kickball.Bounds.Size.z * 0.5f;    // unscaled; WorldScale brings it to radiusM
+			collider.Center = kickball.Bounds.Center;
+		}
+		else
+		{
+			renderer.MaterialOverride = Material.Load( "materials/default.vmat" );
+			renderer.Model = Model.Load( "models/dev/sphere.vmdl" );
+			renderer.Tint = BallRed;
+			go.WorldPosition = new Vector3( atM.x, atM.y, radiusM ) * M;   // rest on the ground
+			go.LocalScale = Vector3.One * (diamM * M / 100f);             // sphere.vmdl is 100 u dia at scale 1
+			collider.Radius = 50f;   // base sphere radius in units; scales with LocalScale -> radiusM
+		}
+		ApplyBounce( collider );
 
 		var rb = go.Components.Create<Rigidbody>();
 		rb.MassOverride = massKg;
 		rb.LinearDamping = 0.2f;
 		rb.AngularDamping = 0.4f;
 		_balls++;
+	}
+
+	/// <summary>A line of traffic cones (a slalom to weave, owner: "more stuff to do"). Evenly spaced
+	/// from -&gt; to. Cones are light dynamic bodies, so clipping one just punts it out of the lane.</summary>
+	static void ConeSlalom( Vector2 fromM, Vector2 toM, int count )
+	{
+		for ( int i = 0; i < count; i++ )
+		{
+			float t = count <= 1 ? 0f : i / (float)(count - 1);
+			DynamicCone( Vector2.Lerp( fromM, toM, t ) );
+		}
+	}
+
+	/// <summary>A small sunflower cluster of cones (tumble targets near a ramp). Deterministic.</summary>
+	static void ConeCluster( Vector2 centreM, int count, float spacingM = 3.5f )
+	{
+		for ( int i = 0; i < count; i++ )
+		{
+			float r = spacingM * MathF.Sqrt( i + 0.5f );
+			float a = i * GoldenAngle;
+			DynamicCone( new Vector2( centreM.x + r * MathF.Cos( a ), centreM.y + r * MathF.Sin( a ) ) );
+		}
+	}
+
+	/// <summary>One dynamic traffic cone: the existing flat-shaded cone model (models/city/cone.vmdl,
+	/// already shipped for the slalom station) when present, else a simple procedural orange blockout
+	/// (the "procedural cone/wedge prop" fallback). Light Rigidbody so any car sends it flying.</summary>
+	static void DynamicCone( Vector2 atM )
+	{
+		var model = Model.Load( "models/city/cone.vmdl" );
+		bool hasCone = model != null && !model.IsError && model.Bounds.Size.z > 0.01f;
+		GameObject go;
+		if ( hasCone )
+		{
+			const float coneHeightMeters = 0.7f;
+			float scale = coneHeightMeters * M / model.Bounds.Size.z;
+			go = Child( "Cone" );
+			go.WorldPosition = new Vector3( atM.x * M, atM.y * M, -model.Bounds.Mins.z * scale );
+			go.LocalScale = Vector3.One * scale;
+			var renderer = go.Components.Create<ModelRenderer>();
+			renderer.Model = model;   // cone vmdl carries its own orange/white flat materials
+			var collider = go.Components.Create<BoxCollider>();
+			collider.Scale = model.Bounds.Size;
+			collider.Center = model.Bounds.Center;
+		}
+		else
+		{
+			// procedural fallback: a squat orange box standing in for the cone
+			go = Block( new Vector3( atM.x, atM.y, 0.6f ) * M, new Vector3( 0.5f, 0.5f, 1.2f ), ConeOrange, name: "Cone" );
+			var col = go.Components.Get<BoxCollider>();
+			if ( col.IsValid() )
+				col.Static = false;   // Block makes static colliders; a cone must be dynamic
+		}
+
+		var rb = go.Components.Create<Rigidbody>();
+		rb.MassOverride = ConeMassKg;
+		rb.LinearDamping = 0.5f;
+		rb.AngularDamping = 0.5f;
+		go.Tags.Add( "cone" );   // PropEjector's query tag: cones fling out of the car's danger volume
+		_cones++;
+	}
+
+	/// <summary>Give a prop collider a bouncy rubber surface so hits visibly bounce (best-effort: if the
+	/// engine cannot resolve the surface the prop still tumbles as a light dynamic body).</summary>
+	static void ApplyBounce( Collider collider )
+	{
+		var rubber = Surface.FindByName( "rubber" );
+		if ( rubber != null )
+			collider.Surface = rubber;
 	}
 
 	// ---------------------------------------------------------------- stunt extras
@@ -484,14 +726,17 @@ public static class PlaygroundBuilder
 	/// deck seam flush because the lip height still equals deckTop.</summary>
 	static void BuildTabletop( Vector2 centreM )
 	{
+		// ONE merged solid (up-face + deck + down-face) since 2026-07-21: the old up-kicker +
+		// deck Block + down-kicker trio buried two vertical lip faces at the deck seams, the
+		// same sunken-belly wall-stop hazard as DoubleMound's crest (see that builder's doc).
 		const float deckHalf = 7f, deckTop = 1.4f, w = 9f;
 		float kickLen = RampKicker.LengthFor( deckTop );
 		float kickRun = Run( kickLen, deckTop );   // easement run keeps the deck seams flush
-		Kicker( new Vector2( centreM.x - deckHalf - kickRun, centreM.y ), 0f, kickLen, w, deckTop, RampGrey );
-		Block( new Vector3( centreM.x, centreM.y, deckTop * 0.5f ) * M,
-			new Vector3( deckHalf * 2f, w, deckTop ), RampGrey, name: "TabletopDeck" );
+		RampKicker.BuildCrested( _scene, _root,
+			new Vector3( centreM.x - deckHalf - kickRun, centreM.y, 0f ), 0f,
+			kickLen, w, deckTop, RampGrey, StuntProfile, deckM: deckHalf * 2f );
+		_ramps += 2;
 		_boxes++;
-		Kicker( new Vector2( centreM.x + deckHalf + kickRun, centreM.y ), 180f, kickLen, w, deckTop, RampGrey );
 	}
 
 	/// <summary>A staircase with a centre RIDE BOARD: the 0.5 m steps themselves are NOT climbable at
@@ -692,6 +937,15 @@ public static class PlaygroundBuilder
 	/// runs ~29% longer than the authored law length (blend 0.5). Chained placements (deck seams,
 	/// mound crests, gap lips, down-ramp bases) must use this, never the authored length.</summary>
 	static float Run( float lenM, float hM ) => RampKicker.GroundRunFor( lenM, hM, StuntProfile );
+
+	/// <summary>A scatter single: one launch kicker at a chosen heading and height, length from the
+	/// curvature law (RampKicker.LengthFor, so a law change flows through). Colour-coded by height.
+	/// The freeform-scatter form of the orientation law - each faces its own way for multi-directional
+	/// coverage; its full-bore landing corridor is validated clear in BuildProtoStuntZones' audit.</summary>
+	/// <summary>Proto-park coverage single, speed-rated at <see cref="ScatterDesignSpeedMs"/>
+	/// (interior arrivals; see the FACE-LOAD paragraph in the class doc).</summary>
+	static void Scatter( Vector2 baseAtM, float yawDeg, float heightM, float widthM = 8f )
+		=> Kicker( baseAtM, yawDeg, RampKicker.LengthFor( heightM, ScatterDesignSpeedMs ), widthM, heightM, HeightColor( heightM ) );
 
 	/// <summary>Place a curved solid launch kicker (base tangent to grade → no lip; collision follows
 	/// the curved face; closed underside → no drive-under gap).</summary>

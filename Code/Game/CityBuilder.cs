@@ -136,8 +136,15 @@ public static class CityBuilder
 		BuildCrosswalks();
 		BuildStreetlights();
 
-		// spawn: the central intersection, facing east down the main avenue
-		layout.SpawnPosition = new Vector3( 0f, 0f, 0f );
+		// RELEASE SPAWN (owner 2026-07-21 late: "spawn in the town but one block closer to the stunt
+		// park than the central intersection, facing the park, so the natural first drive is straight
+		// into it"). The two main avenues cross at the origin (the central intersection: i=5 gives
+		// x = Origin + i*Cell + RoadWidth*0.5 = -235 + 5*46 + 5 = 0). One block east toward the park is
+		// i=6 -> x = -235 + 6*46 + 5 = +Cell = 46 m. So the car sits on the E-W avenue one block east of
+		// centre, Identity facing +X = east, pointed straight down the avenue at the east gate and the
+		// stunt park beyond. This REPLACES the (600,170) ramp-test spawn and clears the old "reset spawn
+		// into the town" pre-deploy item (docs/PRE-DEPLOY-NOTES.md item 2).
+		layout.SpawnPosition = new Vector3( Origin + 6f * Cell + RoadWidth * 0.5f, 0f, 0f );
 		layout.SpawnFacing = Rotation.Identity;
 
 		Log.Info( $"[vp] city built: {GridBlocks}x{GridBlocks} blocks, {Total:F0}m span" );
