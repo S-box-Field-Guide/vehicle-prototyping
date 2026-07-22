@@ -213,6 +213,9 @@ VehicleHud {
 				pointer-events: all; // only the Hide/Show chip is clickable
 				cursor: pointer;
 				padding: 4px 6px;
+				// cancel the hover-pill padding so this row's keycap lines up with the
+				// unpadded rows above (the H chip sat 6px right / 4px low without this)
+				margin: -4px -6px;
 				border-radius: 8px;
 				transition: background-color 0.12s ease;
 				&:hover { background-color: rgba( 74, 217, 242, 0.12 ); }
