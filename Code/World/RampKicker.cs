@@ -63,8 +63,13 @@ public static class RampKicker
 	/// ZERO collision events on any car collider — the signature of event-silent speculative
 	/// contact clamping against the segment boxes' internal faces. A single mesh has no internal
 	/// faces along the drivable surface; the map terrain already drives clean on AddCollisionMesh
-	/// (flat-ground integration is exact to 1 mm in the same captures). Default stays SegmentBoxes
-	/// until the A/B verdict; the mesh twin lives beside the 2.0 ladder lane.</summary>
+	/// (flat-ground integration is exact to 1 mm in the same captures).
+	/// A/B VERDICT (live, 2026-07-21 21:17 capture, owner-driven): mesh twin at 33 m/s integrated
+	/// at ratio 1.00 mean / 1.00 min over the full face; a segment-box kicker at 44 m/s ratio 0.31
+	/// mean / 0.11 min (the felt hitch). SolidMesh is now the DEFAULT and shipped architecture;
+	/// SegmentBoxes is retained for reference/regression only. NOTE: the box architecture's own
+	/// doc (below) fixed the 2026-07 thin-SHELL failures, which this closed solid does not share
+	/// (owner-driven twin run: shapecast suspension smooth through the climb, clean launch).</summary>
 	public enum ColliderMode { SegmentBoxes, SolidMesh }
 
 	/// <summary>Collider/facet resolution for easement kickers: one segment per ~this many metres
@@ -212,7 +217,7 @@ public static class RampKicker
 	public static GameObject Build( Scene scene, GameObject parent, Vector3 atM, float yawDeg,
 		float lengthM, float widthM, float heightM, Color color,
 		RampProfile profile = RampProfile.Arc, int segments = 16,
-		ColliderMode colliderMode = ColliderMode.SegmentBoxes )
+		ColliderMode colliderMode = ColliderMode.SolidMesh )
 	{
 		Vector2[] prof;
 		if ( profile == RampProfile.Easement )
