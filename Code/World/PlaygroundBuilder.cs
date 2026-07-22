@@ -297,6 +297,24 @@ public static class PlaygroundBuilder
 			// marker pylon off to the +Y side of the lane (out of the drive path)
 			MarkerPost( new Vector2( at.x, at.y + 5.5f ), h );
 		}
+
+		// A/B INSTRUMENT (ramp-hitch hunt round 6, 2026-07-21): a MESH-COLLIDER twin of the
+		// centre 2.0 m lane, 12 m north of it (spans y +8..+16, clear of the lane kickers at
+		// gap 24 and of the +5.5 pylons). Identical profile/dims; only the collider architecture
+		// differs (one closed AddCollisionMesh solid vs the segmented convex boxes). Flight
+		// recorder verdict: if the ratchet (0.63/0.23 m per-tick alternation, 40-70% displacement
+		// deficit, seam-locked) vanishes on this twin, the segment boxes' internal faces are the
+		// confirmed thief and SolidMesh becomes the shipped architecture. Magenta so nobody
+		// mistakes it for a calibrated ladder lane. Remove after the verdict.
+		{
+			const float twinH = 2.0f;
+			var twinAt = new Vector2( baseAtM.x, baseAtM.y + 12f );
+			RampKicker.Build( _scene, _root, new Vector3( twinAt.x, twinAt.y, 0f ), 0f,
+				RampKicker.LengthFor( twinH, LadderDesignSpeedMs ), 8f, twinH,
+				new Color( 1f, 0.2f, 0.9f ), StuntProfile,
+				colliderMode: RampKicker.ColliderMode.SolidMesh );
+			_ramps++;
+		}
 	}
 
 	// ---------------------------------------------------------------- chained rhythm lines

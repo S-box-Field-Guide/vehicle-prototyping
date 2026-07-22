@@ -53,6 +53,20 @@ public static class RampKicker
 	/// footprints in-zone). Higher = smoother onset but longer/tighter tail; 0.5 is the kept value.</summary>
 	public const float EasementBlend = 0.5f;
 
+	/// <summary>Collider architecture selection (ramp-hitch hunt round 6, 2026-07-21, A/B
+	/// instrument). SegmentBoxes = the shipped stack of overlapping convex boxes. SolidMesh = ONE
+	/// closed triangle-mesh collider built from the SAME closed solid as the render mesh (top,
+	/// skirts, underside, lip — not the historical open thin SHELL that motivated the boxes).
+	/// WHY: flight-recorder v2 telemetry shows the physics body's per-tick advance RATCHETING on
+	/// the face (0.63/0.23 m alternation at 35 m/s, 40-70% displacement deficit vs velocity·dt,
+	/// stall events spatially locked to the ~0.7 m segment pitch) with velocity glassy-smooth and
+	/// ZERO collision events on any car collider — the signature of event-silent speculative
+	/// contact clamping against the segment boxes' internal faces. A single mesh has no internal
+	/// faces along the drivable surface; the map terrain already drives clean on AddCollisionMesh
+	/// (flat-ground integration is exact to 1 mm in the same captures). Default stays SegmentBoxes
+	/// until the A/B verdict; the mesh twin lives beside the 2.0 ladder lane.</summary>
+	public enum ColliderMode { SegmentBoxes, SolidMesh }
+
 	/// <summary>Collider/facet resolution for easement kickers: one segment per ~this many metres
 	/// of run (finer facets matter at 46 m/s, where an arc-16 facet joint arrives every ~28 ms),
 	/// hard-capped at <see cref="MaxSegments"/>.</summary>
@@ -197,7 +211,8 @@ public static class RampKicker
 	/// Returns the placed GameObject.</summary>
 	public static GameObject Build( Scene scene, GameObject parent, Vector3 atM, float yawDeg,
 		float lengthM, float widthM, float heightM, Color color,
-		RampProfile profile = RampProfile.Arc, int segments = 16 )
+		RampProfile profile = RampProfile.Arc, int segments = 16,
+		ColliderMode colliderMode = ColliderMode.SegmentBoxes )
 	{
 		Vector2[] prof;
 		if ( profile == RampProfile.Easement )
@@ -213,10 +228,10 @@ public static class RampKicker
 			int segs = System.Math.Max( 3, segments );
 			prof = Profile( lengthM, heightM, segs );
 		}
-		var model = BuildRenderModel( prof, widthM );
+		var model = BuildRenderModel( prof, widthM, withCollision: colliderMode == ColliderMode.SolidMesh );
 
 		var go = scene.CreateObject();
-		go.Name = "Kicker";
+		go.Name = colliderMode == ColliderMode.SolidMesh ? "Kicker (mesh)" : "Kicker";
 		go.SetParent( parent, true );
 		go.WorldPosition = atM * M;
 		go.WorldRotation = Rotation.FromYaw( yawDeg );
@@ -225,7 +240,20 @@ public static class RampKicker
 		renderer.Model = model;
 		renderer.Tint = color;
 
-		BuildSegmentColliders( go, prof, widthM );
+		if ( colliderMode == ColliderMode.SolidMesh )
+		{
+			// ONE closed solid mesh collider: no internal faces anywhere near the drivable
+			// surface, so there is nothing for speculative narrowphase to clamp against. Built
+			// from the exact same closed geometry the renderer shows (top + skirts + underside +
+			// lip), NOT the historical open shell.
+			var collider = go.Components.Create<ModelCollider>();
+			collider.Model = model;
+			collider.Static = true;
+		}
+		else
+		{
+			BuildSegmentColliders( go, prof, widthM );
+		}
 
 		go.Tags.Add( "road" );   // wheels treat the curved face as drivable ground
 		return go;
@@ -328,10 +356,12 @@ public static class RampKicker
 
 	// ---------------------------------------------------------------- render mesh (visual only)
 
-	/// <summary>Mesh the closed curved-kicker solid for RENDER (no collision — see
-	/// <see cref="BuildSegmentColliders"/>). Top curved surface, two side skirts down to grade, a flat
-	/// underside and the vertical back lip, wound so every face points outward via the self-check.</summary>
-	static Model BuildRenderModel( Vector2[] prof, float W )
+	/// <summary>Mesh the closed curved-kicker solid. Top curved surface, two side skirts down to
+	/// grade, a flat underside and the vertical back lip, wound so every face points outward via the
+	/// self-check. <paramref name="withCollision"/> additionally bakes the SAME closed solid as a
+	/// triangle collision mesh (<see cref="ColliderMode.SolidMesh"/>); false = render-only, collision
+	/// comes from <see cref="BuildSegmentColliders"/>.</summary>
+	static Model BuildRenderModel( Vector2[] prof, float W, bool withCollision = false )
 	{
 		int segs = prof.Length - 1;
 		float hw = W * 0.5f;
@@ -390,6 +420,9 @@ public static class RampKicker
 		mesh.CreateIndexBuffer( idx.Length, idx );
 		mesh.Bounds = BBox.FromPoints( positions );
 
-		return Model.Builder.AddMesh( mesh ).Create();
+		var builder = Model.Builder.AddMesh( mesh );
+		if ( withCollision )
+			builder = builder.AddCollisionMesh( positions.ToArray(), idx );
+		return builder.Create();
 	}
 }
