@@ -26,7 +26,7 @@ are in `docs/baseline-metrics.md`; the target bands are in `docs/handling-target
 
 ## 1. Vehicle physics core
 
-Evidence: `Code/Vehicle/` (`VehicleController`, `VehicleWheel`, `CarDefinition`, `TireCurve`, `Drivetrain`).
+Evidence: `Libraries/fieldguide.vehiclephysics/Code/` (`VehicleController`, `VehicleWheel`, `CarDefinition`, `TireCurve`, `Drivetrain`).
 
 | Feature | Designed | Implemented | Integrated | In band / tested | Notes |
 |---|:-:|:-:|:-:|:-:|---|
@@ -40,7 +40,7 @@ Evidence: `Code/Vehicle/` (`VehicleController`, `VehicleWheel`, `CarDefinition`,
 
 ## 2. Roster - four cars
 
-Evidence: `Code/Vehicle/CarDefinition.cs`, `Code/Game/CarSwitcher.cs`.
+Evidence: `Code/Vehicle/CarRoster.cs`, `Libraries/fieldguide.vehiclephysics/Code/CarDefinition.cs`, `Code/Game/CarSwitcher.cs`.
 
 | Car | Designed | Implemented | Integrated | In band / tested | Notes |
 |---|:-:|:-:|:-:|:-:|---|
@@ -73,7 +73,7 @@ Evidence: `Code/UI/` (Razor + scss).
 | World & terrain panel (M) | G | G | - | Retired from the player build (stunt zones merged into the main world); the gate (`GameBootstrap.WorldSwitchEnabled`) stays off. Dev world switching via `vp_setworld`. |
 | Tuning panel (T - live physics dials) | G | G | G | Writes onto the running car; reset control. |
 | Telemetry overlay (L) | G | G | G | Live traces from the ring buffer. Letter key — F1-F12 are host-captured (was F4, dead in the published client). |
-| Engine audio (shared placeholder loop, RPM-pitched) | Y | G | G | One 3D positional loop per car, pitch from idle-to-redline RPM, volume swells with throttle. Placeholder shared tone, not a layered engine model; three candidate loops + `vp_engine_sound` / `vp_engine_volume` console dials. `Code/Vehicle/EngineAudio.cs`. |
+| Engine audio (shared placeholder loop, RPM-pitched) | Y | G | G | One 3D positional loop per car, pitch from idle-to-redline RPM, volume swells with throttle. Placeholder shared tone, not a layered engine model; three candidate loops + `vp_engine_sound` / `vp_engine_volume` console dials. `Libraries/fieldguide.vehiclephysics/Code/EngineAudio.cs`. |
 
 ## 5. The maneuver battery
 
@@ -124,7 +124,7 @@ traced to a cause in `docs/baseline-metrics.md`.
 
 ## 7. Controllers
 
-Evidence: `Code/Vehicle/VehicleController.cs`, `ProjectSettings/Input.config`.
+Evidence: `Libraries/fieldguide.vehiclephysics/Code/VehicleController.cs`, `Libraries/fieldguide.vehiclephysics/Code/DriveInputs.cs`, `ProjectSettings/Input.config`.
 
 | Feature | Designed | Implemented | Integrated | Notes |
 |---|:-:|:-:|:-:|---|

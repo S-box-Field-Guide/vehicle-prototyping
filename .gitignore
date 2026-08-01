@@ -58,3 +58,7 @@ logs/
 # OS junk
 Thumbs.db
 desktop.ini
+
+# Pending owner curation, never auto-add
+docs/perf-baseline.md
+docs/assist-matrix.md

@@ -178,8 +178,8 @@ parts/colliders dominates, and 16 parts is the real budget line we sit exactly o
 | contact sheet | `docs/images/pickup_kit_contact.png` (13 meshes framed) | ✅ |
 | pickup spawns + assembles 12/12 body parts | live, BOTH spawn paths: `vp_spawn_kit dragstrip pickup` AND the pilot's own `vp_drive {car:"pickup", station:"dragstrip"}` (new ResolveCar arm) | ✅ `12/12 parts, seatZ=0.888m` (= predicted equilibrium) + `AUDIT partkit_bounds offenders=0` on both |
 | facing (frame lesson: asymmetric-feature check) | front34: grille bars + `light_f` headlights + chrome bumper + tow hooks at +X; rear34: tailgate band, red taillights, step bumper at −X | ✅ |
-| screenshots front34 / rear34 / side | `screenshots/m4b/m4b_pickup_front34.png`, `m4b_pickup_rear34.png`, `m4b_pickup_side_profile.png` (names checked against content) | ✅ |
-| city drive chase shot | `screenshots/m4b/m4b_pickup_city_chase.png` — truck IN MOTION down the city street (route op is still a stub; used a short in-place launch for movement) | ✅ |
+| screenshots front34 / rear34 / side | captured locally (not tracked here); names checked against content. Reproduce with the recipe below | ✅ |
+| city drive chase shot | captured locally: truck IN MOTION down the city street (route op is still a stub; used a short in-place launch for movement) | ✅ |
 | launch telemetry | run below | ✅ healthy |
 | doors/hood/tailgate hinge MOTION | Stage C concern (mounted rigid; axes + signs recorded, tailgate open_sign flagged for visual verify) | ⛔ Stage C |
 

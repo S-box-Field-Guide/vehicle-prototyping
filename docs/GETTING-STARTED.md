@@ -57,8 +57,8 @@ The gamepad tier is analog and ships wired out of the box:
 | `X` | Reset / respawn the car |
 
 Steering rides the left-stick axis directly, with a small deadzone and a response curve so the
-center is fine and full lock is still reachable. See `Code/Vehicle/VehicleController.cs`
-(`SampleGamepad` / `ApplyGamepadSteerCurve`) if you want to tune the feel.
+center is fine and full lock is still reachable. See `Libraries/fieldguide.vehiclephysics/Code/DriveInputs.cs`
+(`SampleDeviceInputs` / `ApplyGamepadSteerCurve`) if you want to tune the feel.
 
 ---
 
@@ -104,11 +104,12 @@ Press `T` for the live **Tuning panel**. Its sliders write directly onto the run
 physics - engine torque, tire-curve peaks, suspension, brake torque, the assist dials, and more -
 so you can feel a change immediately without a recompile. There is a reset control to return to
 the car's authored definition. The authored values themselves live in
-`Code/Vehicle/CarDefinition.cs`.
+`Libraries/fieldguide.vehiclephysics/Code/CarDefinition.cs`, and the per-car roster values in
+`Code/Vehicle/CarRoster.cs`.
 
 ### Engine audio
 
-Every car plays a shared placeholder engine loop (`Code/Vehicle/EngineAudio.cs`): one 3D positional
+Every car plays a shared placeholder engine loop (`Libraries/fieldguide.vehiclephysics/Code/EngineAudio.cs`): one 3D positional
 tone that follows the car, pitched by the live engine RPM (each car's idle-to-redline band maps onto
 roughly 0.8x-2.0x pitch) and swelled by throttle so you can hear lift-off. It is a stand-in for a
 proper layered engine model, not a finished audio system. Two console dials tune it live:
@@ -158,7 +159,8 @@ per-class target bands are in `docs/handling-targets.md`.
 
 | Path | What lives there |
 |---|---|
-| `Code/Vehicle/` | The physics core - raycast-wheel suspension, slip-curve tires, drivetrain, assists (`VehicleController`, `VehicleWheel`, `CarDefinition`, `TireCurve`), plus the multi-part assembly under `Code/Vehicle/Parts/`. |
+| `Libraries/fieldguide.vehiclephysics/Code/` | The physics core, vendored as a kit - raycast-wheel suspension, slip-curve tires, drivetrain, assists (`VehicleController`, `VehicleWheel`, `CarDefinition`, `TireCurve`). |
+| `Code/Vehicle/` | The game's car roster (`CarRoster.cs`) plus the multi-part assembly under `Code/Vehicle/Parts/`. |
 | `Code/Testing/` + `Editor/VpTools.cs` | The playtest harness: the scripted maneuvers (`Code/Testing/Maneuvers/`), the play-mode pilot that injects inputs, the command/report bridge, and the `vp_*` editor tools the Python runner calls. |
 | `Code/World/` + `Code/Game/` | World construction (test track, playground, terrain) and the bootstrap that builds everything on Play. |
 | `Code/UI/` | All Razor + scss panels: drive HUD, tuning panel, telemetry, session menu, and the world / help overlays. |

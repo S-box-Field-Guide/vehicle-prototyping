@@ -51,7 +51,7 @@ speed wherever it binds.
 ## Tuned final state (2026-07-12, battery run 4)
 
 Four cars × 7 maneuvers, after tuning iterations 1/2a/2b (dials in
-`Code/Vehicle/CarDefinition.cs` carry per-change comments). Telemetry
+`Code/Vehicle/CarRoster.cs` carry per-change comments). Telemetry
 authority fixes landed first (jump family gated on real ground contact; status error/done
 split; ABS constants promoted to per-car dials). The proving-ground surface
 is the engine-default **friction 0.80** with no override mechanism; tire-curve coefficients
@@ -757,10 +757,10 @@ other car/maneuver shares a changed code path. Confirmed live:
 No previously-green row regressed. Reds shown in the brake/launch runs (brake kart/pickup, launch
 hatch/coupe/kart wheelspin) are all pre-existing documented/feel-pending reds, unchanged.
 
-## Kart profile re-anchor after the omega-clamp physics fix (2026-07-18, owner call: re-anchor)
+## Kart profile re-anchor after the omega-clamp physics fix (2026-07-18)
 
 Physics context: master 525c700 lands the per-substep drive-side wheel omega clamp (the
-high-PeakTorque wobble fix). Two kart rows interacted with it; owner chose RE-ANCHOR over clamp
+high-PeakTorque wobble fix). Two kart rows interacted with it; the call was RE-ANCHOR over clamp
 revision. Engine 26.07.15a, editor MCP 7274, measurements on the loaded fix build.
 
 ### Kart jturn: re-anchored to measured (spec `specs/maneuvers/jturn.json` kart row)
@@ -818,7 +818,7 @@ byte-identical unless they enter the pathological state.
 Physics context: the kit's standstill fix (parking blend now anchors wheel omega to
 vLong/Radius by the same blend; kit commit chain through the camera-seam hardening,
 vp master 919c096 sync). Engine 26.07.15a, editor MCP 7276, full battery via
-tools/vp_test.py --all. Artifacts: artifacts/battery-omega-fix-919c096/.
+tools/vp_test.py --all. Raw run output was kept locally and is not part of this repo.
 
 VERDICT: GATE PASS. Zero verdict flips against battery-baseline-da37616 on every
 row that is stable across both baseline runs; all FAILs in the run are the

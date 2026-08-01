@@ -69,7 +69,7 @@ Manifest fields, verdict:
   size-only and unaffected.
 - `frames.chassis_local` ("nose points local −Y; +90° yaw") — wrong on both counts.
 
-The instructive failure (screenshot pair in `screenshots/m4/`): the first landing used the
+The instructive failure (captured as a before/after screenshot pair during local verification): the first landing used the
 older negated import formula (`AuthorToLocal=(bY,−bX,bZ)` + yaw +90). Because that is exactly
 180° off the truth in BOTH the conversion and the yaw, **every part's pivot POSITION came out
 world-correct while every MESH sat 180°-spun in place** — taillights facing forward, doors
@@ -214,10 +214,10 @@ by calling `CarDefinitions.HatchKit`; spawning through the pilot additionally ne
 | doors/hood/trunk hinge MOTION | swing about manifest axes | ⛔ not exercised (Stage A mounts them rigid; axes recorded) |
 | packaged-build loose-json read | shipped build | ⛔ packaging question |
 
-Screenshots (`screenshots/m4/`): `m4_kit_at_dragstrip_editor.png`, `m4_kit_front34.png`,
-`m4_kit_rear34.png`, `m4_kit_side_profile.png`, `m4_kit_game_chase.png`,
-`m4_kit_in_city_chase.png`, plus the frame-bug evidence pair
-`m4_frame_bug_v1_taillights_at_plusx.png` / `m4_frame_fix_v2_nose_at_plusx.png`.
+Visual verification was captured locally (not tracked in this repo): the kit at the dragstrip in
+the editor, front-three-quarter, rear-three-quarter, side profile, an in-game chase shot and a
+city chase shot, plus the frame-bug before/after pair (taillights at +X, then nose at +X).
+The recheck recipe below reproduces them.
 
 Ready-to-run recheck (editor MCP on 7290):
 ```
@@ -261,7 +261,7 @@ Stage-A loader honoured the "a broken manifest must never brick a spawn — fall
 fused/blockout" contract only in the happy path. Two holes were closed; the fallback promise now
 holds against partial assets AND malformed-but-parseable manifests. Files touched:
 `Code/Vehicle/Parts/PartKitManifest.cs`, `Code/Vehicle/Parts/PartKitAssembler.cs`,
-`Code/Vehicle/VehicleFactory.cs`, plus a new offline gate `tools/test_partkit.py` +
+`Libraries/fieldguide.vehiclephysics/Code/VehicleFactory.cs`, plus a new offline gate `tools/test_partkit.py` +
 `tools/fixtures/partkit/*.json`.
 
 ### 11.1 Transactional body assembly (was: partial loads accepted)

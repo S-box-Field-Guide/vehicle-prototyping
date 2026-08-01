@@ -7,7 +7,7 @@ dials/code until each roster car lands inside its band; per the revision rule at
 of this doc, any band that turns out wrong gets edited with a reason, never silently ignored.
 
 Roster (actual figures from
-`Code/Vehicle/CarDefinition.cs`, which supersede the rounder class-reference approximations in the
+`Code/Vehicle/CarRoster.cs`, which supersede the rounder class-reference approximations in the
 prose):
 
 | Class | Layout | Mass | Real-world analog |
