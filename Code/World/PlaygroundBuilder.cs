@@ -107,7 +107,7 @@ public static class PlaygroundBuilder
 	}
 
 	/// <summary>
-	/// Build the stunt content INTO the proto world (owner intent 2026-07-19: players load into the
+	/// Build the stunt content INTO the proto world (2026-07-19 design intent: players load into the
 	/// town, drive east through the gate and spur onto the hardpack, and the stunt park is just
 	/// THERE - no world switch). Three zones on the proving-grounds hardpack (world x 500-1500,
 	/// y -280..320), each zone rectangle authored with 15+ m margins from every station corridor
@@ -119,10 +119,10 @@ public static class PlaygroundBuilder
 	///   SOUTH-EAST      x 1060-1300, y -278..-85 (bowl, wall-ride, loose ball field, smooth entry mound)
 	///   SOUTH-WEST      x 505-625,  y -270..-75  (welcome zone off the spur: jumpbox, tabletop, mounds)
 	///
-	/// ROWS + PROPS + FLATNESS PASS 2026-07-21 (owner: "whatever way you're driving, top-left to
-	/// bottom-right, up and down, or across, there's a row of ramps to hit, but still some clear lanes
-	/// to drive through"; "more stuff to do"; "towards the end of the playground I fall off an edge and
-	/// the terrain is clear there"; the ball pit was "taken too literally"). Four changes:
+	/// ROWS + PROPS + FLATNESS PASS 2026-07-21. Goals: whatever heading you drive (top-left to
+	/// bottom-right, up and down, or across) there is a row of ramps to hit, with clear lanes left
+	/// between them; more interactive content to play with; no park edge to fall off; and the ball
+	/// field reads as a loose scatter rather than a literal pit. Four changes:
 	///  1. NORTH BAND RE-ORGANISED INTO DIRECTIONAL ROWS. The freeform fans/singles are replaced by
 	///     three deliberate rows plus the ladder, so most headings meet a hittable ramp LINE with
 	///     documented CLEAR LANES between kickers: the west-edge LADDER (west-east), a second WEST-EAST
@@ -139,7 +139,7 @@ public static class PlaygroundBuilder
 	///     ever scattered spheres); it is now a wider, sparse sunflower scatter (BallField) a car
 	///     drives into and knocks around, plus cones. BALL ASSET CONTRACT: DynamicBall renders the
 	///     delivered models/props/kickball.vmdl when present, else the procedural red sphere.
-	///  4. FLATNESS. The "edge I fall off, terrain clear there" was the hardpack NORTH cliff (y 320)
+	///  4. FLATNESS. The fall-off edge on otherwise clear terrain was the hardpack NORTH cliff (y 320)
 	///     dropping 3 m into the sunken Outskirts run-off apron right at the north band's edge (and the
 	///     symmetric SOUTH cliff behind the SE/SW zones). Fixed in Outskirts.BuildAprons: the N and S
 	///     run-offs are now GRADE fills flush with the hardpack, so the park has no edge to fall off.
@@ -178,12 +178,12 @@ public static class PlaygroundBuilder
 	///     the wall-ride (x 1223-1257) and the external hill ramps (x 1026-1054, y < -145). The E
 	///     pop (1280,-110, N) lands (1280,-29) on open flat east of the wall-ride. Bowl NE mouth
 	///     and wall-ride ride-face approaches left clear.
-	///   SW ZONE: unchanged (owner: keep). Re-verified under floor-90: the shorter runs fit with
+	///   SW ZONE: unchanged. Re-verified under floor-90: the shorter runs fit with
 	///     seams auto-flush (LengthFor/Run drive every seam), and the only launches that leave the
 	///     slab are the west-edge ones (jumpbox base + m1 east face) landing onto the DRIVABLE spur
 	///     road west of x 505, as before.
-	/// REGIME-B / FACE-LOAD SPEED RATING (round-3 feel pass, 2026-07-21 evening; LIVE-UNVERIFIED).
-	/// The owner reproduced the ramp hitch at 32 m/s WITH fps capped to the tick rate, proving the
+	/// REGIME-B / FACE-LOAD SPEED RATING (feel pass, 2026-07-21 evening; LIVE-UNVERIFIED).
+	/// The ramp hitch reproduces at 32 m/s WITH fps capped to the tick rate, proving the
 	/// residual is REAL rendered motion. Offline quantification (tools/ramp_bottoming_port.py) at a
 	/// 32 m/s entry on the floor-90 faces: NO bottoming anywhere (sink 36-45 mm, zero bottomed
 	/// ticks); the felt jolt is the CENTRIPETAL CROUCH - v^2/R = 11.4 m/s^2 (1.06 g on top of
@@ -196,9 +196,9 @@ public static class PlaygroundBuilder
 	///     234 -> 240 (+2.4%): near-free correctness.
 	///   SCATTER / MOUNDS / SE POP (interior arrivals): 35 m/s -> R 104. Honest note: this trims
 	///     the 32 m/s crouch only ~15% (sink 38-45 -> 32-35 mm); interior pop is kept on purpose.
-	///     If the owner still reports hitch on a specific scatter face at 70+ mph, the next notch
+	///     If a hitch still shows on a specific scatter face at 70+ mph, the next notch
 	///     is 46 on that call site (one line).
-	///   SW welcome zone: unrated (0, poppy default) - spur-road approach speeds, owner: keep.
+	///   SW welcome zone: unrated (0, poppy default) - spur-road approach speeds, left as-is.
 	/// A ramp still pitches and crouches BY DESIGN at speed; the target of this rating is no harsh
 	/// jolt (load spike + deep sink), not zero motion.
 	/// LIVE-UNVERIFIED: geometry math only. An editor pass must drive the rows from several headings
@@ -216,8 +216,8 @@ public static class PlaygroundBuilder
 		_ramps = _bowlSegs = _balls = _boxes = _cones = 0;
 
 		// ---- NORTH BAND (x 545-1065, y 80..318): two directional set-pieces + freeform scatter ----
-		// TOWN-ADJACENCY SHIFT (owner 2026-07-21 late: "move that stuff a little closer to the city so
-		// you don't have to drive so far; I want people encouraged to just drive straight in there").
+		// TOWN-ADJACENCY SHIFT (2026-07-21): pull the content closer to the city so the drive out is
+		// short and players are encouraged to head straight in.
 		// The ENTIRE north band is translated -175 m in X from the audited layout (ladder base 735->560),
 		// so the first ramp now sits ~60 m from the hardpack west edge (x500) / ~40 m from the proving
 		// gantry at x520 - was ~220 m. It is a PURE X translation: every internal corridor, clear lane,
@@ -234,9 +234,9 @@ public static class PlaygroundBuilder
 		// directional set-piece: big-air down its own runway along the north strip
 		Runway( new Vector2( 543f, 300f ), new Vector2( 583f, 300f ), 12f );
 		BuildBigAir( new Vector2( 585f, 300f ) );
-		// ---- multi-direction RAMP ROWS (owner 2026-07-21: "whatever way you're driving, top-left to
-		// bottom-right, up and down, or across, there's a row of ramps to hit, but still some clear
-		// lanes to drive through"). Each row is a LATERAL line of kickers facing ONE drive direction
+		// ---- multi-direction RAMP ROWS (2026-07-21): whatever heading you drive (top-left to
+		// bottom-right, up and down, or across) there is a row of ramps to hit, with clear lanes
+		// left to drive through. Each row is a LATERAL line of kickers facing ONE drive direction
 		// with named CLEAR LANES between them; the west-edge LADDER above is the fourth row (a
 		// west-east line you meet driving east out of spawn). All ScatterDesignSpeedMs (35) rated and
 		// validated 0-conflict at full bore by tools/layout_validate.py (north_band()).
@@ -261,7 +261,7 @@ public static class PlaygroundBuilder
 		DoubleMound( new Vector2( 1025f, 255f ), 1.2f, ScatterDesignSpeedMs );
 		DoubleMound( new Vector2( 1030f, 140f ), 1.0f, ScatterDesignSpeedMs );
 
-		// ---- interactive props threaded through the CLEAR LANES (owner: "more stuff to do") ----
+		// ---- interactive props threaded through the CLEAR LANES (more to do between the ramps) ----
 		// a cone slalom in the eastbound clear lane (y~128) just WEST of WE row 2: weave the cones, then
 		// hit the ramps. Nudged east (x690-722) vs the raw -175 translation so it sits in the gap EAST of
 		// the skidpad circle (x640-680) - no dynamic prop in the station. Cones are light dynamic bodies.
@@ -277,17 +277,17 @@ public static class PlaygroundBuilder
 		// ---- SOUTH-EAST ZONE (x 1060-1300, y -278..-85): bowl, wall-ride, ball pit + smooth entry ----
 		BuildBankedBowl( new Vector2( 1150f, -200f ), radiusM: 34f, bankDeg: 26f );
 		BuildWallRide( new Vector2( 1240f, -120f ) );
-		// step-stairs REMOVED here (the hard-angle cluster the owner flagged; see the summary). A
+		// step-stairs REMOVED here (the hard-angle cluster; see the summary). A
 		// smooth bidirectional mound takes their place at the entry; a low pop sits in the open
 		// pocket east of the wall-ride so the corner reads varied without a wall a car can meet.
 		DoubleMound( new Vector2( 1100f, -108f ), 1.2f, ScatterDesignSpeedMs );
 		Scatter( new Vector2( 1280f, -110f ), 90f, 1.0f );
-		// loose physics balls on the flat east of the bowl (former "ball pit", owner: taken too
-		// literally - no container, just balls a car punts around), plus cones for extra tumble.
+		// loose physics balls on the flat east of the bowl (former "ball pit" - no container, just
+		// balls a car punts around), plus cones for extra tumble.
 		BallField( new Vector2( 1240f, -220f ) );
 		ConeCluster( new Vector2( 1240f, -155f ), 6 );
 
-		// ---- SOUTH-WEST WELCOME ZONE (x 505-625, y -270..-75): unchanged (owner: keep) ----
+		// ---- SOUTH-WEST WELCOME ZONE (x 505-625, y -270..-75): unchanged ----
 		BuildJumpOntoBox( new Vector2( 505f, -110f ) );
 		BuildTabletop( new Vector2( 560f, -180f ) );
 		DoubleMound( new Vector2( 540f, -140f ), 1.0f );
@@ -348,8 +348,8 @@ public static class PlaygroundBuilder
 			MarkerPost( new Vector2( at.x, at.y + 5.5f ), h );
 		}
 
-		// (Round-6 A/B mesh twin removed 2026-07-21: verdict landed — mesh integ ratio 1.00 vs
-		// boxes 0.31 on owner-driven runs — and ColliderMode.SolidMesh is now the RampKicker
+		// (Comparison mesh twin removed 2026-07-21: measurement settled at mesh integrity ratio 1.00
+		// vs boxes 0.31 on live runs, and ColliderMode.SolidMesh is now the RampKicker
 		// default for every kicker, so the twin was redundant. History in RampKicker's docs.)
 	}
 
@@ -569,8 +569,8 @@ public static class PlaygroundBuilder
 	const float ConeMassKg = 3.5f;                                    // a real-cone weight - any hit flies it
 	const float GoldenAngle = 2.39996323f;                           // deterministic sunflower scatter, no RNG
 
-	/// <summary>Loose physics balls scattered on FLAT ground - the former "ball pit" (owner 2026-07-21:
-	/// "taken too literally"; there was never any container geometry, just clustered balls). Now a wide,
+	/// <summary>Loose physics balls scattered on FLAT ground - the former "ball pit" (there was never
+	/// any container geometry, just clustered balls). Now a wide,
 	/// sparse sunflower scatter a car drives INTO and knocks around. Deterministic (golden-angle
 	/// spiral, pure function of index). Count/spacing sized so the field reads loose, not a pile.</summary>
 	static void BallField( Vector2 centreM, int count = 14, float spacingM = 8.5f )
@@ -599,8 +599,8 @@ public static class PlaygroundBuilder
 		}
 	}
 
-	/// <summary>BALL ASSET CONTRACT (owner 2026-07-21): render with the delivered kickball model when
-	/// present at models/props/kickball.vmdl (another agent may drop it - NOT built here), else fall
+	/// <summary>BALL ASSET CONTRACT: render with the kickball model when
+	/// present at models/props/kickball.vmdl (supplied by the asset pipeline - NOT built here), else fall
 	/// back to the procedural dev sphere with the red tint (the previous behaviour). A null/invalid
 	/// load falls straight through. Dynamic Rigidbody + rubber surface for bounce.</summary>
 	static void DynamicBall( Vector2 atM, float diamM, float massKg )
@@ -640,7 +640,7 @@ public static class PlaygroundBuilder
 		_balls++;
 	}
 
-	/// <summary>A line of traffic cones (a slalom to weave, owner: "more stuff to do"). Evenly spaced
+	/// <summary>A line of traffic cones (a slalom to weave). Evenly spaced
 	/// from -&gt; to. Cones are light dynamic bodies, so clipping one just punts it out of the lane.</summary>
 	static void ConeSlalom( Vector2 fromM, Vector2 toM, int count )
 	{
@@ -784,7 +784,7 @@ public static class PlaygroundBuilder
 
 	/// <summary>A curved QUARTER-PIPE wall-ride bank: the <see cref="RampKicker"/> tangent-arc profile
 	/// rotated to climb −Y, so the face rises from a grade-tangent base line at y = centre+11.2 to a
-	/// 5 m top edge at y = centre, rideable along X for the full 34 m. Round-2 fix: the old slab +
+	/// 5 m top edge at y = centre, rideable along X for the full 34 m. Later fix: the old slab +
 	/// half-angle apron still met the ground in planar CREASES (flat, 22°, 48°), and a crease arrests
 	/// a car at ANY approach angle (measured: hatch 128 G dead stop on a 4° glancing line; a wide car
 	/// straddles the crease, one axle per plane, and wedges). The run length is hand-picked BELOW the

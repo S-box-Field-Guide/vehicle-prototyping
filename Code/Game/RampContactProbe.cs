@@ -3,9 +3,9 @@ using System;
 namespace VehicleProto;
 
 /// <summary>
-/// LIVE DEBUG INSTRUMENT (2026-07-21, ramp-hitch hunt round 6). Rides ON the car root (the
+/// LIVE DEBUG INSTRUMENT (2026-07-21, ramp-hitch investigation). Rides ON the car root (the
 /// chassis Rigidbody's GameObject) and records every collision callback the chassis receives,
-/// for <see cref="RampTraceRecorder"/> to drain once per fixed tick. Round-5 offline analysis
+/// for <see cref="RampTraceRecorder"/> to drain once per fixed tick. Earlier offline analysis
 /// found the car's raw pose RATCHETS on the ramp face (per-tick advance alternating
 /// 0.63 m / 0.23 m at 35 m/s, a 40% displacement deficit) while rigidbody velocity stays
 /// glassy-smooth — the signature of contact-driven position clamping, suspected ghost

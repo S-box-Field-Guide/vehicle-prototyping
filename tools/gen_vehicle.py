@@ -804,7 +804,7 @@ def build_pickup_wheel(spec, out_dir):
     # long-standing pickup rim/tire z-fight (both faces sat at Wd/2, different material).
     cyl((0, 0, 0), R * 0.52, Wd - 0.05, "rim", axis='Y', verts=14)   # dish face inset 2.5 cm/side
     cyl((0, 0, 0), R * 0.18, Wd - 0.02, "rim", axis='Y', verts=8)    # hub proud of dish, still inboard
-    # centre hub-cap disc — PROUD of the tyre face by 2.5 mm (owner-taste 2026-07-16).
+    # centre hub-cap disc — PROUD of the tyre face by 2.5 mm (styling call 2026-07-16).
     # The rim/hub above sit recessed to kill the sidewall z-fight, which left the wheel
     # reading as a plain black donut side-on. This grey cap gives it a deliberate metal
     # centre: depth Wd+0.005 => each cap face at ±(Wd/2 + 2.5 mm), never sharing the

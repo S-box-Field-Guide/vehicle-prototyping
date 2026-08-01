@@ -34,9 +34,9 @@ public static class CarDefinitions
 		TrackWidth = 1.50f,  // kit spec
 		WheelRadius = 0.30f, // kit spec
 		Layout = DriveLayout.FWD,
-		// +20% SPEED PASS (2026-07-21, owner feel: "all cars ~20% faster, both accel and top speed"):
-		//   - PeakTorque 210 -> 252 (+20% on the current hand-bumped value; the 162->210 owner feel call
-		//     stands, this stacks on top). EngineTorqueAt scales this flat across the rev band, so every
+		// +20% SPEED PASS (2026-07-21, feel target: all cars ~20% faster in both accel and top speed):
+		//   - PeakTorque 210 -> 252 (+20% on the current hand-bumped value; the earlier 162->210 feel
+		//     call stands, this stacks on top). EngineTorqueAt scales this flat across the rev band, so every
 		//     gear pulls ~+20% harder (grip permitting), which is the acceleration half of the request.
 		//   - RedlineRpm 6300 -> 7560 (+20%) is the TOP-SPEED half. RedlineWheelSpeed (Drivetrain.cs) sets
 		//     the redline-equivalent top-gear wheel speed = RedlineRpm/(topGearRatio*FinalDrive)*WheelRadius;
@@ -63,7 +63,7 @@ public static class CarDefinitions
 		// TC sanity check: hatch is FWD, no Sport TC opt-in (Sport is raw "ABS only"). Casual TC targets
 		// slip 0.14 by cutting THROTTLE proportionally against MEASURED slip, so +20% torque doesn't
 		// overwhelm it; TC just clamps throttle harder to hold the same target.
-		// Battery bands this pass will shift (owner sign-off required before re-anchoring; NOT touched here):
+		// Battery bands this pass will shift (sign-off required before re-anchoring; NOT touched here):
 		//   - specs/maneuvers/topspeed.json (hatch): maxSpeedMs (47.22-54.17) shifts UP ~20%.
 		//   - specs/maneuvers/launch.json (hatch): zeroToHundredS (8.0-10.0 s) IMPROVES (drops).
 		//   - specs/maneuvers/launch.json (hatch): wheelspinS (<=0.5 s) roughly FLAT (TC target unchanged).
@@ -84,7 +84,7 @@ public static class CarDefinitions
 		// Spin-recovery default (tested 2026-07-15 on the hatch, dialed 6→7: "7 feels pretty
 		// good, definitely a big difference"). Tunable 0-12 via the Spin recovery dial.
 		SpinRecoveryAssist = 7.0f,
-		// steer-forgiveness pass 2026-07-17 (owner/tester feel): high-speed turn authority up
+		// steer-forgiveness pass 2026-07-17 (playtest feel): high-speed turn authority up
 		// 8→9.5 (+19%) so mid-corner at speed needs less handbrake — MaxSteerAngle (low-speed lock,
 		// inherited 32) and the 22 m/s blend point are UNCHANGED. Modest: still well under the
 		// low-speed lock, keeps snap-oversteer protection at top speed.
@@ -170,9 +170,9 @@ public static class CarDefinitions
 		// never broke loose at 1.0 (J-turn no-180 through runs 1-3); the truck needs real help.
 		HandbrakeGripScale = 0.45f,
 		SpinRecoveryAssist = 7.0f, // spin-recovery default (tested 2026-07-15 on hatch, 6→7; other cars inherit as a starting point); tunable dial
-		// Sport-mode posture (owner call 2026-07-21) — same exposure as the coupe: torquey 320 N-m RWD
+		// Sport-mode posture (2026-07-21), same exposure as the coupe: torquey 320 N-m RWD
 		// truck lights the rears to redline in raw Sport. Reduced-authority Sport TC + yaw damp; slightly
-		// tighter TC than the coupe (heavier, less playful). LIVE-UNVERIFIED; owner to feel/tune.
+		// tighter TC than the coupe (heavier, less playful). LIVE-UNVERIFIED; pending feel tuning.
 		SportTcSlipTarget = 0.30f,
 		SportStabilityScale = 0.5f,
 		DefaultAssists = AssistLevel.Casual,
@@ -203,8 +203,8 @@ public static class CarDefinitions
 		DamperRate = 1600f,
 		Layout = DriveLayout.RWD,
 		// +20% speed pass 2026-07-21: PeakTorque 52->62.4 (+20% accel), RedlineRpm 9000->10800 (+20% top
-		// speed; kart top-gear ceiling ~21.8 -> ~26.1 m/s, extending the "literal race car" character the
-		// owner asked for). FinalDrive/GearRatios/ShiftUp unchanged, so launch/wheelspin behavior holds.
+		// speed; kart top-gear ceiling ~21.8 -> ~26.1 m/s, extending the "literal race car" character
+		// this class is after). FinalDrive/GearRatios/ShiftUp unchanged, so launch/wheelspin behavior holds.
 		PeakTorque = 62.4f, // punchy launch, still shifts out of wheelspin quickly
 		IdleRpm = 1400f,
 		RedlineRpm = 10800f,
@@ -247,9 +247,9 @@ public static class CarDefinitions
 		// J-turn quick without making the tame pointless.
 		HandbrakeGripScale = 0.70f,
 		SpinRecoveryAssist = 7.0f, // spin-recovery default (tested 2026-07-15 on hatch, 6→7; other cars inherit as a starting point); tunable dial
-		// Sport-mode posture (owner call 2026-07-21) — same exposure as the coupe: light RWD kart spins
+		// Sport-mode posture (2026-07-21), same exposure as the coupe: light RWD kart spins
 		// its rears freely in raw Sport. Loosest Sport TC in the roster + gentle yaw damp (the kart already
-		// rotates easily, keep it playful). LIVE-UNVERIFIED; owner to feel/tune.
+		// rotates easily, keep it playful). LIVE-UNVERIFIED; pending feel tuning.
 		SportTcSlipTarget = 0.40f,
 		SportStabilityScale = 0.45f,
 		// Feel session 2026-07-13: drift-exit soft-lock. Baseline (full lock)
@@ -309,11 +309,11 @@ public static class CarDefinitions
 		BrakeTorque = 6200f,
 		WheelRadius = 0.33f,
 		SpinRecoveryAssist = 7.0f, // spin-recovery default (tested 2026-07-15 on hatch, 6→7; other cars inherit as a starting point); tunable dial
-		// Sport-mode posture (owner call 2026-07-21: "Sport mode spins out all over the place"). Sport ran
+		// Sport-mode posture (2026-07-21, reported as spinning out all over the place). Sport ran
 		// with NO traction control and NO yaw damping (both Casual-only), so full throttle spun the 340 N-m
 		// RWD rears to redline (telemetry rearK ~11 at 10 km/h in gear 2) and the counter-steer pendulum
 		// went divergent. These add a reduced-authority Sport TC + yaw damp that keep the tail lively and
-		// drift-capable but recoverable. Starting values — LIVE-UNVERIFIED; owner to feel/tune.
+		// drift-capable but recoverable. Starting values, LIVE-UNVERIFIED; pending feel tuning.
 		SportTcSlipTarget = 0.35f,
 		SportStabilityScale = 0.5f,
 		MaxSteerAngle = 30f,

@@ -136,9 +136,9 @@ public static class CityBuilder
 		BuildCrosswalks();
 		BuildStreetlights();
 
-		// RELEASE SPAWN (owner 2026-07-21 late: "spawn in the town but one block closer to the stunt
-		// park than the central intersection, facing the park, so the natural first drive is straight
-		// into it"). The two main avenues cross at the origin (the central intersection: i=5 gives
+		// RELEASE SPAWN (2026-07-21): spawn in the town but one block closer to the stunt park than
+		// the central intersection, facing the park, so the natural first drive is straight
+		// into it. The two main avenues cross at the origin (the central intersection: i=5 gives
 		// x = Origin + i*Cell + RoadWidth*0.5 = -235 + 5*46 + 5 = 0). One block east toward the park is
 		// i=6 -> x = -235 + 6*46 + 5 = +Cell = 46 m. So the car sits on the E-W avenue one block east of
 		// centre, Identity facing +X = east, pointed straight down the avenue at the east gate and the
@@ -704,10 +704,10 @@ public static class CityBuilder
 	/// Attach the right static collider for a placed building (shared with
 	/// <see cref="Outskirts"/>). PRIMARY: a ModelCollider on the model's AUTHORED physics -
 	/// every building vmdl now carries a PhysicsMeshFile of its render mesh (city polish
-	/// pass, owner regression: any single box over-covers concave ground plans, so a
+	/// pass, regression found in testing: any single box over-covers concave ground plans, so a
 	/// portico/porch/chimney kept phantom collision in front of recessed walls; mesh
-	/// collision matches the visuals exactly). Detection per the knowledge-base
-	/// models-and-import gotcha: a render-clean model can still be collision-hollow, so
+	/// collision matches the visuals exactly). Detection matters because a render-clean
+	/// model can still be collision-hollow, so
 	/// gate on Physics parts and fall back LOUDLY to the wall-footprint box (a missing
 	/// hull stays drivable and visible in the log, never silent).
 	/// </summary>

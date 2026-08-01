@@ -14,7 +14,7 @@ namespace VehicleProto;
 /// track, the banked bowl) sits inside a central pad that is stamped perfectly flat (height 0) with a
 /// smooth cosine shoulder out to the hills — so no structure ever lands on a slope and the raycast
 /// wheels only meet the gentle undulation out in the open exploration ring. If the wheels misbehave
-/// on the collision even so (the KB coarse-collision traps), the §4 TRIPWIRE drops the whole world
+/// on the collision even so (the known coarse-collision traps), the §4 TRIPWIRE drops the whole world
 /// back to the flat plane (Option A) — the accepted fallback.
 /// </summary>
 public static class PlaygroundTerrain
@@ -65,7 +65,7 @@ public static class PlaygroundTerrain
 			verts.Add( new Vertex( p, normal, tangent, new Vector4( x * 0.1f, y * 0.1f, 0, 0 ) ) );
 		}
 
-		// two triangles per cell (consistent diagonal — avoids the KB sawtooth-diagonal artifact).
+		// two triangles per cell (consistent diagonal — avoids the sawtooth-diagonal artifact).
 		// WINDING: for a=origin, b=a+X, c=a+Y, d=a+X+Y the front-facing pattern is {a,b,c},{b,d,c}
 		// (plain right-hand CCW, front = X×Y = +Z UP). The reversed {a,c,b},{b,c,d} renders the
 		// ground FACE-DOWN under the single-sided materials/default.vmat: backface-culled from every

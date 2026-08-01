@@ -368,7 +368,7 @@
 	// click lands as jump-to-position) and false on onmousemove (scrub only while the track is actively
 	// pressed). Value = mouse LOCAL x over the track width, snapped to the param's Step, pushed through
 	// the SAME p.Set path as Adjust so Redline's ScaleShiftPoints, Grip's SetGrip etc. still apply.
-	// (KB gotcha g-ui-draggable-slider-tracks-click-jump-drag; verified drag pattern.)
+	// (Verified draggable-slider-track pattern: click-jump plus drag-scrub.)
 	void TrackScrub( Param p, Sandbox.UI.PanelEvent ev, bool jump )
 	{
 		if ( ev is not Sandbox.UI.MousePanelEvent e ) return;

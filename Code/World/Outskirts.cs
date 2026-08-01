@@ -21,7 +21,7 @@ namespace VehicleProto;
 /// of freefall, so the surround beyond the EAST edge is a SUNKEN RUN-OFF APRON 3 m below grade, and a
 /// car still falls off the east edge exactly as before, into a sealed basin with a return ramp.
 /// The NORTH and SOUTH run-offs were sunken basins too, but the stunt park abuts both (north band to
-/// y 318, SE/SW zones to y -278) and the owner drove off those cliffs; PLAYGROUND FLATNESS LAW
+/// y 318, SE/SW zones to y -278) and testing showed cars driving off those cliffs; PLAYGROUND FLATNESS LAW
 /// (2026-07-21): they are now GRADE fills flush with the hardpack (no maneuver uses the N/S edges,
 /// stations sit 100+ m inside them), so the park has no edge to fall off. The outer wall stands at
 /// the fill/apron rim.
@@ -109,9 +109,9 @@ public static class Outskirts
 		// the east edge (TestTrack.BuildGround doc), so the east run-off stays a SUNKEN basin with a
 		// climb-out ramp. The NORTH and SOUTH edges are used by NO maneuver (every station sits in
 		// y[-170,220], 100+ m inside both edges), and they ABUT the stunt park: the north band reaches
-		// y 318 and the SE/SW zones reach y -278, both within ~2 m of the old 3 m cliffs. The owner
-		// drove off the north edge into the empty basin ("towards the end of the playground I fall off
-		// an edge and the terrain is clear there"). PLAYGROUND FLATNESS LAW (2026-07-21): no elevation
+		// y 318 and the SE/SW zones reach y -278, both within ~2 m of the old 3 m cliffs. Testing
+		// showed cars driving off the north edge into the empty basin, which reads as a fall-off edge
+		// on otherwise clear terrain. PLAYGROUND FLATNESS LAW (2026-07-21): no elevation
 		// change inside the drivable park envelope, so the N and S run-offs are now GRADE fills flush
 		// with the hardpack (5 mm under it, the Fill convention) - a car drives out flat to the outer
 		// wall, there is no edge to fall off and no sunken "clear" terrain to reach. The only residual

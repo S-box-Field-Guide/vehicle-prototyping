@@ -3,11 +3,9 @@
 
 The editor serves the Model Context Protocol over HTTP once you enable it in
 Edit > Preferences > MCP Server. This is the durable driver for the
-vehicle_prototyping agent-playtest loop (tools/vp_test.py): it does the JSON-RPC
+automated playtest loop (tools/vp_test.py): it does the JSON-RPC
 call, unwraps the s&box `call_tool` meta-tool for you, prints results, and can
 rip a base64 PNG screenshot straight to disk.
-
-The direct precedent for the agent playtest loop; pointed at this project's port.
 
 The s&box MCP surface is a handful of ENTRY-POINT tools (editor_status,
 read_console, search_tools, list_toolsets, describe_toolset, call_tool,
@@ -19,11 +17,11 @@ directly; name anything else and it is auto-wrapped in call_tool. The server is
 stateless HTTP (no session id, no initialize handshake required), so every call
 is a single independent POST.
 
-PORT (multi-agent rule): the MCP port is PER-EDITOR configurable in the
+PORT: the MCP port is PER-EDITOR configurable in the
 editor's settings (Edit > Preferences > MCP Server -> "Mcp Server Port"; the
 page shows "Running at http://127.0.0.1:<port>/mcp" when live). With several
-editors open concurrently each project gets its OWN port. Assignments on this
-machine, vehicle_prototyping = 7290.
+editors open concurrently each project needs its OWN port; this project uses 7290
+by default.
 NEVER talk to another project's port. The default here is this repo's assigned
 port 7290; override with the VP_MCP_URL env var or --url. ALWAYS identity-probe
 before any mutating call: editor_status must report Project=vehicle_prototyping

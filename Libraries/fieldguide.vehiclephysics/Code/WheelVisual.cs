@@ -38,15 +38,15 @@ public sealed class WheelVisual : Component
 	/// <summary>
 	/// Suspension tracking runs at the FIXED tick, not per frame (ramp-hitch fix, 2026-07-21,
 	/// LIVE-UNVERIFIED). <see cref="VehicleWheel.SuspensionLength"/> is a raw physics-tick field:
-	/// writing it to LocalPosition per RENDER frame is the documented sawtooth anti-pattern (KB
-	/// g-game-camera-follows-raw-fixedtick-feet-model-sawtooths): the body renders engine-interpolated
-	/// while the wheels step at 50 Hz, so wheels judder against the body exactly where suspension
-	/// length changes fast (ramp faces, transients), worse with speed and refresh rate; a wheel that
-	/// unloads for one tick snapped 5-10 cm to full droop and back inside 1-2 frames. Owner
-	/// discriminator: fps_max 50 (render rate = tick rate) made the felt ramp hitch "a million times
-	/// better". Writing inside OnFixedUpdate lets GameTransform interpolation carry the motion per
-	/// frame, exactly like the chassis (KB g-game-manual-visual-smoother-fights-fixedupdate-
-	/// interpolation: never hand-smooth what engine interpolation already covers).
+	/// writing it to LocalPosition per RENDER frame is the documented sawtooth anti-pattern (a
+	/// visual that follows a raw fixed-tick field sawtooths against interpolated geometry): the body
+	/// renders engine-interpolated while the wheels step at 50 Hz, so wheels judder against the body
+	/// exactly where suspension length changes fast (ramp faces, transients), worse with speed and
+	/// refresh rate; a wheel that unloads for one tick snapped 5-10 cm to full droop and back inside
+	/// 1-2 frames. The discriminator: fps_max 50 (render rate = tick rate) made the felt ramp hitch
+	/// vastly better. Writing inside OnFixedUpdate lets GameTransform interpolation carry the motion
+	/// per frame, exactly like the chassis (never hand-smooth what engine interpolation
+	/// already covers).
 	/// </summary>
 	protected override void OnFixedUpdate()
 	{

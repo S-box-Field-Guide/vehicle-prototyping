@@ -106,7 +106,7 @@ public sealed class DemoBootstrap : Component
 			return;
 
 		// Start collapsed to the chip legend: an open lab on spawn captured the cursor before
-		// players ever drove (owner call, 2026-07-19). The chip keeps T discoverable; reset the
+		// players ever drove (2026-07-19). The chip keeps T discoverable; reset the
 		// static flag here each session.
 		DemoTuningPanel.IsOpen = false;
 

@@ -117,7 +117,7 @@ TuningPanel {
 				}
 
 				.track {
-					// Click-to-jump + drag-to-scrub hit box (KB g-ui-draggable-slider-tracks-click-jump-drag):
+					// Click-to-jump + drag-to-scrub hit box:
 					// events must land on the track (not the fill) so MousePanelEvent.LocalPosition stays
 					// track-relative — hence pointer-events:all here + none on .fill. 14px is the grab area.
 					position: relative;
@@ -169,8 +169,8 @@ TuningPanel {
 			// Issue 3: the saved-tunes ROWS scroll instead of growing the card. Header (.phdr) and the
 			// empty-state line live OUTSIDE this container, so only the list scrolls; the Save-current
 			// button stays put. max-height fits ~3 rows and lets a 4th peek as a scroll affordance.
-			// scroll+gap on a flex column is the collapse-risk context (KB
-			// g-ui-overflow-scroll-panel-breaks-even-with-minheight-pins) — this panel is UNSCALED (no
+			// scroll+gap on a flex column is the collapse-risk context (an overflow-scroll panel can
+			// break even with min-height pins) — this panel is UNSCALED (no
 			// transform) and its sibling .dials already scrolls a gapped column fine, but each .prow
 			// still carries an explicit min-height floor so a thin row can't collapse to ~0.
 			.plist {
@@ -293,8 +293,8 @@ TuningPanel {
 			height: 130px;
 			border-radius: 99px;
 			background-color: rgba( 255, 255, 255, 0.08 );
-			// NO overflow:hidden — same trap as VehicleHud .rpm (gotcha
-			// g-ui-flex-grow-track-holding UPDATE): clipping the track warps the absolute
+			// NO overflow:hidden — same trap as VehicleHud .rpm (a flex-grow track that clips):
+			// clipping the track warps the absolute
 			// .sfill into a floating lime diamond/lens at mid-bar. Children carry their own
 			// radii instead of relying on parent clipping.
 			&.bottom { background-color: rgba( 255, 107, 107, 0.15 ); border: 1px solid rgba( 255, 107, 107, 0.6 ); }

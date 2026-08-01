@@ -37,7 +37,7 @@ $fill-soft:   rgba( 255, 255, 255, 0.05 );   // inset control bg
 $fill-soft2:  rgba( 255, 255, 255, 0.06 );
 
 // --- text ---
-// OWNER CONTRAST RULE (2026-07-17): no dim gray instructional text — tips, hints, keycaps,
+// CONTRAST RULE (2026-07-17): no dim gray instructional text — tips, hints, keycaps,
 // and labels must be white/bright. Hierarchy comes from size/weight/uppercase, NOT dimness.
 // text-body/label/ghost formerly held mid/dark grays (#A6ADB8/#8B93A0/#6E7480) that read as
 // "disabled"; all three now match text-hi. Kept as separate tokens (not collapsed to one) so

@@ -1,7 +1,7 @@
 """
-Round-4 offline port: the DRIVETRAIN/ASSIST response to driven-wheel unload at a
-kicker lip (owner: "hitches going off the ramps" at any speed, unmoved by the
-suspension/geometry/visual fixes of rounds 1-3).
+Offline port: the DRIVETRAIN/ASSIST response to driven-wheel unload at a
+kicker lip (reported as "hitches going off the ramps" at any speed, unmoved by the
+earlier suspension/geometry/visual fixes).
 
 Digit-faithful ports of the kit paths that run at the lip, from
 Libraries/fieldguide.vehiclephysics (hatch, Casual, full throttle):
@@ -175,7 +175,7 @@ def lip_run(v, assists_tc=True, H=2.0, R_face=180.0, pre_s=1.0, post_s=1.5, gear
         grounded = True if force_grounded_s is not None else (t < lipT) or (t >= landT)
         load = STATIC_W
         if t >= landT and t < landT + 0.2:
-            load = 2 * STATIC_W       # landing transient (round-2 sims)
+            load = 2 * STATIC_W       # landing transient (from the earlier sims)
         thr_in = 1.0
         # tick-level TC reads the LAST substep's slip of grounded driven wheels
         if assists_tc:

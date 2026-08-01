@@ -104,12 +104,11 @@ public sealed class VehicleWheel : Component
 			// that whole cascade: omega holds ~rolling speed, rpm stays steady, the escape shift
 			// never arms in air, and touchdown slip is ~0. Flat-ground behavior is byte-identical BY
 			// CONSTRUCTION (this branch never runs with valid ground contact; grounded-tick A/B in
-			// the port asserts bit-identical trajectories). Registered prediction at commit time: the
-			// owner's Sim-mode discriminator will NOT kill the hitch (the cascade is
-			// assist-independent); result to be recorded next to this comment either way.
+			// the port asserts bit-identical trajectories). Note: switching to Sim mode does NOT
+			// kill the hitch, because the cascade is assist-independent.
 			IntegrateWheelSpin( dt, 0f, brakeTorque, 0f );
 			// Airborne wind-down is bearing drag only: 2%/s. The previous 0.5f here was 50%/s
-			// (documented in round 4 as "0.5%/s", a 100x misread of its own constant): after a
+			// (previously documented as "0.5%/s", a 100x misread of its own constant): after a
 			// 1.2 s flight the wheels arrived at ~55% of road speed and braked the car while
 			// spinning back up (flight recorder 2026-07-21: ~2 m/s of the touchdown loss plus
 			// the landing skid chirp came from exactly this). Real free wheels barely slow.

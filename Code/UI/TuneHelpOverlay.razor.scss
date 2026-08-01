@@ -1,9 +1,9 @@
 // Dial-explainer overlay for the Tuning panel. Tokens inlined from _tokens.scss (house convention:
 // panels self-contain literals — @import isn't resolved by the headless build). ZERO font-size /
 // letter-spacing except the single title (glyph-corruption law, see HelpOverlay). All instructional
-// text is bright (#F2F4F7 / #E8EAED family) per the standing text-contrast order — no dim gray.
+// text is bright (#F2F4F7 / #E8EAED family) per the project's text-contrast rule — no dim gray.
 //
-// LAYOUT LESSON (owner screenshot, first cut): a `max-height + overflow-y: auto` flex column with
+// LAYOUT LESSON (first cut): a `max-height + overflow-y: auto` flex column with
 // shrinkable children does NOT scroll here — yoga COMPRESSES the rows into the cap instead (pills
 // squashed to a sliver, text painting over neighbouring rows, tail clipped). The working recipe is
 // the TuningPanel .plist one: give the scroller an EXPLICIT height + `overflow-y: scroll`, and make
@@ -102,7 +102,7 @@ TuneHelpOverlay {
 			.drow {
 				flex-direction: column;
 				gap: 3px;
-				flex-shrink: 0;     // never compress — the scroller scrolls instead (owner-screenshot bug)
+				flex-shrink: 0;     // never compress — the scroller scrolls instead (first-cut bug)
 				min-height: 34px;   // thin-row collapse floor inside a scroll container (house .prow lesson)
 				padding: 10px 12px;
 				background-color: rgba( 255, 255, 255, 0.03 );

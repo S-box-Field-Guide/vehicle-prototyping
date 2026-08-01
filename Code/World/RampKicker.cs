@@ -38,8 +38,8 @@ public static class RampKicker
 	/// R = 14H+9 law, R ~ 13-37 m) that step is a hard jounce that scrubs speed. Easement =
 	/// clothoid-blended: curvature rises LINEARLY from 0 to 1/R over the first
 	/// <see cref="EasementBlend"/> of the run, then holds, so the suspension load onset is ~30x
-	/// gentler at the base (0.007 deg/segment vs the arc's 0.21 deg) - it kills the base JERK the
-	/// owner feels as a "hitch". MEASURED (2026-07-20 A/B, hatch jump, 2.0 ladder face): under the
+	/// gentler at the base (0.007 deg/segment vs the arc's 0.21 deg) - it kills the base JERK that
+	/// reads as a "hitch". MEASURED (2026-07-20 A/B, hatch jump, 2.0 ladder face): under the
 	/// R(H)=max(MinRadiusM,52H) law both profiles already retain ~98% of NET face speed at 38-45 m/s
 	/// (the R>=90 floor made the pure-arc step small enough that the dampers absorb it), so the
 	/// easement's win is the smoother onset feel, not net speed - and its uniform-scale tightens the
@@ -53,7 +53,7 @@ public static class RampKicker
 	/// footprints in-zone). Higher = smoother onset but longer/tighter tail; 0.5 is the kept value.</summary>
 	public const float EasementBlend = 0.5f;
 
-	/// <summary>Collider architecture selection (ramp-hitch hunt round 6, 2026-07-21, A/B
+	/// <summary>Collider architecture selection (ramp-hitch investigation, 2026-07-21, A/B
 	/// instrument). SegmentBoxes = the shipped stack of overlapping convex boxes. SolidMesh = ONE
 	/// closed triangle-mesh collider built from the SAME closed solid as the render mesh (top,
 	/// skirts, underside, lip — not the historical open thin SHELL that motivated the boxes).
@@ -64,12 +64,12 @@ public static class RampKicker
 	/// contact clamping against the segment boxes' internal faces. A single mesh has no internal
 	/// faces along the drivable surface; the map terrain already drives clean on AddCollisionMesh
 	/// (flat-ground integration is exact to 1 mm in the same captures).
-	/// A/B VERDICT (live, 2026-07-21 21:17 capture, owner-driven): mesh twin at 33 m/s integrated
+	/// A/B VERDICT (live, 2026-07-21 21:17 capture, hand-driven): mesh twin at 33 m/s integrated
 	/// at ratio 1.00 mean / 1.00 min over the full face; a segment-box kicker at 44 m/s ratio 0.31
 	/// mean / 0.11 min (the felt hitch). SolidMesh is now the DEFAULT and shipped architecture;
 	/// SegmentBoxes is retained for reference/regression only. NOTE: the box architecture's own
 	/// doc (below) fixed the 2026-07 thin-SHELL failures, which this closed solid does not share
-	/// (owner-driven twin run: shapecast suspension smooth through the climb, clean launch).</summary>
+	/// (hand-driven twin run: shapecast suspension smooth through the climb, clean launch).</summary>
 	public enum ColliderMode { SegmentBoxes, SolidMesh }
 
 	/// <summary>Collider/facet resolution for easement kickers: one segment per ~this many metres
@@ -92,7 +92,7 @@ public static class RampKicker
 	}
 
 	/// <summary>
-	/// RADIUS LAW, round-2 revision (2026-07-21 evening; LIVE-UNVERIFIED). The arc radius
+	/// RADIUS LAW, second revision (2026-07-21 evening; LIVE-UNVERIFIED). The arc radius
 	/// R = (L²+H²)/(2H) is what the suspension feels on the face: riding at speed v needs a normal
 	/// force N = m(g·cosθ + v²/R). THREE distinct failure mechanisms are now known, and only the
 	/// first two are radius-law concerns; the third is a LAYOUT (spacing) concern that a bigger
@@ -113,19 +113,19 @@ public static class RampKicker
 	///      <see cref="RadiusFor"/> with a per-feature design speed. This mechanism only matters on
 	///      features that realistically take 35+ m/s entries.
 	///
-	///   C. CHAIN FLIGHT-vs-GAP OVERSHOOT (the round-2 finding, and the DOMINANT felt hitch). A car
+	///   C. CHAIN FLIGHT-vs-GAP OVERSHOOT (the later finding, and the DOMINANT felt hitch). A car
 	///      launching a chained kicker lands range = v·cosθ·t past the lip (t from H + v·sinθ·t −
 	///      g/2·t² = 0). When that range exceeds the flat gap to the next kicker (base spacing minus
 	///      ground run), the car lands ON the next FACE: a 4x-clamp slam into rising ground, the
 	///      visible "stuck on the ramp, slows, then launches like crazy" as that face re-launches
 	///      it. Kinematic audit, hatch: OLD law (floor 90) chains failed from 20-23 m/s (the
 	///      original "only when going really fast"); the R 240 blanket floor lengthened every run
-	///      25-60%, shrank the gaps, and moved failure DOWN to 9-15 m/s (the owner's round-2 "any
+	///      25-60%, shrank the gaps, and moved failure DOWN to 9-15 m/s (reported then as "any
 	///      speed over about 40 mph"). A blanket radius floor CANNOT fix this: bigger R means longer
 	///      runs, smaller gaps, earlier failure. The fix is the SPACING law
 	///      <see cref="MinChainSpacingM"/>, owned by the layout.
 	///
-	///   Exonerated offline (round 2, 2-axle pitch-DOF port, facet-vs-smooth A/B): the segmented
+	///   Exonerated offline (2-axle pitch-DOF port, facet-vs-smooth A/B): the segmented
 	///   box collider. At the real facet sizes (0.7-1.05 m) facet loads differ under 3% from a
 	///   perfectly smooth face and cause no contact loss; a clean single-kicker easement climb is
 	///   smooth at every sub-bottoming speed (loads 1.1-1.3x, rears never lift, pitch tracks the
@@ -138,7 +138,7 @@ public static class RampKicker
 	///   81 to 13 km/h, and 39 to 6 km/h straddling a side edge). Longer faces mean MORE side-wall
 	///   area, another reason not to blanket-lengthen.
 	///
-	/// The 90 m floor is restored below; the 240 m blanket floor (round-1 fix, live-FALSIFIED as a
+	/// The 90 m floor is restored below; the 240 m blanket floor (an earlier fix, live-FALSIFIED as a
 	/// feel fix because mechanism C dominated) is retired in favor of the per-feature design-speed
 	/// rating. 52·H keeps every default exit at or under ~11.3° (landing-slam dial, regime A data).
 	/// </summary>
@@ -158,7 +158,7 @@ public static class RampKicker
 	/// <paramref name="designSpeedMs"/> (the fastest REALISTIC entry for this specific feature) to
 	/// also clear regime-B bottoming at that speed: R at least
 	/// <see cref="BottomingRadiusMargin"/>·v²/<see cref="BottomingCentripetalCapacity"/>
-	/// (53 m/s gives ~240 m, the round-1 full-bore figure). Leave it 0 for rhythm/chain kickers,
+	/// (53 m/s gives ~240 m, the earlier full-bore figure). Leave it 0 for rhythm/chain kickers,
 	/// whose entries are link-speed bound and whose spacing needs the short run.</summary>
 	public static float RadiusFor( float heightM, float designSpeedMs = 0f )
 	{
@@ -203,7 +203,7 @@ public static class RampKicker
 	/// link speed + <paramref name="marginM"/>. Entries above the link speed will still overshoot
 	/// onto the next face; the link speed is the chain's protected envelope and belongs in the
 	/// layout's comment for the line. LIVE-UNVERIFIED: derived from the offline kinematic audit
-	/// that matched both owner failure-threshold reports (20-23 m/s on floor-90 geometry,
+	/// that matched both reported failure thresholds (20-23 m/s on floor-90 geometry,
 	/// 9-15 m/s on the retired floor-240 geometry).</summary>
 	public static float MinChainSpacingM( float heightM, float maxLinkSpeedMs, float designSpeedMs = 0f, float marginM = 4f )
 	{

@@ -5,7 +5,7 @@ using System.Text;
 namespace VehicleProto;
 
 /// <summary>
-/// LIVE DEBUG INSTRUMENT (2026-07-21, ramp-hitch hunt; v2 = round 6). High-rate flight recorder:
+/// LIVE DEBUG INSTRUMENT (2026-07-21, ramp-hitch investigation; v2). High-rate flight recorder:
 /// records EVERY fixed tick (car kinematics + per-wheel suspension) and EVERY render frame
 /// (frame dt + interpolated car position + chase-camera position) into preallocated in-memory
 /// buffers, then dumps one CSV to FileSystem.Data on capture end. Nothing is logged to the
@@ -13,12 +13,12 @@ namespace VehicleProto;
 /// cannot cause the stutter it is trying to measure. Toggle with the vp_ramptrace convar
 /// (set 1 to arm, 0 to dump); a capture also auto-dumps after MaxCaptureSeconds.
 ///
-/// ROUND-6 UPGRADE (offline analysis of the round-5 captures, 2026-07-21): on the ramp face the
+/// v2 UPGRADE (offline analysis of the earlier captures, 2026-07-21): on the ramp face the
 /// car's raw pose advances in an alternating 0.63 m / 0.23 m per-tick RATCHET (40% displacement
 /// deficit vs SpeedMs·dt; spatial period ~0.86 m ≈ the kicker segment-box pitch) while
 /// Rigidbody.Velocity stays glassy-smooth (+0.03/tick, no alternation at 3 decimals) — flat
 /// ground is exact to 1 mm, airborne is exact, ONLY the grounded face climb ratchets. Rendering
-/// interpolates that ratchet faithfully, which IS the owner's visible "car sticks on the ramp"
+/// interpolates that ratchet faithfully, which IS the visible "car sticks on the ramp"
 /// (worst at high refresh; fps_max 50 masks it). Suspect: ghost/speculative contacts against the
 /// INTERNAL faces of the overlapping segment boxes clamping integration without touching
 /// velocity. The new columns discriminate the remaining hypotheses:
@@ -30,7 +30,7 @@ namespace VehicleProto;
 ///                   near-horizontal normals from "KickerSeg" boxes. One tick of latency.
 ///   rt            — RealTime.Now in both row types: fixed-grid vs wall-clock scheduling jitter.
 ///   R rows ix,iy  — interpolated horizontal position: quantifies the RENDERED judder at the
-///                   owner's real refresh rate (run with fps_max 0 — round-5 captures were all
+///                   display's real refresh rate (run with fps_max 0 — earlier captures were all
 ///                   accidentally at fps_max 50, which masks the visual).
 ///
 /// What the two row types answer:
@@ -43,12 +43,12 @@ public sealed class RampTraceRecorder : Component
 	[ConVar( "vp_ramptrace" )]
 	public static bool Armed { get; set; }
 
-	/// <summary>TESTING MODE (owner order 2026-07-21): auto-arm a capture at play start and
-	/// re-arm after every dump, so EVERY owner run is recorded without touching the convar
-	/// (the green-kicker "acted like a collision" report arrived with no telemetry because the
+	/// <summary>TESTING MODE (2026-07-21): auto-arm a capture at play start and
+	/// re-arm after every dump, so EVERY test run is recorded without touching the convar
+	/// (a green-kicker "acted like a collision" report once arrived with no telemetry because the
 	/// recorder was off). Captures chain in 120 s segments; play-stop still teardown-dumps.
 	/// Set back to FALSE for release builds (players must not write 500 KB CSVs every two
-	/// minutes); flip to true for owner test loops.</summary>
+	/// minutes); flip to true for test loops.</summary>
 	public const bool TestingAutoArm = false;
 
 	public VehicleController Target { get; set; }

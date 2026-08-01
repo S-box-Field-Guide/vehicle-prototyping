@@ -417,7 +417,7 @@ def measurement_world_gate(url, files):
 
 
 def compile_gate(url):
-    """Refuse to run on a stale/wedged compile (gotchas.md Tooling). Raises VpError
+    """Refuse to run on a stale/wedged compile. Raises VpError
     with the recovery hint if the compile is not clean-and-fresh."""
     cs = mcp_json(url, "compile_status")
     # Real engine shape (verified live, 26.07.08e): {IsBuilding, Compilers:[{Name,
@@ -446,7 +446,7 @@ def compile_gate(url):
             "editor compiler crashed internally and is running a STALE assembly. "
             "Recover by bumping a source mtime (PowerShell: "
             "(Get-Item Code\\Testing\\VehicleBridge.cs).LastWriteTime = Get-Date), wait "
-            "~8 s, re-check compile_status. (gotchas.md Tooling: compiler wedge)")
+            "~8 s, re-check compile_status.")
     if not success:
         raise VpError(f"compile not clean (success={success}, errors={errors}); fix "
                       f"the build before running the battery.")
@@ -483,7 +483,7 @@ class Run:
 
 def _args_json(payload):
     """Project [McpTool]s take ONE string param: {"argsJson": "<json>"} — never the
-    object directly (gotchas.md, editor-MCP calling convention)."""
+    object directly (the editor-MCP calling convention)."""
     return {"argsJson": json.dumps(payload)}
 
 

@@ -332,8 +332,8 @@ Layer0
 def write_vmdl(path, obj_rel, materials, physics=True):
     """physics=True adds a PhysicsShapeList/PhysicsMeshFile referencing the SAME OBJ, so the
     compiled model carries REAL concave collision matching the render mesh (city polish pass:
-    bounds/footprint boxes gave phantom walls at recessed features; pattern per the
-    sbox-knowledge models-and-import gotcha + the world-builder wb kit vmdls). The cone prop
+    bounds/footprint boxes gave phantom walls at recessed features; standard s&box
+    model-import pattern for concave collision). The cone prop
     opts out: it is a dynamic 4 kg punt prop with its own runtime BoxCollider, and a concave
     mesh is static-only physics."""
     remaps = []

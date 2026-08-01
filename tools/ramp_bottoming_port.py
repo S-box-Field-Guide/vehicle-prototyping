@@ -1,7 +1,7 @@
 """
-Offline evidence tool for the stunt-kicker hitch hunt (rounds 1-2, 2026-07-21).
+Offline evidence tool for the stunt-kicker hitch investigation (2026-07-21).
 
-ROUND-2 VERDICT (supersedes the round-1 framing): the blanket MinRadiusM 240 floor
+CURRENT VERDICT (supersedes the earlier framing): the blanket MinRadiusM 240 floor
 was live-FALSIFIED as a feel fix and is retired; RampKicker.cs is back on the 90 m
 arrest floor with an opt-in per-feature design-speed rating (RadiusFor/LengthFor
 designSpeedMs) plus a chain spacing law (MinChainSpacingM). What this tool proved:
@@ -15,8 +15,8 @@ designSpeedMs) plus a chain spacing law (MinChainSpacingM). What this tool prove
   3. Facets (segmented box collider) and clean single-face climbs are EXONERATED:
      a 2-axle pitch-DOF port (scratchpad ramp_pitch_port.py) showed facet-vs-smooth
      loads within 3%, no contact loss, pitch tracking the slope at all
-     sub-bottoming speeds. Forward retention ~99% everywhere - matching the owner's
-     round-2 confirmation that exit speed is correct and the felt hitch is VISUAL.
+     sub-bottoming speeds. Forward retention ~99% everywhere - matching the live
+     confirmation that exit speed is correct and the felt hitch is VISUAL.
 
 Faithful to VehicleWheel suspension: combined 4-wheel spring/damper, compression
 clamped to travel, Load clamped to 4x static, force along contact normal, surface
@@ -181,8 +181,8 @@ def report(entry_v, L, H):
     print(f"  min com_above {min_comabove*1000:.0f}mm (rest {COM_ABOVE_REST*1000:.0f}, bottom {(REST_FULL-TRAVEL)*1000:.0f})  "
           f"min vz {min_vz:.2f} m/s (dive)  belly {max_belly*1000:.1f}mm")
 
-FLOOR_BEFORE = 90.0    # the shipped MinRadiusM (arrest floor, restored in round 2)
-FLOOR_AFTER = 240.0    # the retired round-1 blanket floor (kept for the A/B tables)
+FLOOR_BEFORE = 90.0    # the shipped MinRadiusM (arrest floor, since restored)
+FLOOR_AFTER = 240.0    # the retired blanket floor (kept for the A/B tables)
 LADDER = (0.6, 1.2, 2.0, 3.0, 4.5)
 
 def exit_angle_deg(L, H):

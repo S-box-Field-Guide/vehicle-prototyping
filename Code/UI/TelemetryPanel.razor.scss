@@ -185,7 +185,7 @@ TelemetryPanel {
 			border-radius: 99px;
 			background-color: rgba( 255, 255, 255, 0.10 );
 			// NO overflow:hidden — warps absolute .fill into a mid-bar diamond/lens
-			// (gotcha g-ui-flex-grow-track-holding UPDATE; same fix as VehicleHud .rpm /
+			// (a flex-grow track that clips; same fix as VehicleHud .rpm /
 			// TuningPanel .sbar).
 			// SAME-SIZE FIX (same bug class as .wchip above) — base carries the same 1px
 			// transparent border .absbar uses, so entering ABS doesn't widen the BRK bar
@@ -235,7 +235,7 @@ TelemetryPanel {
 		.wcell { flex-direction: column; align-items: center; gap: 5px; }
 
 		.wchip {
-			// CONSTANT SIZE IN ALL STATES — state is conveyed by COLOR only (owner directive). Every
+			// CONSTANT SIZE IN ALL STATES — state is conveyed by COLOR only. Every
 			// state also carries an identical 1px transparent border so a border-bearing state can't
 			// change the box either. The size-blowout mechanism was the `.grip` card-selector collision
 			// above, now fixed by the rename; this stays as belt-and-suspenders.

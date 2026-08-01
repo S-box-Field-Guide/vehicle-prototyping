@@ -14,7 +14,7 @@ display-only (see `Code/Game/VpBuild.cs` for the full policy).
   mounds and tabletops. Held back until the physics earned it: every ramp is one continuous
   welded collision surface (no seams to catch), crested features are single solids (no buried
   faces to wall-stop a bottomed chassis), and the park ground is flat to every edge. The
-  telemetry that gated the release lives in tools/ and .claude/learnings/.
+  measurement harness that gated the release lives in tools/.
 - NEW interactive props: a ball field to plow through, red rubber kickballs (molded seams and
   all), cone slaloms and cone clusters. Everything is a real physics prop that flies when hit,
   and a cone knocked under the car gets flung out the side instead of wedging and chocking a
@@ -121,7 +121,7 @@ display-only (see `Code/Game/VpBuild.cs` for the full policy).
 - FIX drive mode now persists across car switches (Session menu picker and `[`/`]` cycle) instead of
   resetting to the default on every switch.
 - FIX UI text-contrast pass: dim gray instructional text across the HUD/menus is now bright
-  white/high-contrast per the standing text-contrast order.
+  white/high-contrast per the project's text-contrast rule.
 - FIX pickup cab glass fit: window panes were leaning/offset inside their frames — now upright and
   properly inset.
 - NEW pickup wheel hub caps.
@@ -155,7 +155,7 @@ display-only (see `Code/Game/VpBuild.cs` for the full policy).
   (`VehicleBridge.Status == "running"`) so automated runs keep their display unchanged; reuses the
   existing UiFeed `Timing*` fields, so no razor change.
 - REDESIGN Session menu (Tab) from a single 340px column to a 760px two-column card (design
-  "Vehicle Session Menu", owner-commissioned — supersedes the old single-column design-lock for
+  "Vehicle Session Menu"; supersedes the old single-column design-lock for
   this panel). LEFT column: Resume (primary) + "Respawn car" (ghost, with an `R` keycap chip),
   divider, labelled Drive-mode & Units segmented controls (each now shows its current value at the
   right of its label), spacer, divider, red "Quit to menu". RIGHT column: a "Vehicle" header with a
@@ -178,7 +178,7 @@ display-only (see `Code/Game/VpBuild.cs` for the full policy).
   `TelemetryPanel .grip` and applied to ANY descendant with class `grip` — including a wheel chip in the
   GRIP state (`.wchip.grip`). So grip-state chips inherited the card's `padding: 24px 26px` and ballooned
   into big squares while working/sliding/air chips stayed 22×36. Renamed the card class to `.gripcard`;
-  chip size is now constant in all states and only COLOR conveys grip/working/sliding/air (owner directive).
+  chip size is now constant in all states and only COLOR conveys grip/working/sliding/air.
 - FIX telemetry Code Error `<tiny>% is not valid with height/width/left` — near-zero physics values
   (e.g. a `1.67e-10` throttle residual) string-interpolated into inline `style=` percentages emitted
   SCIENTIFIC NOTATION, which the engine styler rejects. Added `UiFmt.Pct()` (clamp to [0,100] + F3
@@ -234,7 +234,7 @@ display-only (see `Code/Game/VpBuild.cs` for the full policy).
   blocked. Gamepad handbrake moved off L1 to A (via Jump) to free the bumper.
 - car-picker thumbnails ACTUALLY packaged: build 2's wizard ran on a stale in-memory
   sbproj and dropped the `ui/cars/*.png` Resources glob despite the disk file being
-  correct (KB `g-tool-editor-clobbers-hand-edited-sbproj-on-save`); editor restarted
+  correct (the editor rewrites a hand-edited sbproj on save); editor restarted
   so the wizard reads the restored Resources
 
 ## build 2 — 2026-07-15 (republish, unlisted)

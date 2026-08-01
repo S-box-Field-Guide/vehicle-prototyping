@@ -129,13 +129,13 @@ def DM(name,cx,cy,h,w=7,vdes=0.0):
     K(name+"_E",cx+r,cy,180,h,w,vdes)    # east face launches -X
 
 def ladder(name,bx,by):
-    # heights = C# LadderHeights (0.6,1.2,2.0,3.0,4.5); rated VD_LADDER (round-3 feel pass)
+    # heights = C# LadderHeights (0.6,1.2,2.0,3.0,4.5); rated VD_LADDER (feel pass)
     for i,h in enumerate([0.6,1.2,2.0,3.0,4.5]):
         K(f"{name}{i}",bx,by-48+i*24,0,h,8,VD_LADDER)
 
 # obstacle: model my own big-air chain footprint + external banked curve
 def north_band():
-    # TOWN-ADJACENCY SHIFT (owner 2026-07-21): the whole north band is translated -175 m in X so the
+    # TOWN-ADJACENCY SHIFT (2026-07-21): the whole north band is translated -175 m in X so the
     # first ramp sits ~60 m from the hardpack west edge (was ~220 m). PURE X translation - relative
     # geometry, corridors, and speed ratings unchanged. The banked-curve wall is a FIXED station
     # (unmoved), so the shifted band clears it by a wider margin than before.
@@ -193,7 +193,7 @@ def jumpbox(name,bx,by,launchH=3.0,boxTop=3.2,boxDepth=15,boxW=12):
     K(name+"_down",boxBackX+dnrun,by,180,boxTop,boxW)
 
 def sw_zone():
-    # welcome zone off the spur: KEEP jumpbox, tabletop, mounds (owner). Re-verified under floor-90.
+    # welcome zone off the spur: KEEP jumpbox, tabletop, mounds. Re-verified under floor-90.
     jumpbox("jb",505,-110)
     tabletop("tt",560,-180)
     DM("m1",540,-140,1.0)

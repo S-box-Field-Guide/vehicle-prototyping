@@ -25,7 +25,7 @@
 
 				@* MaxLength MUST be a C# expression @(40), not "40"/40 — the editor razor codegen emits a
 				   quoted/bare numeric attr as a STRING and fails CS0029 int? conversion, even though headless
-				   builds green (KB g-ui-unquoted-numeric-attr-headless-vs-editor-codegen). *@
+				   builds green. *@
 				<TextEntry @ref="InputBox" class="renamefield mono" MaxLength=@(40)
 					Placeholder="Tune name…  ·  Enter to save  ·  Esc to cancel"
 					onsubmit=@Save />
@@ -40,7 +40,7 @@
 </root>
 
 @code {
-	// @ref must bind to a PROPERTY, not a bare field (g-ui-ref-field-bare-private-field-silently).
+	// @ref must bind to a PROPERTY, not a bare field (a bare private field binds silently and stays null).
 	TextEntry InputBox { get; set; }
 
 	// Focus-acquire latch (engine ChatPanel idiom): keep asking for focus until the freshly-created
@@ -61,7 +61,7 @@
 
 		// Esc cancels the rename. CONSUME it (set false) so neither the host pause menu nor VehicleHud's
 		// global "close any cursor modal" Esc handler also fires — VehicleHud is guarded to skip Esc while
-		// a rename is active, so this panel owns the key. (g-game-input-escapepressed-real-getset-consumable)
+		// a rename is active, so this panel owns the key. (Input.EscapePressed is a real get/set-consumable.)
 		if ( Input.EscapePressed )
 		{
 			Input.EscapePressed = false;
@@ -79,7 +79,7 @@
 	}
 
 	// PanelComponent post-build hook (NOT OnAfterTreeRender — that's Panel-only and fails CS0115 here;
-	// g-ui-panelcomponent-overrides-ontreebuilt-ontreef). Seed the field + grab focus on a fresh open.
+	// PanelComponent overrides OnTreeBuilt/OnTreeFirstBuilt instead). Seed the field + grab focus on a fresh open.
 	protected override void OnTreeBuilt()
 	{
 		var target = TuneRenameState.Target;

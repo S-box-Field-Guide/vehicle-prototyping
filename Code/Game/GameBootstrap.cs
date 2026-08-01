@@ -77,8 +77,8 @@ public sealed class GameBootstrap : Component
 		// Build the selected world + spawn the default hatch (the shared path a live world switch reuses).
 		var controller = BuildWorldAndCar( CarDefinitions.Hatch );
 
-		// LIVE-UNVERIFIED (2026-07-21): apply the player's persisted drive-mode preference (owner
-		// request — a selected Sport/Sim mode should stick across sessions). Same InitialAssists +
+		// LIVE-UNVERIFIED (2026-07-21): apply the player's persisted drive-mode preference (a
+		// selected Sport/Sim mode should stick across sessions). Same InitialAssists +
 		// Assists double-set CarSwitcher.SwitchTo uses when carrying a mode across a car swap: the
 		// kit's VehicleController.OnStart (Libraries/) runs a frame or two after this spawn and would
 		// otherwise reset Assists back to Definition.DefaultAssists, clobbering a plain Assists-only

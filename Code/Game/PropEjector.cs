@@ -3,7 +3,7 @@ using System;
 namespace VehicleProto;
 
 /// <summary>
-/// Arcade cone ejector (owner order 2026-07-21). Telemetry (ramptrace2-223331, t=41.7..59) showed
+/// Arcade cone ejector (2026-07-21). Telemetry (ramptrace2-223331, t=41.7..59) showed
 /// a full-speed cone hit ending with the cone WEDGED under the car's nose: front axle load halved
 /// (~1600 N vs 3102 static), front suspension drooped to 0.153 m, nose pitched up 1.15 deg, car
 /// creeping 0.3 m/s under throttle and unable to drive off it, cone invisible under the bodywork.
@@ -20,7 +20,7 @@ public sealed class PropEjector : Component
 	public VehicleController Target { get; set; }
 
 	// Margins beyond the body box. Forward margin means bumper touches FLING rather than push:
-	// the arcade cone behavior the owner asked for ("extra bouncy, not really like physics").
+	// the intended arcade cone behavior (extra bouncy, not really like physics).
 	const float MarginX = 0.4f;   // m beyond nose/tail
 	const float MarginY = 0.3f;   // m beyond the flanks
 	const float BellyBand = 1.0f; // m below origin still counted as "under the car"

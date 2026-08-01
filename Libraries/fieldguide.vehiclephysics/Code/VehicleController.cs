@@ -523,7 +523,7 @@ public sealed class VehicleController : Component, Component.ICollisionListener
 		// proportional: hold driven-wheel slip near a target. Casual holds the grip PEAK; Sport (when the
 		// car opts in via SportTcSlipTarget) holds a LOOSER target well past the peak so the rears still
 		// break into a throttle-steerable slide, but bounded so they can't free-spin to redline and torch
-		// rear lateral grip (the Sport spin-out, owner 2026-07-21). The longitudinal tire-curve peaks sit
+		// rear lateral grip (the Sport spin-out reported 2026-07-21). The longitudinal tire-curve peaks sit
 		// at slip 0.09-0.14; a 0.25 target parks the tire in the post-peak slide — slower (less grip than
 		// the peak) AND permanently over the wheelspin threshold. Casual 0.14 targets the peak: more launch
 		// grip and slip under the counter. Sport, not opted in (target 0), returns raw throttle — the old
@@ -563,7 +563,7 @@ public sealed class VehicleController : Component, Component.ICollisionListener
 	/// air management the car rotates through the whole flight and lands nose-first, digging in.
 	/// Flight-recorder capture (2026-07-21, Lad2 at 35.5 m/s): launch attitude 8.6 deg nose-UP,
 	/// landing attitude 17.8 deg nose-DOWN, touchdown 35.5 to 31.7 m/s in 40 ms (a ~5 g spike)
-	/// then pitch slammed level in 100 ms - the owner's "hitch going off the ramps", reported
+	/// then pitch slammed level in 100 ms - the reported "hitch going off the ramps", seen
 	/// identically at every speed because the lip pivot exists at every speed. Damping the
 	/// car-local pitch rate while fully airborne holds the launch attitude so the car lands
 	/// wheels-matched (slightly tail-first). 0 or negative disables. LIVE-UNVERIFIED.
@@ -600,7 +600,7 @@ public sealed class VehicleController : Component, Component.ICollisionListener
 
 		// Casual damps at full authority; Sport (when the car opts in via SportStabilityScale) damps at a
 		// FRACTION so the counter-steer pendulum snap (rear regains grip and flings the car the other way,
-		// uncatchable — owner 2026-07-21) is bled off while deliberate rotation survives. Sim, and Sport
+		// uncatchable, reported 2026-07-21) is bled off while deliberate rotation survives. Sim, and Sport
 		// with no opt-in, get nothing. Casual multiplies by exactly 1f so its behavior is byte-identical.
 		float authority;
 		if ( Assists == AssistLevel.Casual )

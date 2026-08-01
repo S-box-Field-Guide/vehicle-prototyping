@@ -111,7 +111,7 @@ public class CarDefinition
 
 	// Arcade feel dials (defaults = the original sim-leaning behavior)
 	public float SteerRateScale { get; set; } = 1f;    // multiplies how fast steering ramps
-	// Reverse speed pass 2026-07-21 (owner feel): raised 4.5 -> 20.0 m/s (~10 -> ~45 mph). This is the
+	// Reverse speed pass 2026-07-21 (feel): raised 4.5 -> 20.0 m/s (~10 -> ~45 mph). This is the
 	// ACTUAL reverse cap mechanism (VehicleController cuts reverse throttle above this speed), and the
 	// game roster inherits it (only the pickup used to override it). Each car is still additionally
 	// limited by its reverse-gear redline-equivalent wheel speed (RedlineRpm/ReverseRatio/FinalDrive/
@@ -140,7 +140,7 @@ public class CarDefinition
 	public float WallGlanceHeadOnDeg { get; set; } = 60f;  // at/above this incidence: no assist (hard stop preserved)
 	public float WallAlignStrength { get; set; } = 6f;     // yaw-align rate toward the wall tangent (per second)
 
-	// ── Sport-mode stability posture (owner call 2026-07-21) ──
+	// ── Sport-mode stability posture (2026-07-21) ──
 	// Sport historically ran with NO traction control and NO yaw-stability damping (both Casual-only),
 	// so a full-throttle RWD car spun the rears to redline and the counter-steer pendulum went divergent
 	// — uncatchable spin-outs. These give Sport a REDUCED-authority version of each assist, opt-in per

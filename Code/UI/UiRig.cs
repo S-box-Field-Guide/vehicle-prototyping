@@ -32,7 +32,7 @@ public static class UiRig
 		var playerTiming = hudGo.Components.Create<PlayerTiming>();
 		playerTiming.Target = target;
 
-		// Drive-mode session persistence (owner request 2026-07-21): watches Target.Assists and
+		// Drive-mode session persistence (2026-07-21): watches Target.Assists and
 		// mirrors any change into UserSettings.AssistLevel. Same always-on Component pattern as
 		// PlayerTiming above (not a panel); follows the active car via Retarget below.
 		var drivePersist = hudGo.Components.Create<DriveModePersister>();

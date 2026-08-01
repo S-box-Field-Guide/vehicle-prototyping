@@ -22,7 +22,7 @@ public static class VehicleFactory
 	// and by a custom body that opts into the shared driver. A custom builder may seat its own driver.
 	static readonly Vector3 DefaultDriverLocalM = new( 0.05f, 0f, 0.06f );
 
-	// ---- blockout model assets (owner-approved art pass; tools/vehicle_blockouts) ----
+	// ---- blockout model assets (art pass; tools/vehicle_blockouts) ----
 	// Kit-Assets-relative paths. Keyed by roster Name so CarDefinition stays untouched
 	// (physics contract); an unmapped name or missing model falls back to the primitive
 	// box/kart builders, so a consumer with a custom roster loses nothing.

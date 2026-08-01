@@ -8,7 +8,7 @@ namespace VehicleProto;
 /// One car-picker tile's 3D preview: a razor <see cref="ScenePanel"/> that renders its own
 /// PRIVATE off-screen <see cref="Scene"/> holding the car's assembled part-kit body + wheels as
 /// plain render <see cref="ModelRenderer"/>s, framed by the kit's bounds and slowly yaw-spinning
-/// (owner: "show a small rotating 3D model of each vehicle" instead of a static PNG).
+/// (a small rotating 3D model of each vehicle instead of a static PNG).
 ///
 /// PREVIEW PATTERN (the current, non-obsolete path): a detached
 /// <see cref="Scene.CreateEditorScene"/> populated with REAL GameObjects/Components (a
@@ -37,7 +37,7 @@ namespace VehicleProto;
 public sealed class CarThumb : ScenePanel
 {
 	// Slow, steady presentation spin. The selected tile turns a hair faster so the eye is drawn to
-	// the current pick; both stay in the calm 20-30 deg/s band the owner asked for.
+	// the current pick; both stay in the calm 20-30 deg/s band the design calls for.
 	const float SpinSpeedSelected = 30f; // deg/s
 	const float SpinSpeedIdle = 22f;     // deg/s
 

@@ -22,8 +22,8 @@ public class UserSettingsData
 	// the Session (Tab) menu slider adjusts and persists it.
 	public int MasterVolume { get; set; } = 25;
 
-	// LIVE-UNVERIFIED (2026-07-21): the player's chosen drive mode / assist level (owner: "I want the
-	// drive mode you set to save between sessions"). ONE global value, not per-car — whichever mode
+	// LIVE-UNVERIFIED (2026-07-21): the player's chosen drive mode / assist level (a drive mode you
+	// set saves between sessions). ONE global value, not per-car — whichever mode
 	// the player leaves the session on greets them next boot, on whichever car they spawn into.
 	// Default Casual (existing/never-touched players keep current byte-identical behaviour).
 	public AssistLevel AssistLevel { get; set; } = AssistLevel.Casual;
