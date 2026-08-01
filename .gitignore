@@ -36,6 +36,25 @@ __pycache__/
 # Local console-capture scratch file (tools)
 tools/_console_tail.txt
 
-# Owner-local launch/store drafts (not for the public tree)
+# Local launch/store drafts (not for the public tree)
 docs/news-post-launch.md
 docs/sandbox-listing.md
+
+# Local measurement output and capture scratch (machine-specific, not for the public tree)
+artifacts/
+screenshots/
+logs/
+*.log
+
+# Local tooling state
+.claude/
+
+# Credentials and environment files (defensive: none of these belong in the tree)
+.env
+.env.*
+*.pem
+*.key
+
+# OS junk
+Thumbs.db
+desktop.ini
