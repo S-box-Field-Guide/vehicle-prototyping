@@ -147,4 +147,4 @@ MIT licensed - see [`LICENSE`](LICENSE). Clone it, fork it, ship it.
 
 Building a driving game on this baseline, or tuning your own vehicle physics? Join the
 s&box Field Guide Discord — share your project, swap tuning notes, and get help with
-the traps: **[discord.gg/JfrwFtn9T](https://discord.gg/JfrwFtn9T)**
+the traps: **[discord.gg/WeGJnwQP7C](https://discord.gg/WeGJnwQP7C)**
